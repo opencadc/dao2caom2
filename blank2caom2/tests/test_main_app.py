@@ -68,18 +68,15 @@
 #
 import pytest
 
-from blank2caom2 import main_app, APPLICATION, COLLECTION
+from blank2caom2 import main_app, APPLICATION, COLLECTION, BlankName
 from caom2.diff import get_differences
 from caom2pipe import manage_composable as mc
 
-from hashlib import md5
 import os
 import sys
 
-from mock import patch
-
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-TESTDATA_DIR = os.path.join(THIS_DIR, 'data')
+TEST_DATA_DIR = os.path.join(THIS_DIR, 'data')
 PLUGIN = os.path.join(os.path.dirname(THIS_DIR), 'main_app.py')
 
 
@@ -93,49 +90,23 @@ PLUGIN = os.path.join(os.path.dirname(THIS_DIR), 'main_app.py')
 @pytest.mark.parametrize('test_name', [])
 def test_main_app(test_name):
     basename = os.path.basename(test_name)
-    product_id = basename.split('.fits')[0]
-    lineage = _get_lineage(product_id, basename)
+    blank_name = BlankName(fname_on_disk=basename)
     output_file = '{}.actual.xml'.format(test_name)
-    local = _get_local(test_name)
-    plugin = PLUGIN
 
-    with patch('caom2utils.fits2caom2.CadcDataClient') as data_client_mock:
-        def get_file_info(archive, file_id):
-            if '_prev' in file_id:
-                return {'size': 10290,
-                        'md5sum': md5('-37'.encode()).hexdigest(),
-                        'type': 'image/jpeg'}
-            else:
-                return {'size': 37,
-                        'md5sum': md5('-37'.encode()).hexdigest(),
-                        'type': 'application/fits'}
-        data_client_mock.return_value.get_file_info.side_effect = \
-            get_file_info
-
-        sys.argv = \
-            ('{} --no_validate --local {} '
-             '--plugin {} --module {} --observation {} {} -o {} --lineage {}'.
-             format(APPLICATION, local, plugin, plugin, COLLECTION, product_id,
-                    output_file, lineage)).split()
-        print(sys.argv)
-        main_app()
-        obs_path = test_name.replace('header', 'xml')
-        expected = mc.read_obs_from_file(obs_path)
-        actual = mc.read_obs_from_file(output_file)
-        result = get_differences(expected, actual, 'Observation')
-        if result:
-            msg = 'Differences found in observation {}\n{}'. \
-                format(expected.observation_id, '\n'.join(
-                [r for r in result]))
-            raise AssertionError(msg)
-        # assert False  # cause I want to see logging messages
-
-
-def _get_local(test_name):
-    prev_name = test_name.replace('.fits.header', '_prev.jpg')
-    prev_256_name = test_name.replace('.fits.header', '_prev_256.jpg')
-    return '{} {} {}'.format(test_name, prev_name, prev_256_name)
-
-
-def _get_lineage(product_id, basename):
-    return '{}/ad:{}/{}.fits.gz'.format(COLLECTION, product_id, product_id)
+    sys.argv = \
+        ('{} --debug --no_validate --local {} --observation {} {} -o {} '
+         '--lineage {}'.
+         format(APPLICATION, test_name, COLLECTION, blank_name.obs_id,
+                output_file, blank_name.lineage)).split()
+    print(sys.argv)
+    main_app()
+    obs_path = '{}/{}'.format(TEST_DATA_DIR, 'RN43.xml')
+    expected = mc.read_obs_from_file(obs_path)
+    actual = mc.read_obs_from_file(output_file)
+    result = get_differences(expected, actual, 'Observation')
+    if result:
+        msg = 'Differences found in observation {}\n{}'. \
+            format(expected.observation_id, '\n'.join(
+            [r for r in result]))
+        raise AssertionError(msg)
+    # assert False  # cause I want to see logging messages

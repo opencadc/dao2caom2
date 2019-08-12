@@ -176,7 +176,7 @@ def main_app():
     except Exception as e:
         logging.error('Failed {} execution for {}.'.format(APPLICATION, args))
         tb = traceback.format_exc()
-        logging.error(tb)
+        logging.debug(tb)
         sys.exit(-1)
 
     logging.debug('Done {} processing.'.format(APPLICATION))

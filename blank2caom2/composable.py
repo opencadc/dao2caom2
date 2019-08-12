@@ -67,50 +67,61 @@
 # ***********************************************************************
 #
 
+import logging
 import sys
-import tempfile
+import traceback
 
 from caom2pipe import execute_composable as ec
 from caom2pipe import manage_composable as mc
-from blank2caom2 import APPLICATION, COLLECTION, BlankName
+from blank2caom2 import APPLICATION, BlankName
 
 
 meta_visitors = []
 data_visitors = []
 
 
-def run():
-    ec.run_by_file(ec.StorageName, APPLICATION, COLLECTION, None, meta_visitors,
-                   data_visitors)
-
-
-def run_proxy():
-    proxy = '/usr/src/app/cadcproxy.pem'
-    ec.run_by_file(ec.StorageName, APPLICATION, COLLECTION, proxy, 
-	meta_visitors, data_visitors)
-
-
-def run_single():
+def _run():
     """
-    Run the processing for a single entry.
+    Uses a todo file to identify the work to be done.
+
     :return 0 if successful, -1 if there's any sort of failure. Return status
         is used by airflow for task instance management and reporting.
     """
     config = mc.Config()
     config.get_executors()
-    config.resource_id = 'ivo://cadc.nrc.ca/sc2repo'
-    if config.features.run_in_airflow:
-        temp = tempfile.NamedTemporaryFile()
-        mc.write_to_file(temp.name, sys.argv[2])
-        config.proxy = temp.name
-    else:
-        config.proxy = sys.argv[2]
-    config.stream = 'raw'
-    if config.features.use_file_names:
-        storage_name = ec.StorageName(file_name=sys.argv[1])
-    else:
-        obs_id = ec.StorageName.remove_extensions(sys.argv[1])
-        storage_name = BlankName(obs_id=obs_id)
-    result = ec.run_single(config, storage_name, APPLICATION, meta_visitors,
-                           data_visitors)
-    sys.exit(result)
+    return ec.run_by_file(config, BlankName, APPLICATION,
+                          meta_visitors, data_visitors, chooser=None)
+
+
+def run():
+    """Wraps _run in exception handling, with sys.exit calls."""
+    try:
+        result = _run()
+        sys.exit(result)
+    except Exception as e:
+        logging.error(e)
+        tb = traceback.format_exc()
+        logging.debug(tb)
+        sys.exit(-1)
+
+
+def _run_state():
+    """Uses a state file with a timestamp to control which entries will be
+    processed.
+    """
+    config = mc.Config()
+    config.get_executors()
+    return ec.run_from_state(config, BlankName, APPLICATION, meta_visitors,
+                             data_visitors, bookmark=None, work=None)
+
+
+def run_state():
+    """Wraps _run_state in exception handling."""
+    try:
+        _run_state()
+        sys.exit(0)
+    except Exception as e:
+        logging.error(e)
+        tb = traceback.format_exc()
+        logging.debug(tb)
+        sys.exit(-1)
