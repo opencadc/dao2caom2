@@ -68,9 +68,12 @@
 #
 import pytest
 
-from blank2caom2 import main_app, APPLICATION, COLLECTION, BlankName
+from dao2caom2 import main_app, APPLICATION, COLLECTION, DAOName
 from caom2.diff import get_differences
+from caom2pipe import execute_composable as ec
 from caom2pipe import manage_composable as mc
+
+from mock import patch
 
 import os
 import sys
@@ -80,33 +83,45 @@ TEST_DATA_DIR = os.path.join(THIS_DIR, 'data')
 PLUGIN = os.path.join(os.path.dirname(THIS_DIR), 'main_app.py')
 
 
-# def pytest_generate_tests(metafunc):
-#     if os.path.exists(TESTDATA_DIR):
-#         files = [os.path.join(TESTDATA_DIR, name) for name in
-#                  os.listdir(TESTDATA_DIR) if name.endswith('header')]
-#         metafunc.parametrize('test_name', files)
+def pytest_generate_tests(metafunc):
+    if os.path.exists(TEST_DATA_DIR):
+        files = [os.path.join(TEST_DATA_DIR, name) for name in
+                 os.listdir(TEST_DATA_DIR) if name.endswith('header')]
+        metafunc.parametrize('test_name', files)
 
 
-@pytest.mark.parametrize('test_name', [])
+# @pytest.mark.parametrize('test_name', [])
 def test_main_app(test_name):
     basename = os.path.basename(test_name)
-    blank_name = BlankName(fname_on_disk=basename)
+    dao_name = DAOName(obs_id=ec.StorageName.remove_extensions(basename))
+
+    obs_path = '{}/{}.xml'.format(TEST_DATA_DIR, dao_name.obs_id)
+    expected = mc.read_obs_from_file(obs_path)
+
     output_file = '{}.actual.xml'.format(test_name)
 
-    sys.argv = \
-        ('{} --debug --no_validate --local {} --observation {} {} -o {} '
-         '--lineage {}'.
-         format(APPLICATION, test_name, COLLECTION, blank_name.obs_id,
-                output_file, blank_name.lineage)).split()
-    print(sys.argv)
-    main_app()
-    obs_path = '{}/{}'.format(TEST_DATA_DIR, 'RN43.xml')
-    expected = mc.read_obs_from_file(obs_path)
-    actual = mc.read_obs_from_file(output_file)
-    result = get_differences(expected, actual, 'Observation')
-    if result:
-        msg = 'Differences found in observation {}\n{}'. \
-            format(expected.observation_id, '\n'.join(
-            [r for r in result]))
-        raise AssertionError(msg)
-    # assert False  # cause I want to see logging messages
+    with patch('caom2utils.fits2caom2.CadcDataClient') as data_client_mock:
+        def gfi(archive, file_id):
+            temp = expected.planes[dao_name.obs_id].artifacts[
+                'ad:{}/{}'.format(archive, file_id)]
+            return {'size': temp.content_length,
+                    'md5sum': temp.content_checksum.uri,
+                    'type': temp.content_type}
+
+        data_client_mock.return_value.get_file_info.side_effect = gfi
+
+        sys.argv = \
+            ('{} --no_validate --local {} --observation {} {} -o {} '
+             '--plugin {} --module {} --lineage {}'.
+             format(APPLICATION, test_name, COLLECTION, dao_name.obs_id,
+                    output_file, PLUGIN, PLUGIN, dao_name.lineage)).split()
+        print(sys.argv)
+        main_app()
+        actual = mc.read_obs_from_file(output_file)
+        result = get_differences(expected, actual, 'Observation')
+        if result:
+            msg = 'Differences found in observation {}\n{}'. \
+                format(expected.observation_id, '\n'.join(
+                [r for r in result]))
+            raise AssertionError(msg)
+        # assert False  # cause I want to see logging messages

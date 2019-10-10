@@ -71,9 +71,9 @@ any suffix after odometer number indicates it's a processed file)
 1. Spectra
 
     1. dao_c122_2007_000882_v.fits	processed science observation (suffix '_v')
-    1. dao_c122_2007_000882.fits	corresponding unprocessed observation
+        1. dao_c122_2007_000882.fits	corresponding unprocessed observation
     1. dao_c122_2007_000881_e.fits	processed arc (suffix '_e')
-    1. dao_c122_2007_000881.fits	corresponding unprocessed arc
+        1. dao_c122_2007_000881.fits	corresponding unprocessed arc
     1. dao_c122_2007_000916_F.fits	co-added, processed flat field (suffix '_F')
         1. member files are dao_c122_2007_000916.fits through dao_c122_2007_000926.fits
     1. dao_c122_2016_012652_B.fits	co-added, processed bias (suffix '_B')
@@ -82,7 +82,7 @@ any suffix after odometer number indicates it's a processed file)
 1. Images
 
     1. dao_c182_2016_004034_a.fits	processed science observation (suffix '_a')
-    1. dao_c182_2016_004034.fits	corresponding unprocessed observation
+        1. dao_c182_2016_004034.fits	corresponding unprocessed observation
     1. dao_c182_2016_008332_B.fits	co-added processed bias (suffix '_B')
         1. member files dao_c182_2016_008332.fits through dao_c182_2016_008347.fits
     1. dao_c182_2016_002019_F.fits	co-added processed flat (suffix '_F')

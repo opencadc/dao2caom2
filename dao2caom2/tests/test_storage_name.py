@@ -66,8 +66,8 @@
 #
 # ***********************************************************************
 #
-from blank2caom2 import BlankName
+from dao2caom2 import DAOName
 
 
 def test_is_valid():
-    assert BlankName('anything').is_valid()
+    assert DAOName('anything').is_valid()

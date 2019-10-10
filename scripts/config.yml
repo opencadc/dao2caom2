@@ -1,4 +1,4 @@
-working_directory: /usr/src/app/blankt2caom2
+working_directory: /usr/src/app/dao2caom2
 # the netrc_filename value must be a fully-qualified name
 # netrc_filename: /usr/src/app/netrc
 # this is the name of the proxy certificate file supplied 
@@ -47,8 +47,8 @@ progress_file_name: progress.txt
 # ad stream value - sorry
 # set stream to 'default', if using TaskType STORE or PULL
 stream: default
-archive: BLANK
-collection: BLANK
+archive: DAO
+collection: DAO
 #
 # CADC service execution metrics
 #

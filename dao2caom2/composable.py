@@ -73,7 +73,7 @@ import traceback
 
 from caom2pipe import execute_composable as ec
 from caom2pipe import manage_composable as mc
-from blank2caom2 import APPLICATION, BlankName
+from dao2caom2 import APPLICATION, DAOName
 
 
 meta_visitors = []
@@ -89,7 +89,7 @@ def _run():
     """
     config = mc.Config()
     config.get_executors()
-    return ec.run_by_file(config, BlankName, APPLICATION,
+    return ec.run_by_file(config, DAOName, APPLICATION,
                           meta_visitors, data_visitors, chooser=None)
 
 
@@ -111,7 +111,7 @@ def _run_state():
     """
     config = mc.Config()
     config.get_executors()
-    return ec.run_from_state(config, BlankName, APPLICATION, meta_visitors,
+    return ec.run_from_state(config, DAOName, APPLICATION, meta_visitors,
                              data_visitors, bookmark=None, work=None)
 
 
