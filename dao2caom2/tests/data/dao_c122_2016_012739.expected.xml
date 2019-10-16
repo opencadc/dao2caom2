@@ -1,0 +1,99 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<caom2:Observation xmlns:caom2="http://www.opencadc.org/caom2/xml/v2.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="caom2:SimpleObservation" caom2:id="00000000-0000-0000-099b-0158bb851d1c" caom2:lastModified="2017-04-05T23:58:31.160" caom2:maxLastModified="2017-11-10T19:20:48.977" caom2:metaChecksum="md5:97722649e93afab8a873267106db17c1" caom2:accMetaChecksum="md5:4cf5837b5d60aa1ec7f5fe16fb5ec46d">
+  <caom2:collection>DAO</caom2:collection>
+  <caom2:observationID>dao_c122_2016_012739</caom2:observationID>
+  <caom2:metaRelease>2016-12-01T15:01:22.000</caom2:metaRelease>
+  <caom2:algorithm>
+    <caom2:name>exposure</caom2:name>
+  </caom2:algorithm>
+  <caom2:type>bias</caom2:type>
+  <caom2:intent>calibration</caom2:intent>
+  <caom2:proposal>
+    <caom2:id>DAO122_2016D9</caom2:id>
+    <caom2:pi>Bohlender</caom2:pi>
+  </caom2:proposal>
+  <caom2:target>
+    <caom2:name>bias</caom2:name>
+    <caom2:type>object</caom2:type>
+    <caom2:standard>false</caom2:standard>
+    <caom2:moving>false</caom2:moving>
+  </caom2:target>
+  <caom2:telescope>
+    <caom2:name>DAO 1.2-m</caom2:name>
+    <caom2:geoLocationX>-2331226.7854122813</caom2:geoLocationX>
+    <caom2:geoLocationY>-3532798.978466634</caom2:geoLocationY>
+    <caom2:geoLocationZ>4755607.337178416</caom2:geoLocationZ>
+  </caom2:telescope>
+  <caom2:instrument>
+    <caom2:name>McKellar Spectrograph</caom2:name>
+  </caom2:instrument>
+  <caom2:environment>
+    <caom2:humidity>84.0</caom2:humidity>
+    <caom2:photometric>false</caom2:photometric>
+  </caom2:environment>
+  <caom2:planes>
+    <caom2:plane caom2:id="00000000-0000-0000-099b-0158bb8526fd" caom2:lastModified="2016-12-01T17:53:40.237" caom2:maxLastModified="2017-11-10T19:20:48.977" caom2:metaChecksum="md5:51dba30a81a8ea540ab7928005d9bec8" caom2:accMetaChecksum="md5:c251bcc64bebeccd3f88eabc0b0c79cf">
+      <caom2:productID>dao_c122_2016_012739</caom2:productID>
+      <caom2:metaRelease>2016-12-01T15:01:22.000</caom2:metaRelease>
+      <caom2:dataRelease>2016-12-01T15:01:22.000</caom2:dataRelease>
+      <caom2:dataProductType>spectrum</caom2:dataProductType>
+      <caom2:calibrationLevel>1</caom2:calibrationLevel>
+      <caom2:provenance>
+        <caom2:name>DAO unprocessed data</caom2:name>
+        <caom2:project>DAO Science Archive</caom2:project>
+        <caom2:producer>NRC Herzberg</caom2:producer>
+        <caom2:reference>https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/dao/</caom2:reference>
+      </caom2:provenance>
+      <caom2:artifacts>
+        <caom2:artifact caom2:id="00000000-0000-0000-099b-0158bb852703" caom2:lastModified="2017-11-10T19:20:48.977" caom2:maxLastModified="2017-11-10T19:20:48.977" caom2:metaChecksum="md5:5d3abfbf229bd9372d20a5664e3963b4" caom2:accMetaChecksum="md5:ee493f1e264c34600c111840434ce5e6">
+          <caom2:uri>ad:DAO/dao_c122_2016_012739.fits.gz</caom2:uri>
+          <caom2:productType>calibration</caom2:productType>
+          <caom2:releaseType>data</caom2:releaseType>
+          <caom2:contentType>application/fits</caom2:contentType>
+          <caom2:contentLength>246728</caom2:contentLength>
+          <caom2:contentChecksum>md5:bf8084ba4f67a78c0b1c532c99d378c9</caom2:contentChecksum>
+          <caom2:parts>
+            <caom2:part caom2:id="00000000-0000-0000-099b-0158bb852705" caom2:lastModified="2016-12-01T17:53:40.237" caom2:maxLastModified="2016-12-01T17:53:40.237" caom2:metaChecksum="md5:ef7e00a14a151c7ddb9e4c42d98a14bf" caom2:accMetaChecksum="md5:9607d6163d26c3e17ef9bdae3b6f9154">
+              <caom2:name>0</caom2:name>
+              <caom2:chunks>
+                <caom2:chunk caom2:id="00000000-0000-0000-099b-0158bb852707" caom2:lastModified="2016-12-01T17:53:40.237" caom2:maxLastModified="2016-12-01T17:53:40.237" caom2:metaChecksum="md5:74dd1544d4ca5b79d925c4c4bd8671e3" caom2:accMetaChecksum="md5:f7239aa31fd868845baf4e5402ac9717">
+                  <caom2:naxis>2</caom2:naxis>
+                  <caom2:observableAxis>2</caom2:observableAxis>
+                  <caom2:timeAxis>5</caom2:timeAxis>
+                  <caom2:observable>
+                    <caom2:dependent>
+                      <caom2:axis>
+                        <caom2:ctype>FLUX</caom2:ctype>
+                        <caom2:cunit>COUNTS</caom2:cunit>
+                      </caom2:axis>
+                      <caom2:bin>1</caom2:bin>
+                    </caom2:dependent>
+                  </caom2:observable>
+                  <caom2:time>
+                    <caom2:axis>
+                      <caom2:axis>
+                        <caom2:ctype>TIME</caom2:ctype>
+                        <caom2:cunit>d</caom2:cunit>
+                      </caom2:axis>
+                      <caom2:function>
+                        <caom2:naxis>1</caom2:naxis>
+                        <caom2:delta>0.0</caom2:delta>
+                        <caom2:refCoord>
+                          <caom2:pix>0.5</caom2:pix>
+                          <caom2:val>57723.6256944</caom2:val>
+                        </caom2:refCoord>
+                      </caom2:function>
+                    </caom2:axis>
+                    <caom2:timesys>UTC</caom2:timesys>
+                    <caom2:exposure>0.0</caom2:exposure>
+                    <caom2:resolution>0.0</caom2:resolution>
+                  </caom2:time>
+                </caom2:chunk>
+              </caom2:chunks>
+            </caom2:part>
+          </caom2:parts>
+        </caom2:artifact>
+      </caom2:artifacts>
+    </caom2:plane>
+  </caom2:planes>
+</caom2:Observation>
