@@ -84,21 +84,21 @@ PLUGIN = os.path.join(os.path.dirname(THIS_DIR), 'main_app.py')
 
 
 def pytest_generate_tests(metafunc):
+    files = []
     if os.path.exists(TEST_DATA_DIR):
         files = [os.path.join(TEST_DATA_DIR, name) for name in
                  os.listdir(TEST_DATA_DIR) if name.endswith('header')]
-        metafunc.parametrize('test_name', files)
+    metafunc.parametrize('test_name', files)
 
 
-# @pytest.mark.parametrize('test_name', [])
 def test_main_app(test_name):
     basename = os.path.basename(test_name)
     dao_name = DAOName(obs_id=ec.StorageName.remove_extensions(basename))
 
-    obs_path = '{}/{}.xml'.format(TEST_DATA_DIR, dao_name.obs_id)
+    obs_path = '{}/{}.expected.xml'.format(TEST_DATA_DIR, dao_name.obs_id)
     expected = mc.read_obs_from_file(obs_path)
 
-    output_file = '{}.actual.xml'.format(test_name)
+    output_file = '{}/{}.actual.xml'.format(TEST_DATA_DIR, dao_name.obs_id)
 
     with patch('caom2utils.fits2caom2.CadcDataClient') as data_client_mock:
         def gfi(archive, file_id):
