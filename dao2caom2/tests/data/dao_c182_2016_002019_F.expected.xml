@@ -18,9 +18,9 @@
   </caom2:target>
   <caom2:telescope>
     <caom2:name>DAO 1.8-m</caom2:name>
-    <caom2:geoLocationX>-2331180.02654</caom2:geoLocationX>
-    <caom2:geoLocationY>-3532960.1648</caom2:geoLocationY>
-    <caom2:geoLocationZ>4755520.49519</caom2:geoLocationZ>
+    <caom2:geoLocationX>-2331180.0236165463</caom2:geoLocationX>
+    <caom2:geoLocationY>-3532960.1603673417</caom2:geoLocationY>
+    <caom2:geoLocationZ>4755520.510544372</caom2:geoLocationZ>
   </caom2:telescope>
   <caom2:instrument>
     <caom2:name>Newtonian Imager</caom2:name>
@@ -83,7 +83,7 @@
       <caom2:polarization/>
       <caom2:artifacts>
         <caom2:artifact caom2:id="00000000-0000-0000-1d5d-0158ad60beb5" caom2:lastModified="2017-11-10T18:35:42.370" caom2:maxLastModified="2017-11-10T18:35:42.370" caom2:metaChecksum="md5:f3db39333dc34f8f098efb9d8b44942e" caom2:accMetaChecksum="md5:12a49f0ba751bcdd118aed2d4236e899">
-          <caom2:uri>ad:DAO/dao_c182_2016_002019_F.fits</caom2:uri>
+          <caom2:uri>ad:DAO/dao_c182_2016_002019_F.fits.gz</caom2:uri>
           <caom2:productType>calibration</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>
@@ -101,14 +101,14 @@
                     <caom2:axis>
                       <caom2:axis>
                         <caom2:ctype>WAVE</caom2:ctype>
-                        <caom2:cunit>Angstrom</caom2:cunit>
+                        <caom2:cunit>m</caom2:cunit>
                       </caom2:axis>
                       <caom2:function>
                         <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>1300.0</caom2:delta>
+                        <caom2:delta>1.3e-07</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>1.0</caom2:pix>
-                          <caom2:val>6200.0</caom2:val>
+                          <caom2:val>6.2e-07</caom2:val>
                         </caom2:refCoord>
                       </caom2:function>
                     </caom2:axis>

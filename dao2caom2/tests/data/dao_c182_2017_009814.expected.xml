@@ -100,14 +100,14 @@
                     <caom2:axis>
                       <caom2:axis>
                         <caom2:ctype>WAVE</caom2:ctype>
-                        <caom2:cunit>Angstrom</caom2:cunit>
+                        <caom2:cunit>m</caom2:cunit>
                       </caom2:axis>
                       <caom2:function>
                         <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>1500.0</caom2:delta>
+                        <caom2:delta>1.5e-07</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>1.0</caom2:pix>
-                          <caom2:val>4700.0</caom2:val>
+                          <caom2:val>4.7e-07</caom2:val>
                         </caom2:refCoord>
                       </caom2:function>
                     </caom2:axis>

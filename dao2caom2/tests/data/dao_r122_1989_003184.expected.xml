@@ -23,9 +23,6 @@
   <caom2:instrument>
     <caom2:name>McKellar Spectrograph</caom2:name>
   </caom2:instrument>
-  <caom2:environment>
-    <caom2:photometric>false</caom2:photometric>
-  </caom2:environment>
   <caom2:planes>
     <caom2:plane caom2:id="00000000-0000-0000-d128-01641eadb56b" caom2:lastModified="2018-06-20T19:31:12.900" caom2:maxLastModified="2018-06-20T19:31:12.900" caom2:metaChecksum="md5:70a94a457217285716fdeb12a2f2ae48" caom2:accMetaChecksum="md5:0717a9e6da94a8a8c29fb986f5a1a717">
       <caom2:productID>dao_r122_1989_003184</caom2:productID>

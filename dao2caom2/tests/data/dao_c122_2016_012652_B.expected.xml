@@ -18,9 +18,9 @@
   </caom2:target>
   <caom2:telescope>
     <caom2:name>DAO 1.2-m</caom2:name>
-    <caom2:geoLocationX>-2331226.78834</caom2:geoLocationX>
-    <caom2:geoLocationY>-3532798.9829</caom2:geoLocationY>
-    <caom2:geoLocationZ>4755607.32183</caom2:geoLocationZ>
+    <caom2:geoLocationX>-2331226.7854122813</caom2:geoLocationX>
+    <caom2:geoLocationY>-3532798.978466634</caom2:geoLocationY>
+    <caom2:geoLocationZ>4755607.337178416</caom2:geoLocationZ>
   </caom2:telescope>
   <caom2:instrument>
     <caom2:name>McKellar Spectrograph</caom2:name>
@@ -61,7 +61,7 @@
       <caom2:polarization/>
       <caom2:artifacts>
         <caom2:artifact caom2:id="00000000-0000-0000-e481-0158c157e489" caom2:lastModified="2017-11-10T19:20:57.160" caom2:maxLastModified="2017-11-10T19:20:57.160" caom2:metaChecksum="md5:e8204881408c0458cd170f7e738f1a18" caom2:accMetaChecksum="md5:68628e3a5f2da21a8fde1621c5909844">
-          <caom2:uri>ad:DAO/dao_c122_2016_012652_B.fits</caom2:uri>
+          <caom2:uri>ad:DAO/dao_c122_2016_012652_B.fits.gz</caom2:uri>
           <caom2:productType>calibration</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>

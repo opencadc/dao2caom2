@@ -80,7 +80,7 @@
                         <caom2:naxis>1850</caom2:naxis>
                         <caom2:delta>6.750000000000001e-11</caom2:delta>
                         <caom2:refCoord>
-                          <caom2:pix>875.5</caom2:pix>
+                          <caom2:pix>873.0</caom2:pix>
                           <caom2:val>4.4e-07</caom2:val>
                         </caom2:refCoord>
                       </caom2:function>

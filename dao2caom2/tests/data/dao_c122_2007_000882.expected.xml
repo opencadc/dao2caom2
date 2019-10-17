@@ -203,14 +203,14 @@
                     <caom2:axis>
                       <caom2:axis>
                         <caom2:ctype>WAVE</caom2:ctype>
-                        <caom2:cunit>Angstrom</caom2:cunit>
+                        <caom2:cunit>m</caom2:cunit>
                       </caom2:axis>
                       <caom2:function>
                         <caom2:naxis>4088</caom2:naxis>
-                        <caom2:delta>0.0728442492178</caom2:delta>
+                        <caom2:delta>7.28442492178e-11</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>1.0</caom2:pix>
-                          <caom2:val>6437.19933574</caom2:val>
+                          <caom2:val>6.43719933574e-07</caom2:val>
                         </caom2:refCoord>
                       </caom2:function>
                     </caom2:axis>

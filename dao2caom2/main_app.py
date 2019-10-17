@@ -78,7 +78,7 @@ from astropy.coordinates import SkyCoord, FK5
 import astropy.units as u
 
 from caom2 import Observation, TargetType, DataProductType, ProductType
-from caom2 import ObservationIntentType
+from caom2 import ObservationIntentType, CalibrationLevel
 from caom2utils import ObsBlueprint, get_gen_proc_arg_parser, gen_proc
 from caom2pipe import astro_composable as ac
 from caom2pipe import execute_composable as ec
@@ -95,7 +95,7 @@ COLLECTION = 'DAO'
 class DAOName(ec.StorageName):
     """Naming rules:
     - support mixed-case file name storage, and mixed-case obs id values
-    - support compressed raw files and uncompressed product files in storage
+    - support uncompressed raw files and compressed product files in storage
     - uncompressed product files have an extension added to the input
       names - lower case if there's a single input, upper case if there's
       multiple inputs, as far as I can tell right now.
@@ -111,6 +111,15 @@ class DAOName(ec.StorageName):
     def is_valid(self):
         return True
 
+    @staticmethod
+    def is_processed(entry):
+        file_id = ec.CaomName(entry).file_id
+        result = False
+        if (re.match('dao_[cr]\\d{3}_\\d{4}_\\d{6}_[evBF]', file_id) or
+                re.match('dao_[p]\\d{3}_\\d{6}(u|v|y|r|i|)', file_id)):
+            result = True
+        return result
+
 
 def get_artifact_product_type(header):
     obs_type = _get_obs_type(header)
@@ -121,9 +130,11 @@ def get_artifact_product_type(header):
     return product_type
 
 
-def get_calibration_level(uri):
-    from caom2 import CalibrationLevel
+def get_calibration_level(parameters):
+    uri = parameters.get('uri')
     result = CalibrationLevel.RAW_STANDARD
+    if DAOName.is_processed(uri):
+        result = CalibrationLevel.CALIBRATED
     return result
 
 
@@ -155,18 +166,20 @@ def get_energy_function_delta(header):
     data_product_type = get_data_product_type(header)
     if data_product_type == DataProductType.SPECTRUM:
         wavelength = _get_wavelength(header)
+        cdelt = header.get('DELTA_WL')
         if wavelength is None:
             pass
         else:
-            logging.error('hows the wavelength?')
-            dispersion = header.get('DISPERSI')
-            dispaxis = _get_dispaxis(header)
-            if dispaxis == 1:
-                xbin = mc.to_float(header.get('XBIN'))
-            else:
-                xbin = mc.to_float(header.get('YBIN'))
-            cdelt = dispersion * 15.0 * xbin / 1000.0
-            logging.error('cdelt is {} dispersion is {} xbin is {}'.format(cdelt, dispersion, xbin))
+            if cdelt is None:
+                logging.error('hows the wavelength?')
+                dispersion = header.get('DISPERSI')
+                dispaxis = _get_dispaxis(header)
+                if dispaxis == 1:
+                    xbin = mc.to_float(header.get('XBIN'))
+                else:
+                    xbin = mc.to_float(header.get('YBIN'))
+                cdelt = dispersion * 15.0 * xbin / 1000.0
+                logging.error('cdelt is {} dispersion is {} xbin is {}'.format(cdelt, dispersion, xbin))
     else:
         cdelt = header.get('BANDPASS')
     return cdelt
@@ -177,33 +190,41 @@ def get_energy_function_pix(header):
     data_product_type = get_data_product_type(header)
     if data_product_type == DataProductType.SPECTRUM:
         wavelength = _get_wavelength(header)
-        if wavelength is not None:
-            datasec = re.sub(r'(\[)(\d+:\d+,\d+:\d+)(\])', r'\g<2>',
-                             header.get('DATASEC'))
-            (dx, dy) = datasec.split(',')
-            (xl, xh) = dx.split(':')
-            (yl, yh) = dy.split(':')
-            dispaxis = _get_dispaxis(header)
-            if dispaxis == 1:
-                crpix = (int(xh) - int(xl)) / 2.0 + int(xl)
-            else:
-                crpix = (int(yh) - int(yl)) / 2.0 + int(yl)
+        if wavelength is None:
+            pass
+        else:
+            crpix = header.get('REFPIXEL')
+            if crpix is None:
+                temp = header.get('DATASEC')
+                if temp is not None:
+                    datasec = re.sub(r'(\[)(\d+:\d+,\d+:\d+)(\])', r'\g<2>', temp)
+                    (dx, dy) = datasec.split(',')
+                    (xl, xh) = dx.split(':')
+                    (yl, yh) = dy.split(':')
+                    dispaxis = _get_dispaxis(header)
+                    if dispaxis == 1:
+                        crpix = (int(xh) - int(xl)) / 2.0 + int(xl)
+                    else:
+                        crpix = (int(yh) - int(yl)) / 2.0 + int(yl)
     return crpix
 
 
 def get_energy_resolving_power(header):
     band_pass = mc.to_float(header.get('BANDPASS'))
     wavelength = _get_wavelength(header)
-    data_product_type = get_data_product_type(header)
-    if data_product_type == DataProductType.IMAGE:
-        resolving_power = wavelength / band_pass
+    if wavelength is None:
+        resolving_power = None
     else:
-        # assume 2.5 pixel wide resolution element
-        if band_pass is None:
-            cdelt = get_energy_function_delta(header)
-            resolving_power = wavelength / (2.5 * cdelt)
+        data_product_type = get_data_product_type(header)
+        if data_product_type == DataProductType.IMAGE:
+            resolving_power = wavelength / band_pass
         else:
-            resolving_power = wavelength / (2.5 * band_pass)
+            # assume 2.5 pixel wide resolution element
+            if band_pass is None:
+                cdelt = get_energy_function_delta(header)
+                resolving_power = wavelength / (2.5 * cdelt)
+            else:
+                resolving_power = wavelength / (2.5 * band_pass)
     return resolving_power
 
 
@@ -300,7 +321,10 @@ def get_position_function_cd11(header):
             platescale = mc.to_float(header.get('PLTSCALE'))
             pixsize = mc.to_float(header.get('PIXSIZE'))
             xbin = mc.to_float(header.get('XBIN'))
-            result = platescale * pixsize * xbin / 3600000.0
+            if (platescale is not None and
+                    pixsize is not None and
+                    xbin is not None):
+                result = platescale * pixsize * xbin / 3600000.0
     return result
 
 
@@ -311,7 +335,8 @@ def get_position_function_cd12(header):
         data_product_type = get_data_product_type(header)
         if data_product_type == DataProductType.SPECTRUM:
             naxis1 = _get_naxis1(header)
-            result = mc.to_float(naxis1) / 2.0
+            if naxis1 is not None:
+                result = mc.to_float(naxis1) / 2.0
         else:
             result = 0.0
     return result
@@ -324,7 +349,8 @@ def get_position_function_cd21(header):
         data_product_type = get_data_product_type(header)
         if data_product_type == DataProductType.SPECTRUM:
             naxis2 = _get_naxis2(header)
-            result = mc.to_float(naxis2) / 2.0
+            if naxis2 is not None:
+                result = mc.to_float(naxis2) / 2.0
         else:
             result = 0.0
     return result
@@ -343,7 +369,10 @@ def get_position_function_cd22(header):
             platescale = mc.to_float(header.get('PLTSCALE'))
             pixsize = mc.to_float(header.get('PIXSIZE'))
             xbin = mc.to_float(header.get('XBIN'))
-            result = platescale * pixsize * xbin / 3600000.0
+            if (platescale is not None and
+                    pixsize is not None and
+                    xbin is not None):
+                result = platescale * pixsize * xbin / 3600000.0
     return result
 
 
@@ -429,15 +458,18 @@ def _get_obs_type(header):
 
 
 def _get_position(header):
-    ra = header.get('RA')
-    dec = header.get('DEC')
-    equinox = 'J{}'.format(header.get('EQUINOX'))
-    fk5 = FK5(equinox=equinox)
-    coord = SkyCoord(
-        '{} {}'.format(ra, dec), unit=(u.hourangle, u.deg), frame=fk5)
-    j2000 = FK5(equinox='J2000')
-    result = coord.transform_to(j2000)
-    return result.ra.degree, result.dec.degree
+    if header.get('EQUINOX') is None:
+        return None, None
+    else:
+        ra = header.get('RA')
+        dec = header.get('DEC')
+        equinox = 'J{}'.format(header.get('EQUINOX'))
+        fk5 = FK5(equinox=equinox)
+        coord = SkyCoord(
+            '{} {}'.format(ra, dec), unit=(u.hourangle, u.deg), frame=fk5)
+        j2000 = FK5(equinox='J2000')
+        result = coord.transform_to(j2000)
+        return result.ra.degree, result.dec.degree
 
 
 def _get_telescope(header):
@@ -474,7 +506,6 @@ def accumulate_bp(bp, uri):
 
     bp.clear('Observation.proposal.id')
     bp.add_fits_attribute('Observation.proposal.id', 'DAOPRGID')
-    bp.set_default('Observation.proposal.id', 'No PRG ID')
     bp.clear('Observation.proposal.pi')
     bp.add_fits_attribute('Observation.proposal.pi', 'PINAME')
 
@@ -484,7 +515,7 @@ def accumulate_bp(bp, uri):
     bp.set_default('Observation.environment.photometric', 'false')
 
     bp.set('Plane.dataProductType', 'get_data_product_type(header)')
-    bp.set('Plane.calibrationLevel', 'get_calibration_level(uri)')
+    bp.set('Plane.calibrationLevel', 'get_calibration_level(parameters)')
 
     bp.set('Plane.provenance.project', 'DAO Science Archive')
     bp.set('Plane.provenance.name', 'DAO unprocessed data')
@@ -608,23 +639,23 @@ def update(observation, **kwargs):
     return observation
 
 
-def update_chunk_position(chunk, headers):
-    naxis1 = headers[0].get('NAXIS1')
-    naxis2 = headers[0].get('NAXIS2')
-    ra = headers[0].get('RA')
-    dec = headers[0].get('DEC')
-    equinox = headers[0].get('EQUINOX')
-    platescale = mc.to_float(headers[0].get('PLTSCALE'))
-    pixsize = mc.to_float(headers[0].get('PIXSIZE'))
-    xbin = mc.to_float(headers[0].get('XBIN'))
-    cd11 = platescale * pixsize * xbin / 3600000.0
-    cd22 = cd11
-    cd12 = mc.to_float(naxis1) / 2.0
-    cd21 = cd12
-    chunk.position_axis_1 = 1
-    chunk.position_axis_2 = 2
-    from caom2 import SpatialWCS
-    chunk.position = SpatialWCS()
+# def update_chunk_position(chunk, headers):
+#     naxis1 = headers[0].get('NAXIS1')
+#     naxis2 = headers[0].get('NAXIS2')
+#     ra = headers[0].get('RA')
+#     dec = headers[0].get('DEC')
+#     equinox = headers[0].get('EQUINOX')
+#     platescale = mc.to_float(headers[0].get('PLTSCALE'))
+#     pixsize = mc.to_float(headers[0].get('PIXSIZE'))
+#     xbin = mc.to_float(headers[0].get('XBIN'))
+#     cd11 = platescale * pixsize * xbin / 3600000.0
+#     cd22 = cd11
+#     cd12 = mc.to_float(naxis1) / 2.0
+#     cd21 = cd12
+#     chunk.position_axis_1 = 1
+#     chunk.position_axis_2 = 2
+#     from caom2 import SpatialWCS
+#     chunk.position = SpatialWCS()
 
 
 def _build_blueprints(uri):
@@ -669,7 +700,7 @@ def main_app():
     except Exception as e:
         logging.error('Failed {} execution for {}.'.format(APPLICATION, args))
         tb = traceback.format_exc()
-        logging.debug(tb)
+        logging.error(tb)
         sys.exit(-1)
 
     logging.debug('Done {} processing.'.format(APPLICATION))

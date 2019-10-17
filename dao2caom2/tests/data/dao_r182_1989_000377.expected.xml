@@ -23,9 +23,6 @@
   <caom2:instrument>
     <caom2:name>Cassegrain Spectrograph</caom2:name>
   </caom2:instrument>
-  <caom2:environment>
-    <caom2:photometric>false</caom2:photometric>
-  </caom2:environment>
   <caom2:planes>
     <caom2:plane caom2:id="00000000-0000-0000-258c-0164290d4159" caom2:lastModified="2018-06-22T19:51:45.740" caom2:maxLastModified="2018-06-22T19:51:45.740" caom2:metaChecksum="md5:6b5e115f2a06ee7f6975ab05de76439a" caom2:accMetaChecksum="md5:2dba3743b72326b2cf1bef710635b235">
       <caom2:productID>dao_r182_1989_000377</caom2:productID>

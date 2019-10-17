@@ -41,7 +41,7 @@
       <caom2:provenance>
         <caom2:name>DAO unprocessed data</caom2:name>
         <caom2:project>DAO Science Archive</caom2:project>
-        <caom2:producer>NRC/NSIP/OAP</caom2:producer>
+        <caom2:producer>NRC Herzberg</caom2:producer>
         <caom2:reference>https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/dao/</caom2:reference>
       </caom2:provenance>
       <caom2:artifacts>
