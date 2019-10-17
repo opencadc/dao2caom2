@@ -114,7 +114,7 @@
                       </caom2:axis>
                       <caom2:function>
                         <caom2:naxis>950</caom2:naxis>
-                        <caom2:delta>5.4e-09</caom2:delta>
+                        <caom2:delta>5.400000000000001e-10</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>435.0</caom2:pix>
                           <caom2:val>6.3e-07</caom2:val>
@@ -124,7 +124,7 @@
                     <caom2:specsys>TOPOCENT</caom2:specsys>
                     <caom2:ssysobs>TOPOCENT</caom2:ssysobs>
                     <caom2:ssyssrc>TOPOCENT</caom2:ssyssrc>
-                    <caom2:resolvingPower>466.0</caom2:resolvingPower>
+                    <caom2:resolvingPower>466.6666666666667</caom2:resolvingPower>
                   </caom2:energy>
                   <caom2:time>
                     <caom2:axis>

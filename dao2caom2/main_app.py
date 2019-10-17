@@ -81,6 +81,7 @@ from caom2 import Observation, TargetType, DataProductType, ProductType
 from caom2 import ObservationIntentType, CalibrationLevel
 from caom2utils import ObsBlueprint, get_gen_proc_arg_parser, gen_proc
 from caom2pipe import astro_composable as ac
+from caom2pipe import caom_composable as cc
 from caom2pipe import execute_composable as ec
 from caom2pipe import manage_composable as mc
 
@@ -113,10 +114,20 @@ class DAOName(ec.StorageName):
 
     @staticmethod
     def is_processed(entry):
+        # the entry is a uri
         file_id = ec.CaomName(entry).file_id
         result = False
-        if (re.match('dao_[cr]\\d{3}_\\d{4}_\\d{6}_[evBF]', file_id) or
+        if (re.match('dao_[cr]\\d{3}_\\d{4}_\\d{6}_[aevBF]', file_id) or
                 re.match('dao_[p]\\d{3}_\\d{6}(u|v|y|r|i|)', file_id)):
+            result = True
+        return result
+
+    @staticmethod
+    def is_unprocessed_reticon(entry):
+        # the entry is a uri
+        file_id = ec.CaomName(entry).file_id
+        result = False
+        if re.match('dao_[r]\\d{3}_\\d{4}_\\d{6}', file_id):
             result = True
         return result
 
@@ -171,7 +182,8 @@ def get_energy_function_delta(header):
             pass
         else:
             if cdelt is None:
-                logging.error('hows the wavelength?')
+                logging.error('hows the wavelength? xbin {} ybin {}'.format(header.get('XBIN'),
+                                                                            header.get('YBIN')))
                 dispersion = header.get('DISPERSI')
                 dispaxis = _get_dispaxis(header)
                 if dispaxis == 1:
@@ -210,11 +222,10 @@ def get_energy_function_pix(header):
 
 
 def get_energy_resolving_power(header):
-    band_pass = mc.to_float(header.get('BANDPASS'))
+    resolving_power = None
     wavelength = _get_wavelength(header)
-    if wavelength is None:
-        resolving_power = None
-    else:
+    if wavelength is not None:
+        band_pass = mc.to_float(header.get('BANDPASS'))
         data_product_type = get_data_product_type(header)
         if data_product_type == DataProductType.IMAGE:
             resolving_power = wavelength / band_pass
@@ -222,8 +233,10 @@ def get_energy_resolving_power(header):
             # assume 2.5 pixel wide resolution element
             if band_pass is None:
                 cdelt = get_energy_function_delta(header)
+                logging.error('no bandpadd cdelt {} wavln {}'.format(cdelt, wavelength))
                 resolving_power = wavelength / (2.5 * cdelt)
             else:
+                logging.error('bandpass {} wavln {}'.format(band_pass, wavelength))
                 resolving_power = wavelength / (2.5 * band_pass)
     return resolving_power
 
@@ -259,47 +272,47 @@ def get_obs_intent(header):
 def get_position_function_coord1_pix(header):
     result = None
     artifact_product_type = get_artifact_product_type(header)
+    data_product_type = get_data_product_type(header)
     if artifact_product_type is ProductType.SCIENCE:
-        data_product_type = get_data_product_type(header)
         if data_product_type == DataProductType.SPECTRUM:
             result = 1.0
         else:
             result = _get_naxis1(header) / 2.0
     else:
-        obs_type = header.get('OBSTYPE')
-        if obs_type == 'dark':
-            result = 1.0
+        if data_product_type == DataProductType.IMAGE:
+            result = _get_naxis1(header) / 2.0
+        else:
+            obs_type = header.get('OBSTYPE')
+            if obs_type == 'dark':
+                result = 1.0
     return result
 
 
 def get_position_function_coord2_pix(header):
     result = None
     artifact_product_type = get_artifact_product_type(header)
+    data_product_type = get_data_product_type(header)
     if artifact_product_type is ProductType.SCIENCE:
-        data_product_type = get_data_product_type(header)
         if data_product_type == DataProductType.SPECTRUM:
             result = 1.0
         else:
             result = _get_naxis2(header) / 2.0
     else:
-        obs_type = header.get('OBSTYPE')
-        if obs_type == 'dark':
-            result = 1.0
+        if data_product_type == DataProductType.IMAGE:
+            result = _get_naxis2(header) / 2.0
+        else:
+            obs_type = header.get('OBSTYPE')
+            if obs_type == 'dark':
+                result = 1.0
     return result
 
 
 def get_position_function_coord1_val(header):
-    ra = None
-    # artifact_product_type = get_artifact_product_type(header)
-    # if artifact_product_type is ProductType.SCIENCE:
     ra, ignore_dec = _get_position(header)
     return ra
 
 
 def get_position_function_coord2_val(header):
-    dec = None
-    # artifact_product_type = get_artifact_product_type(header)
-    # if artifact_product_type is ProductType.SCIENCE:
     ignore_ra, dec = _get_position(header)
     return dec
 
@@ -319,8 +332,8 @@ def _pattern(header, science_spectrum, science_image):
 def get_position_function_cd11(header):
     result = None
     artifact_product_type = get_artifact_product_type(header)
+    data_product_type = get_data_product_type(header)
     if artifact_product_type is ProductType.SCIENCE:
-        data_product_type = get_data_product_type(header)
         if data_product_type == DataProductType.SPECTRUM:
             # DB - set entrance aperture to a fixed 5" by 5" because of lack
             # of detailed information
@@ -332,11 +345,19 @@ def get_position_function_cd11(header):
             if (platescale is not None and
                     pixsize is not None and
                     xbin is not None):
+                logging.error('am i here?')
                 result = platescale * pixsize * xbin / 3600000.0
     else:
         obs_type = header.get('OBSTYPE')
-        if obs_type == 'dark':
-            result = -0.001388
+        if data_product_type == DataProductType.IMAGE and obs_type == 'dark':
+            platescale = mc.to_float(header.get('PLTSCALE', 0.0))
+            pixsize = mc.to_float(header.get('PIXSIZE', 0.0))
+            xbin = mc.to_float(header.get('XBIN', 0.0))
+            logging.error('must be here then')
+            result = platescale * pixsize * xbin / 3600000.0
+        else:
+            if obs_type == 'dark':
+                result = -0.001388
     return result
 
 
@@ -386,8 +407,8 @@ def get_position_function_cd21(header):
 def get_position_function_cd22(header):
     result = None
     artifact_product_type = get_artifact_product_type(header)
+    data_product_type = get_data_product_type(header)
     if artifact_product_type is ProductType.SCIENCE:
-        data_product_type = get_data_product_type(header)
         if data_product_type == DataProductType.SPECTRUM:
             # DB - set entrance aperture to a fixed 5" by 5" because of lack
             # of detailed information
@@ -402,8 +423,15 @@ def get_position_function_cd22(header):
                 result = platescale * pixsize * xbin / 3600000.0
     else:
         obs_type = header.get('OBSTYPE')
-        if obs_type == 'dark':
-            result = 0.001388
+        if data_product_type == DataProductType.IMAGE and obs_type == 'dark':
+            platescale = mc.to_float(header.get('PLTSCALE', 0.0))
+            pixsize = mc.to_float(header.get('PIXSIZE', 0.0))
+            xbin = mc.to_float(header.get('XBIN', 0.0))
+            logging.error('must also be here then')
+            result = platescale * pixsize * xbin / 3600000.0
+        else:
+            if obs_type == 'dark':
+                result = 0.001388
     return result
 
 
@@ -470,10 +498,11 @@ def _get_dispaxis(header):
     dispaxis = None
     if get_data_product_type(header) == DataProductType.SPECTRUM:
         dispaxis = header.get('DISPAXIS')
-        logging.error('dispaxis is {}'.format(dispaxis))
+        logging.error('dispaxis from header is {}'.format(dispaxis))
         if dispaxis is None:
             telescope = get_telescope_name(header)
             if telescope == 'DAO 1.2-m':
+                logging.error('am I here? for dispaxis?')
                 dispaxis = 2
             else:
                 dispaxis = 1
@@ -663,38 +692,35 @@ def update(observation, **kwargs):
                         chunk.observable_axis = 2
                         chunk.time_axis = 5
                         chunk.energy_axis = 1
+                        if DAOName.is_unprocessed_reticon(artifact.uri):
+                            cc.reset_energy(chunk)
                         if artifact.product_type == ProductType.SCIENCE:
                             logging.error('science')
                             chunk.position_axis_1 = 3
                             chunk.position_axis_2 = 4
                         else:
-                            logging.error('not science {}'.format(artifact.product_type))
+                            logging.error('not science {} type {}'.format(artifact.product_type,
+                                                                          observation.type))
                             if observation.type == 'dark':
                                 chunk.position_axis_1 = 3
                                 chunk.position_axis_2 = 4
                             else:
-                                chunk.position_axis_1 = None
-                                chunk.position_axis_2 = None
-                                chunk.position = None
+                                cc.reset_position(chunk)
                             # no energy for calibration?
-                            if observation.type not in ['flat', 'comparison']:
-                                chunk.energy_axis = None
-                                chunk.energy = None
+                            if observation.type not in ['flat', 'comparison', 'dark']:
+                                cc.reset_energy(chunk)
         else:  # DataProductType.IMAGE
             logging.error('image')
             for artifact in plane.artifacts.values():
                 for part in artifact.parts.values():
                     for chunk in part.chunks:
                         # no observable axis when image
-                        chunk.observable_axis = None
-                        chunk.observable = None
+                        cc.reset_observable(chunk)
                         if artifact.product_type == ProductType.CALIBRATION:
-                            chunk.position = None
-                            chunk.position_axis_1 = None
-                            chunk.position_axis_2 = None
-                            if observation.type != 'flat':
-                                chunk.energy_axis = None
-                                chunk.energy = None
+                            if observation.type != 'dark':
+                                cc.reset_position(chunk)
+                            if observation.type not in ['flat', 'dark']:
+                                cc.reset_energy(chunk)
 
     logging.debug('Done update.')
     return observation
@@ -737,7 +763,6 @@ def _build_blueprints(uri):
 
 
 def _get_uri(args):
-    result = None
     if args.observation:
         result = DAOName(obs_id=args.observation[1]).file_uri
     elif args.local:

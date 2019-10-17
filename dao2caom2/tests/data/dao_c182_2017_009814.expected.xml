@@ -80,17 +80,17 @@
                         <caom2:refCoord>
                           <caom2:coord1>
                             <caom2:pix>510.0</caom2:pix>
-                            <caom2:val>264.839545355</caom2:val>
+                            <caom2:val>264.8395537556353</caom2:val>
                           </caom2:coord1>
                           <caom2:coord2>
                             <caom2:pix>1175.0</caom2:pix>
-                            <caom2:val>41.810509389</caom2:val>
+                            <caom2:val>41.81050761310203</caom2:val>
                           </caom2:coord2>
                         </caom2:refCoord>
-                        <caom2:cd11>0.000169</caom2:cd11>
+                        <caom2:cd11>0.00016875</caom2:cd11>
                         <caom2:cd12>0.0</caom2:cd12>
                         <caom2:cd21>0.0</caom2:cd21>
-                        <caom2:cd22>0.000169</caom2:cd22>
+                        <caom2:cd22>0.00016875</caom2:cd22>
                       </caom2:function>
                     </caom2:axis>
                     <caom2:coordsys>FK5</caom2:coordsys>
