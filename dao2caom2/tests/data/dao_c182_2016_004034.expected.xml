@@ -80,11 +80,11 @@
                         <caom2:refCoord>
                           <caom2:coord1>
                             <caom2:pix>510.0</caom2:pix>
-                            <caom2:val>317.087814941</caom2:val>
+                            <caom2:val>317.0878267884892</caom2:val>
                           </caom2:coord1>
                           <caom2:coord2>
                             <caom2:pix>1175.0</caom2:pix>
-                            <caom2:val>11.0154388514</caom2:val>
+                            <caom2:val>11.01544207701015</caom2:val>
                           </caom2:coord2>
                         </caom2:refCoord>
                         <caom2:cd11>0.000169</caom2:cd11>
@@ -125,7 +125,7 @@
                       </caom2:axis>
                       <caom2:function>
                         <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>0.001042</caom2:delta>
+                        <caom2:delta>0.001041666666666667</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>0.5</caom2:pix>
                           <caom2:val>57604.3096875</caom2:val>

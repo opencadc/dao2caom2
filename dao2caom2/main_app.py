@@ -265,6 +265,10 @@ def get_position_function_coord1_pix(header):
             result = 1.0
         else:
             result = _get_naxis1(header) / 2.0
+    else:
+        obs_type = header.get('OBSTYPE')
+        if obs_type == 'dark':
+            result = 1.0
     return result
 
 
@@ -277,22 +281,26 @@ def get_position_function_coord2_pix(header):
             result = 1.0
         else:
             result = _get_naxis2(header) / 2.0
+    else:
+        obs_type = header.get('OBSTYPE')
+        if obs_type == 'dark':
+            result = 1.0
     return result
 
 
 def get_position_function_coord1_val(header):
     ra = None
-    artifact_product_type = get_artifact_product_type(header)
-    if artifact_product_type is ProductType.SCIENCE:
-        ra, ignore_dec = _get_position(header)
+    # artifact_product_type = get_artifact_product_type(header)
+    # if artifact_product_type is ProductType.SCIENCE:
+    ra, ignore_dec = _get_position(header)
     return ra
 
 
 def get_position_function_coord2_val(header):
     dec = None
-    artifact_product_type = get_artifact_product_type(header)
-    if artifact_product_type is ProductType.SCIENCE:
-        ignore_ra, dec = _get_position(header)
+    # artifact_product_type = get_artifact_product_type(header)
+    # if artifact_product_type is ProductType.SCIENCE:
+    ignore_ra, dec = _get_position(header)
     return dec
 
 
@@ -314,7 +322,7 @@ def get_position_function_cd11(header):
     if artifact_product_type is ProductType.SCIENCE:
         data_product_type = get_data_product_type(header)
         if data_product_type == DataProductType.SPECTRUM:
-            # I've set entrance aperture to a fixed 5" by 5" because of lack
+            # DB - set entrance aperture to a fixed 5" by 5" because of lack
             # of detailed information
             result = -0.001388
         else:
@@ -325,6 +333,10 @@ def get_position_function_cd11(header):
                     pixsize is not None and
                     xbin is not None):
                 result = platescale * pixsize * xbin / 3600000.0
+    else:
+        obs_type = header.get('OBSTYPE')
+        if obs_type == 'dark':
+            result = -0.001388
     return result
 
 
@@ -334,24 +346,39 @@ def get_position_function_cd12(header):
     if artifact_product_type is ProductType.SCIENCE:
         data_product_type = get_data_product_type(header)
         if data_product_type == DataProductType.SPECTRUM:
-            naxis1 = _get_naxis1(header)
-            if naxis1 is not None:
-                result = mc.to_float(naxis1) / 2.0
+            result = 0.0
+            # naxis1 = _get_naxis1(header)
+            # if naxis1 is None:
+            #     result = 0.0
+            # else:
+            #     result = mc.to_float(naxis1) / 2.0
         else:
+            result = 0.0
+    else:
+        obs_type = header.get('OBSTYPE')
+        if obs_type == 'dark':
             result = 0.0
     return result
 
 
 def get_position_function_cd21(header):
+    logging.error('called')
     result = None
     artifact_product_type = get_artifact_product_type(header)
     if artifact_product_type is ProductType.SCIENCE:
         data_product_type = get_data_product_type(header)
         if data_product_type == DataProductType.SPECTRUM:
-            naxis2 = _get_naxis2(header)
-            if naxis2 is not None:
-                result = mc.to_float(naxis2) / 2.0
+            result = 0.0
+            # naxis2 = _get_naxis2(header)
+            # if naxis2 is None:
+            #     result = 0.0
+            # else:
+            #     result = mc.to_float(naxis2) / 2.0
         else:
+            result = 0.0
+    else:
+        obs_type = header.get('OBSTYPE')
+        if obs_type == 'dark':
             result = 0.0
     return result
 
@@ -362,7 +389,7 @@ def get_position_function_cd22(header):
     if artifact_product_type is ProductType.SCIENCE:
         data_product_type = get_data_product_type(header)
         if data_product_type == DataProductType.SPECTRUM:
-            # I've set entrance aperture to a fixed 5" by 5" because of lack
+            # DB - set entrance aperture to a fixed 5" by 5" because of lack
             # of detailed information
             result = 0.001388
         else:
@@ -373,6 +400,28 @@ def get_position_function_cd22(header):
                     pixsize is not None and
                     xbin is not None):
                 result = platescale * pixsize * xbin / 3600000.0
+    else:
+        obs_type = header.get('OBSTYPE')
+        if obs_type == 'dark':
+            result = 0.001388
+    return result
+
+
+def get_position_function_dimension_naxis1(header):
+    data_product_type = get_data_product_type(header)
+    if data_product_type == DataProductType.SPECTRUM:
+        result = 1
+    else:
+        result = header.get('NAXIS1')
+    return result
+
+
+def get_position_function_dimension_naxis2(header):
+    data_product_type = get_data_product_type(header)
+    if data_product_type == DataProductType.SPECTRUM:
+        result = 1
+    else:
+        result = header.get('NAXIS2')
     return result
 
 
@@ -461,8 +510,8 @@ def _get_position(header):
     if header.get('EQUINOX') is None:
         return None, None
     else:
-        ra = header.get('RA')
-        dec = header.get('DEC')
+        ra = header.get('RA', 0)
+        dec = header.get('DEC', 0)
         equinox = 'J{}'.format(header.get('EQUINOX'))
         fk5 = FK5(equinox=equinox)
         coord = SkyCoord(
@@ -561,6 +610,10 @@ def accumulate_bp(bp, uri):
     bp.set('Chunk.position.axis.axis2.ctype', 'DEC--TAN')
     bp.set('Chunk.position.axis.axis1.cunit', 'deg')
     bp.set('Chunk.position.axis.axis2.cunit', 'deg')
+    bp.set('Chunk.position.axis.function.dimension.naxis1',
+           'get_position_function_dimension_naxis1(header)')
+    bp.set('Chunk.position.axis.function.dimension.naxis2',
+           'get_position_function_dimension_naxis2(header)')
     bp.set('Chunk.position.axis.function.refCoord.coord1.pix',
            'get_position_function_coord1_pix(header)')
     bp.set('Chunk.position.axis.function.refCoord.coord1.val',
@@ -603,6 +656,7 @@ def update(observation, **kwargs):
     # correct the *_axis values
     for plane in observation.planes.values():
         if plane.data_product_type == DataProductType.SPECTRUM:
+            logging.error('spectrum')
             for artifact in plane.artifacts.values():
                 for part in artifact.parts.values():
                     for chunk in part.chunks:
@@ -610,17 +664,24 @@ def update(observation, **kwargs):
                         chunk.time_axis = 5
                         chunk.energy_axis = 1
                         if artifact.product_type == ProductType.SCIENCE:
+                            logging.error('science')
                             chunk.position_axis_1 = 3
                             chunk.position_axis_2 = 4
                         else:
-                            chunk.position_axis_1 = None
-                            chunk.position_axis_2 = None
-                            chunk.position = None
+                            logging.error('not science {}'.format(artifact.product_type))
+                            if observation.type == 'dark':
+                                chunk.position_axis_1 = 3
+                                chunk.position_axis_2 = 4
+                            else:
+                                chunk.position_axis_1 = None
+                                chunk.position_axis_2 = None
+                                chunk.position = None
                             # no energy for calibration?
                             if observation.type not in ['flat', 'comparison']:
                                 chunk.energy_axis = None
                                 chunk.energy = None
         else:  # DataProductType.IMAGE
+            logging.error('image')
             for artifact in plane.artifacts.values():
                 for part in artifact.parts.values():
                     for chunk in part.chunks:
