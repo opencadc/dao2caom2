@@ -106,8 +106,17 @@ class DAOName(ec.StorageName):
 
     def __init__(self, obs_id=None, fname_on_disk=None, file_name=None):
         self.fname_in_ad = file_name
+        if obs_id is None:
+            obs_id = DAOName.get_obs_id(file_name)
+            file_id = ec.StorageName.remove_extensions(file_name)
+        else:
+            file_id = obs_id
         super(DAOName, self).__init__(
             obs_id, COLLECTION, DAOName.DAO_NAME_PATTERN, fname_on_disk)
+        self._file_id = file_id
+        logging.error('obs id {} file name {} file id {}'.format(self._obs_id,
+                                                                 self.file_name,
+                                                                 file_id))
 
     def is_valid(self):
         return True
@@ -130,6 +139,18 @@ class DAOName(ec.StorageName):
         if re.match('dao_[r]\\d{3}_\\d{4}_\\d{6}', file_id):
             result = True
         return result
+
+    @staticmethod
+    def get_obs_id(file_name):
+        # observation ID differs from the file ID for processed data, except for
+        # composite processed observations (master biases and flats)
+        file_id = ec.StorageName.remove_extensions(file_name)
+        logging.error('file_id is {}'.format(file_id))
+        if re.match('dao_[cr]\\d{3}_\\d{4}_\\d{6}_[aev]', file_id):
+            obsID = file_id[0:-2]
+        else:
+            obsID = file_id
+        return obsID
 
 
 def get_artifact_product_type(header):
@@ -158,17 +179,24 @@ def get_data_product_type(header):
     return data_product_type
 
 
-def get_energy_function_naxis(header):
+def get_energy_function_naxis(parameters):
+    uri = parameters.get('uri')
+    header = parameters.get('header')
     naxis = 1
     data_product_type = get_data_product_type(header)
     if data_product_type == DataProductType.SPECTRUM:
-        dispaxis = _get_dispaxis(header)
-        if dispaxis == 1:
-            naxis = header.get('NAXIS1')
-        elif dispaxis == 2:
-            naxis = header.get('NAXIS2')
+        if DAOName.is_processed(uri):
+            naxis = _get_naxis1(header)
         else:
-            raise mc.CadcException('Could not find dispaxis for {}'.format('TODO'))
+            dispaxis = _get_dispaxis(header)
+            logging.error('dispaxis in get energy function {}'.format(dispaxis))
+            if dispaxis == 1:
+                naxis = _get_naxis1(header)
+            elif dispaxis == 2:
+                naxis = _get_naxis2(header)
+            else:
+                raise mc.CadcException(
+                    'Could not find dispaxis for {}'.format('TODO'))
     return naxis
 
 
@@ -570,6 +598,7 @@ def accumulate_bp(bp, uri):
     bp.set('Observation.intent', 'get_obs_intent(header)')
     bp.clear('Observation.metaRelease')
     bp.add_fits_attribute('Observation.metaRelease',  'RELEASE')
+    bp.add_fits_attribute('Observation.metaRelease',  'DATE-OBS')
 
     bp.set('Observation.telescope.name',  'get_telescope_name(header)')
     bp.set('Observation.telescope.geoLocationX',  'get_geo_x(header)')
@@ -594,12 +623,20 @@ def accumulate_bp(bp, uri):
 
     bp.set('Plane.dataProductType', 'get_data_product_type(header)')
     bp.set('Plane.calibrationLevel', 'get_calibration_level(parameters)')
+    bp.clear('Plane.metaRelease')
+    bp.add_fits_attribute('Plane.metaRelease',  'DATE-OBS')
 
     bp.set('Plane.provenance.project', 'DAO Science Archive')
-    bp.set('Plane.provenance.name', 'DAO unprocessed data')
+    bp.clear('Plane.provenance.name')
+    bp.add_fits_attribute('Plane.provenance.name', 'PROCNAME')
+    bp.set_default('Plane.provenance.name', 'DAO unprocessed data')
+    # bp.set('Plane.provenance.name', 'DAO unprocessed data')
     bp.set('Plane.provenance.producer', 'NRC Herzberg')
     bp.set('Plane.provenance.reference',
            'https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/dao/')
+    bp.clear('Plane.provenance.version')
+    bp.add_fits_attribute('Plane.provenance.version', 'PROCVERS')
+    bp.set_default('Plane.provenance.version', None)
 
     bp.set('Artifact.productType', 'get_artifact_product_type(header)')
 
@@ -622,7 +659,7 @@ def accumulate_bp(bp, uri):
     bp.set('Chunk.energy.axis.function.delta',
            'get_energy_function_delta(header)')
     bp.set('Chunk.energy.axis.function.naxis',
-           'get_energy_function_naxis(header)')
+           'get_energy_function_naxis(parameters)')
     bp.set('Chunk.energy.axis.function.refCoord.pix',
            'get_energy_function_pix(header)')
     bp.clear('Chunk.energy.axis.function.refCoord.val')
@@ -667,8 +704,9 @@ def accumulate_bp(bp, uri):
 
 
 def update(observation, **kwargs):
-    """Called to fill multiple CAOM model elements and/or attributes, must
-    have this signature for import_module loading and execution.
+    """Called to fill multiple CAOM model elements and/or attributes (an n:n
+    relationship between TDM attributes and CAOM attributes). Must have this
+    signature for import_module loading and execution.
 
     :param observation A CAOM Observation model instance.
     :param **kwargs Everything else."""
@@ -685,8 +723,10 @@ def update(observation, **kwargs):
     # correct the *_axis values
     for plane in observation.planes.values():
         if plane.data_product_type == DataProductType.SPECTRUM:
-            logging.error('spectrum')
             for artifact in plane.artifacts.values():
+
+                # provenance inputs
+                _update_provenance(plane, artifact, headers)
                 for part in artifact.parts.values():
                     for chunk in part.chunks:
                         chunk.observable_axis = 2
@@ -726,6 +766,10 @@ def update(observation, **kwargs):
     return observation
 
 
+def _update_provenance(plane, artifact, headers):
+    pass
+    # if DAOName.is_processed(artifact.uri):
+    #     cc.update_plane_provenance(plane, headers,)
 # def update_chunk_position(chunk, headers):
 #     naxis1 = headers[0].get('NAXIS1')
 #     naxis2 = headers[0].get('NAXIS2')
@@ -763,18 +807,18 @@ def _build_blueprints(uri):
 
 
 def _get_uri(args):
-    if args.observation:
-        result = DAOName(obs_id=args.observation[1]).file_uri
+    if args.lineage:
+        ignore, uri = mc.decompose_lineage(args.lineage[0])
     elif args.local:
         obs_id = ec.StorageName.remove_extensions(
             os.path.basename(args.local[0]))
-        result = DAOName(obs_id=obs_id).file_uri
-    elif args.lineage:
-        result = args.lineage[0].split('/', 1)[1]
+        uri = DAOName(obs_id=obs_id).file_uri
+    elif args.observation:
+        uri = DAOName(obs_id=args.observation[1]).file_uri
     else:
         raise mc.CadcException(
             'Could not define uri from these args {}'.format(args))
-    return result
+    return uri
 
 
 def main_app():
