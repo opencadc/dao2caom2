@@ -70,23 +70,22 @@ import logging
 import pytest
 
 from dao2caom2 import main_app, APPLICATION, COLLECTION, DAOName
-from caom2.diff import get_differences
 from caom2pipe import manage_composable as mc
 
 import os
 import sys
 
 from mock import patch
+import test_main_app
 
-pytest.main(args=['-s', os.path.abspath(__file__)])
-THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-TEST_DATA_DIR = os.path.join(THIS_DIR, 'data')
-PLUGIN = os.path.join(os.path.dirname(THIS_DIR), 'main_app.py')
+# THIS_DIR = os.path.dirname(os.path.realpath(__file__))
+# TEST_DATA_DIR = os.path.join(THIS_DIR, 'data')
+# PLUGIN = os.path.join(os.path.dirname(THIS_DIR), 'main_app.py')
 
 # structured by observation id, list of file ids that make up a multi-plane
 # observation
 DIR_NAME = 'processed'
-LOOKUP = {'dao_c122_2007_000882': ['dao_c122_2007_000882_v']
+LOOKUP = { # 'dao_c122_2007_000882': ['dao_c122_2007_000882_v']
           }
 
 
@@ -95,60 +94,54 @@ def pytest_generate_tests(metafunc):
     metafunc.parametrize('test_name', obs_id_list)
 
 
-def test_multi_plane(test_name):
-    dao_name = DAOName(file_name='{}.fits.header'.format(LOOKUP[test_name][0]))
+@patch('caom2utils.fits2caom2.CadcDataClient')
+def test_multi_plane(data_client_mock, test_name):
+    dao_name = DAOName(file_name=f'{LOOKUP[test_name][0]}.fits.header')
     lineage = _get_lineage(dao_name.obs_id)
-    actual_fqn = '{}/{}/{}.actual.xml'.format(
-        TEST_DATA_DIR, DIR_NAME, dao_name.obs_id)
+    expected_fqn = f'{test_main_app.TEST_DATA_DIR}/{DIR_NAME}/' \
+                   f'{dao_name.obs_id}.expected.xml'
+    actual_fqn = f'{test_main_app.TEST_DATA_DIR}/{DIR_NAME}/' \
+                 f'{dao_name.obs_id}.actual.xml'
 
     local = _get_local(test_name)
-    plugin = PLUGIN
+    plugin = test_main_app.PLUGIN
 
-    expected_fqn = '{}/{}/{}.expected.xml'.format(
-        TEST_DATA_DIR, DIR_NAME, dao_name.obs_id)
-    expected = mc.read_obs_from_file(expected_fqn)
+    data_client_mock.return_value.get_file_info.side_effect = \
+        test_main_app._get_file_info
 
-    with patch('caom2utils.fits2caom2.CadcDataClient') as data_client_mock:
-        def gfi(archive, file_id):
-            fid = mc.StorageName.remove_extensions(file_id)
-            temp = expected.planes[fid].artifacts[
-                'ad:{}/{}'.format(archive, file_id)]
-            return {'size': temp.content_length,
-                    'md5sum': temp.content_checksum.uri,
-                    'type': temp.content_type}
+    if os.path.exists(actual_fqn):
+        os.remove(actual_fqn)
 
-        data_client_mock.return_value.get_file_info.side_effect = gfi
+    sys.argv = \
+        (f'{APPLICATION} --quiet --no_validate --local {local} '
+         f'--observation {COLLECTION} {dao_name.obs_id} '
+         f'--plugin {plugin} --module {plugin} --out {actual_fqn} '
+         f'--lineage {lineage}').split()
+    print(sys.argv)
+    try:
+        main_app.to_caom2()
+    except Exception as e:
+        import logging
+        import traceback
+        logging.error(traceback.format_exc())
 
-        if os.path.exists(actual_fqn):
-            os.remove(actual_fqn)
-
-        sys.argv = \
-            ('{} --quiet --no_validate --local {} --observation {} {} '
-             '--plugin {} --module {} --out {} --lineage {}'.
-             format(APPLICATION, local, COLLECTION, dao_name.obs_id, plugin,
-                    plugin, actual_fqn, lineage)).split()
-        print(sys.argv)
-        main_app()
-        actual = mc.read_obs_from_file(actual_fqn)
-        result = get_differences(expected, actual, 'Observation')
-        if result:
-            msg = 'Differences found obs id {} \n{}'.format(
-                expected.observation_id, '\n'.join([r for r in result]))
-            raise AssertionError(msg)
-        # assert False  # cause I want to see logging messages
+    compare_result = mc.compare_observations(actual_fqn, expected_fqn)
+    if compare_result is not None:
+        raise AssertionError(compare_result)
+    # assert False  # cause I want to see logging messages
 
 
 def _get_lineage(obs_id):
     result = ''
     for ii in LOOKUP[obs_id]:
-        fits = mc.get_lineage(COLLECTION, ii, '{}.fits.gz'.format(ii))
-        result = '{} {}'.format(result, fits)
+        fits = mc.get_lineage(COLLECTION, ii, f'{ii}.fits.gz')
+        result = f'{result} {fits}'
     return result
 
 
 def _get_local(obs_id):
     result = ''
     for ii in LOOKUP[obs_id]:
-        result = '{} {}/{}/{}.fits.header'.format(result, TEST_DATA_DIR,
-                                                  DIR_NAME, ii)
+        result = f'{result} {test_main_app.TEST_DATA_DIR}/{DIR_NAME}/' \
+                 f'{ii}.fits.header'
     return result

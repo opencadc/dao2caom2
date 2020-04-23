@@ -66,10 +66,8 @@
 #
 # ***********************************************************************
 #
-import pytest
 
 from dao2caom2 import main_app, APPLICATION, COLLECTION, DAOName
-from caom2.diff import get_differences
 from caom2pipe import manage_composable as mc
 
 from mock import patch
@@ -90,37 +88,33 @@ def pytest_generate_tests(metafunc):
     metafunc.parametrize('test_name', files)
 
 
-def test_main_app(test_name):
+@patch('caom2utils.fits2caom2.CadcDataClient')
+def test_main_app(data_client_mock, test_name):
+    data_client_mock.return_value.get_file_info.side_effect = _get_file_info
     basename = os.path.basename(test_name)
     dao_name = DAOName(obs_id=mc.StorageName.remove_extensions(basename))
 
-    obs_path = '{}/{}.expected.xml'.format(TEST_DATA_DIR, dao_name.obs_id)
-    expected = mc.read_obs_from_file(obs_path)
+    obs_path = f'{TEST_DATA_DIR}/{dao_name.obs_id}.expected.xml'
+    output_file = f'{TEST_DATA_DIR}/{dao_name.obs_id}.actual.xml'
 
-    output_file = '{}/{}.actual.xml'.format(TEST_DATA_DIR, dao_name.obs_id)
+    sys.argv = \
+        (f'{APPLICATION} --debug --no_validate --local {test_name} '
+         f'--observation {COLLECTION} {dao_name.obs_id} -o {output_file} '
+         f'--plugin {PLUGIN} --module {PLUGIN} --lineage '
+         f'{dao_name.lineage}').split()
+    print(sys.argv)
+    try:
+        main_app.to_caom2()
+    except Exception as e:
+        import logging
+        import traceback
+        logging.error(traceback.format_exc())
 
-    with patch('caom2utils.fits2caom2.CadcDataClient') as data_client_mock:
-        def gfi(archive, file_id):
-            temp = expected.planes[dao_name.obs_id].artifacts[
-                'ad:{}/{}'.format(archive, file_id)]
-            return {'size': temp.content_length,
-                    'md5sum': temp.content_checksum.uri,
-                    'type': temp.content_type}
+    compare_result = mc.compare_observations(output_file, obs_path)
+    if compare_result is not None:
+        raise AssertionError(compare_result)
+    # assert False  # cause I want to see logging messages
 
-        data_client_mock.return_value.get_file_info.side_effect = gfi
 
-        sys.argv = \
-            ('{} --debug --no_validate --local {} --observation {} {} -o {} '
-             '--plugin {} --module {} --lineage {}'.
-             format(APPLICATION, test_name, COLLECTION, dao_name.obs_id,
-                    output_file, PLUGIN, PLUGIN, dao_name.lineage)).split()
-        print(sys.argv)
-        main_app()
-        actual = mc.read_obs_from_file(output_file)
-        result = get_differences(expected, actual, 'Observation')
-        if result:
-            msg = 'Differences found in observation {}\n{}'. \
-                format(expected.observation_id, '\n'.join(
-                [r for r in result]))
-            raise AssertionError(msg)
-        # assert False  # cause I want to see logging messages
+def _get_file_info(archive, file_id):
+    return {'type': 'application/fits'}

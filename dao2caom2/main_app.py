@@ -85,7 +85,8 @@ from caom2pipe import caom_composable as cc
 from caom2pipe import manage_composable as mc
 
 
-__all__ = ['main_app', 'update', 'DAOName', 'COLLECTION', 'APPLICATION']
+__all__ = ['dao_main_app', 'update', 'DAOName', 'COLLECTION', 'APPLICATION',
+           'to_caom2']
 
 
 APPLICATION = 'dao2caom2'
@@ -113,9 +114,12 @@ class DAOName(mc.StorageName):
         super(DAOName, self).__init__(
             obs_id, COLLECTION, DAOName.DAO_NAME_PATTERN, fname_on_disk)
         self._file_id = file_id
-        logging.error('obs id {} file name {} file id {}'.format(self._obs_id,
-                                                                 self.file_name,
-                                                                 file_id))
+        self._logger = logging.getLogger(__name__)
+        self._logger.error(self)
+
+    def __str__(self):
+        return f'obs id {self._obs_id} file name {self.file_name} ' \
+               f'file id {self._file_id}'
 
     def is_valid(self):
         return True
@@ -141,10 +145,10 @@ class DAOName(mc.StorageName):
 
     @staticmethod
     def get_obs_id(file_name):
-        # observation ID differs from the file ID for processed data, except for
-        # composite processed observations (master biases and flats)
+        # observation ID differs from the file ID for processed data, except
+        # for composite processed observations (master biases and flats)
         file_id = mc.StorageName.remove_extensions(file_name)
-        logging.error('file_id is {}'.format(file_id))
+        logging.error(f'file_id is {file_id}')
         if re.match('dao_[cr]\\d{3}_\\d{4}_\\d{6}_[aev]', file_id):
             obsID = file_id[0:-2]
         else:
@@ -188,14 +192,14 @@ def get_energy_function_naxis(parameters):
             naxis = _get_naxis1(header)
         else:
             dispaxis = _get_dispaxis(header)
-            logging.error('dispaxis in get energy function {}'.format(dispaxis))
+            logging.error(f'dispaxis in get energy function {dispaxis}')
             if dispaxis == 1:
                 naxis = _get_naxis1(header)
             elif dispaxis == 2:
                 naxis = _get_naxis2(header)
             else:
                 raise mc.CadcException(
-                    'Could not find dispaxis for {}'.format('TODO'))
+                    f'Could not find dispaxis for \'TODO\'')
     return naxis
 
 
@@ -209,8 +213,8 @@ def get_energy_function_delta(header):
             pass
         else:
             if cdelt is None:
-                logging.error('hows the wavelength? xbin {} ybin {}'.format(header.get('XBIN'),
-                                                                            header.get('YBIN')))
+                logging.error(f'hows the wavelength? xbin {header.get("XBIN")} '
+                              f'ybin {header.get("YBIN")}')
                 dispersion = header.get('DISPERSI')
                 dispaxis = _get_dispaxis(header)
                 if dispaxis == 1:
@@ -218,7 +222,8 @@ def get_energy_function_delta(header):
                 else:
                     xbin = mc.to_float(header.get('YBIN'))
                 cdelt = dispersion * 15.0 * xbin / 1000.0
-                logging.error('cdelt is {} dispersion is {} xbin is {}'.format(cdelt, dispersion, xbin))
+                logging.error(f'cdelt is {cdelt} dispersion is '
+                              f'{dispersion} xbin is {xbin}')
     else:
         cdelt = header.get('BANDPASS')
     return cdelt
@@ -260,10 +265,10 @@ def get_energy_resolving_power(header):
             # assume 2.5 pixel wide resolution element
             if band_pass is None:
                 cdelt = get_energy_function_delta(header)
-                logging.error('no bandpadd cdelt {} wavln {}'.format(cdelt, wavelength))
+                logging.error(f'no bandpadd cdelt {cdelt} wavln {wavelength}')
                 resolving_power = wavelength / (2.5 * cdelt)
             else:
-                logging.error('bandpass {} wavln {}'.format(band_pass, wavelength))
+                logging.error(f'bandpass {band_pass} wavln {wavelength}')
                 resolving_power = wavelength / (2.5 * band_pass)
     return resolving_power
 
@@ -491,7 +496,7 @@ def get_target_type(header):
 def get_telescope_name(header):
     telescope = _get_telescope(header)
     observatory = header.get('OBSERVAT')
-    return '{} {}'.format(observatory, telescope)
+    return f'{observatory} {telescope}'
 
 
 def get_time_axis_delta(header):
@@ -525,7 +530,7 @@ def _get_dispaxis(header):
     dispaxis = None
     if get_data_product_type(header) == DataProductType.SPECTRUM:
         dispaxis = header.get('DISPAXIS')
-        logging.error('dispaxis from header is {}'.format(dispaxis))
+        logging.error(f'dispaxis from header is {dispaxis}')
         if dispaxis is None:
             telescope = get_telescope_name(header)
             if telescope == 'DAO 1.2-m':
@@ -545,9 +550,8 @@ def _get_geo(header):
     elif telescope == '1.8-m':
         return ac.get_location(48.51967, -123.41833, 232.0)
     else:
-        raise mc.CadcException(
-            'Unexpected telescope value of {} for {}'.format(
-                telescope, header.get('DAOPRGID')))
+        raise mc.CadcException(f'Unexpected telescope value of {telescope} for '
+                               f'{header.get("DAOPRGID")}')
 
 
 def _get_naxis1(header):
@@ -568,10 +572,9 @@ def _get_position(header):
     else:
         ra = header.get('RA', 0)
         dec = header.get('DEC', 0)
-        equinox = 'J{}'.format(header.get('EQUINOX'))
+        equinox = f'J{header.get("EQUINOX")}'
         fk5 = FK5(equinox=equinox)
-        coord = SkyCoord(
-            '{} {}'.format(ra, dec), unit=(u.hourangle, u.deg), frame=fk5)
+        coord = SkyCoord(f'{ra} {dec}', unit=(u.hourangle, u.deg), frame=fk5)
         j2000 = FK5(equinox='J2000')
         result = coord.transform_to(j2000)
         return result.ra.degree, result.dec.degree
@@ -738,8 +741,8 @@ def update(observation, **kwargs):
                             chunk.position_axis_1 = 3
                             chunk.position_axis_2 = 4
                         else:
-                            logging.error('not science {} type {}'.format(artifact.product_type,
-                                                                          observation.type))
+                            logging.error(f'not science {artifact.product_type}'
+                                          f' type {observation.type}')
                             if observation.type == 'dark':
                                 chunk.position_axis_1 = 3
                                 chunk.position_axis_2 = 4
@@ -815,21 +818,25 @@ def _get_uri(args):
     elif args.observation:
         uri = DAOName(obs_id=args.observation[1]).file_uri
     else:
-        raise mc.CadcException(
-            'Could not define uri from these args {}'.format(args))
+        raise mc.CadcException(f'Could not define uri from these args {args}')
     return uri
 
 
-def main_app():
+def to_caom2():
+    args = get_gen_proc_arg_parser().parse_args()
+    uri = _get_uri(args)
+    blueprints = _build_blueprints(uri)
+    return gen_proc(args, blueprints)
+
+
+def dao_main_app():
     args = get_gen_proc_arg_parser().parse_args()
     try:
-        uri = _get_uri(args)
-        blueprints = _build_blueprints(uri)
-        gen_proc(args, blueprints)
+        result = to_caom2()
+        logging.debug(f'Done {APPLICATION} processing.')
+        sys.exit(result)
     except Exception as e:
-        logging.error('Failed {} execution for {}.'.format(APPLICATION, args))
+        logging.error(f'Failed {APPLICATION} execution for {args}.')
         tb = traceback.format_exc()
         logging.error(tb)
         sys.exit(-1)
-
-    logging.debug('Done {} processing.'.format(APPLICATION))
