@@ -42,7 +42,6 @@
           <caom2:productType>science</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>
-          <caom2:contentLength>6111</caom2:contentLength>
           <caom2:contentChecksum>md5:d7e04b40ff0b1a23f0b5ea76db0cb585</caom2:contentChecksum>
           <caom2:parts>
             <caom2:part caom2:id="00000000-0000-0000-3261-01641e755d6a" caom2:lastModified="2018-06-20T18:29:39.363" caom2:maxLastModified="2018-06-20T18:29:39.363" caom2:metaChecksum="md5:48e0a0d5550e0b73ab3afa505286f8bc" caom2:accMetaChecksum="md5:a690f2028c22a78e2900377feedd6c2b">

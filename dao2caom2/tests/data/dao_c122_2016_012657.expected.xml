@@ -50,7 +50,6 @@
           <caom2:productType>calibration</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>
-          <caom2:contentLength>237287</caom2:contentLength>
           <caom2:contentChecksum>md5:5a9847d1e13cda0820f186e0ed195894</caom2:contentChecksum>
           <caom2:parts>
             <caom2:part caom2:id="00000000-0000-0000-8223-0158b7f517fe" caom2:lastModified="2016-12-01T01:17:27.507" caom2:maxLastModified="2016-12-01T01:17:27.507" caom2:metaChecksum="md5:84e88a9abde5fec3045b739550a6348b" caom2:accMetaChecksum="md5:ea35c056c94e02e833dd74d9fb7a25cc">
