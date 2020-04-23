@@ -82,7 +82,6 @@ from caom2 import ObservationIntentType, CalibrationLevel
 from caom2utils import ObsBlueprint, get_gen_proc_arg_parser, gen_proc
 from caom2pipe import astro_composable as ac
 from caom2pipe import caom_composable as cc
-from caom2pipe import execute_composable as ec
 from caom2pipe import manage_composable as mc
 
 
@@ -93,7 +92,7 @@ APPLICATION = 'dao2caom2'
 COLLECTION = 'DAO'
 
 
-class DAOName(ec.StorageName):
+class DAOName(mc.StorageName):
     """Naming rules:
     - support mixed-case file name storage, and mixed-case obs id values
     - support uncompressed raw files and compressed product files in storage
@@ -108,7 +107,7 @@ class DAOName(ec.StorageName):
         self.fname_in_ad = file_name
         if obs_id is None:
             obs_id = DAOName.get_obs_id(file_name)
-            file_id = ec.StorageName.remove_extensions(file_name)
+            file_id = mc.StorageName.remove_extensions(file_name)
         else:
             file_id = obs_id
         super(DAOName, self).__init__(
@@ -124,7 +123,7 @@ class DAOName(ec.StorageName):
     @staticmethod
     def is_processed(entry):
         # the entry is a uri
-        file_id = ec.CaomName(entry).file_id
+        file_id = mc.CaomName(entry).file_id
         result = False
         if (re.match('dao_[cr]\\d{3}_\\d{4}_\\d{6}_[aevBF]', file_id) or
                 re.match('dao_[p]\\d{3}_\\d{6}(u|v|y|r|i|)', file_id)):
@@ -134,7 +133,7 @@ class DAOName(ec.StorageName):
     @staticmethod
     def is_unprocessed_reticon(entry):
         # the entry is a uri
-        file_id = ec.CaomName(entry).file_id
+        file_id = mc.CaomName(entry).file_id
         result = False
         if re.match('dao_[r]\\d{3}_\\d{4}_\\d{6}', file_id):
             result = True
@@ -144,7 +143,7 @@ class DAOName(ec.StorageName):
     def get_obs_id(file_name):
         # observation ID differs from the file ID for processed data, except for
         # composite processed observations (master biases and flats)
-        file_id = ec.StorageName.remove_extensions(file_name)
+        file_id = mc.StorageName.remove_extensions(file_name)
         logging.error('file_id is {}'.format(file_id))
         if re.match('dao_[cr]\\d{3}_\\d{4}_\\d{6}_[aev]', file_id):
             obsID = file_id[0:-2]
@@ -810,7 +809,7 @@ def _get_uri(args):
     if args.lineage:
         ignore, uri = mc.decompose_lineage(args.lineage[0])
     elif args.local:
-        obs_id = ec.StorageName.remove_extensions(
+        obs_id = mc.StorageName.remove_extensions(
             os.path.basename(args.local[0]))
         uri = DAOName(obs_id=obs_id).file_uri
     elif args.observation:

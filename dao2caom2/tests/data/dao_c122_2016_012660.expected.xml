@@ -2,7 +2,7 @@
 <caom2:Observation xmlns:caom2="http://www.opencadc.org/caom2/xml/v2.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="caom2:SimpleObservation" caom2:id="00000000-0000-0000-0e22-0158b7f924c7" caom2:lastModified="2017-04-05T23:54:49.967" caom2:maxLastModified="2017-11-10T18:52:42.053" caom2:metaChecksum="md5:372c9d53940fd9e79fab389947e4f6d0" caom2:accMetaChecksum="md5:1f4938059354f40a2daed3bf8dc54530">
   <caom2:collection>DAO</caom2:collection>
   <caom2:observationID>dao_c122_2016_012660</caom2:observationID>
-  <caom2:metaRelease>2016-12-01T01:11:47.000</caom2:metaRelease>
+  <caom2:metaRelease>2016-12-01T01:11:25.000</caom2:metaRelease>
   <caom2:algorithm>
     <caom2:name>exposure</caom2:name>
   </caom2:algorithm>
@@ -34,7 +34,7 @@
   <caom2:planes>
     <caom2:plane caom2:id="00000000-0000-0000-0e22-0158b7f92ed1" caom2:lastModified="2016-12-01T01:21:55.007" caom2:maxLastModified="2017-11-10T18:52:42.053" caom2:metaChecksum="md5:89c60e41f7dd742999a6e48dd017a3b9" caom2:accMetaChecksum="md5:1a47441fb1b612f8e4066d9facaf20a7">
       <caom2:productID>dao_c122_2016_012660</caom2:productID>
-      <caom2:metaRelease>2016-12-01T01:11:47.000</caom2:metaRelease>
+      <caom2:metaRelease>2016-12-01T01:11:25.000</caom2:metaRelease>
       <caom2:dataRelease>2016-12-01T01:11:47.000</caom2:dataRelease>
       <caom2:dataProductType>spectrum</caom2:dataProductType>
       <caom2:calibrationLevel>1</caom2:calibrationLevel>

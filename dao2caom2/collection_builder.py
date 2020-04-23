@@ -3,7 +3,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2018.                            (c) 2018.
+#  (c) 2020.                            (c) 2020.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -65,62 +65,26 @@
 #  $Revision: 4 $
 #
 # ***********************************************************************
-#
 
 import logging
-import sys
-import traceback
-
-from caom2pipe import run_composable as rc
-from dao2caom2 import APPLICATION, collection_builder
+from caom2pipe import name_builder_composable as nbc
+from dao2caom2 import main_app
 
 
-meta_visitors = []
-data_visitors = []
+__all__ = ['DAOBuilder']
 
 
-def _run():
-    """
-    Uses a todo file to identify the work to be done.
+class DAOBuilder(nbc.StorageNameBuilder):
 
-    :return 0 if successful, -1 if there's any sort of failure. Return status
-        is used by airflow for task instance management and reporting.
-    """
-    builder = collection_builder.DAOBuilder()
-    return rc.run_by_todo(builder=builder, command_name=APPLICATION,
-                          meta_visitors=meta_visitors,
-                          data_visitors=data_visitors)
+    def __init__(self):
+        super(DAOBuilder, self).__init__()
+        self._logger = logging.getLogger(__name__)
 
+    def build(self, entry):
+        """
 
-def run():
-    """Wraps _run in exception handling, with sys.exit calls."""
-    try:
-        result = _run()
-        sys.exit(result)
-    except Exception as e:
-        logging.error(e)
-        tb = traceback.format_exc()
-        logging.debug(tb)
-        sys.exit(-1)
-
-
-def _run_state():
-    """Uses a state file with a timestamp to control which entries will be
-    processed.
-    """
-    builder = collection_builder.DAOBuilder()
-    return rc.run_by_state(builder=builder, command_name=APPLICATION,
-                           meta_visitors=meta_visitors,
-                           data_visitors=data_visitors)
-
-
-def run_state():
-    """Wraps _run_state in exception handling."""
-    try:
-        _run_state()
-        sys.exit(0)
-    except Exception as e:
-        logging.error(e)
-        tb = traceback.format_exc()
-        logging.debug(tb)
-        sys.exit(-1)
+        :param entry: an entry is a file name
+        :return:
+        """
+        self._logger.debug(f'Build a StorageName instance for {entry}.')
+        return main_app.DAOName(file_name=entry)

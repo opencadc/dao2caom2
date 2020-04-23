@@ -70,7 +70,6 @@ import pytest
 
 from dao2caom2 import main_app, APPLICATION, COLLECTION, DAOName
 from caom2.diff import get_differences
-from caom2pipe import execute_composable as ec
 from caom2pipe import manage_composable as mc
 
 from mock import patch
@@ -93,7 +92,7 @@ def pytest_generate_tests(metafunc):
 
 def test_main_app(test_name):
     basename = os.path.basename(test_name)
-    dao_name = DAOName(obs_id=ec.StorageName.remove_extensions(basename))
+    dao_name = DAOName(obs_id=mc.StorageName.remove_extensions(basename))
 
     obs_path = '{}/{}.expected.xml'.format(TEST_DATA_DIR, dao_name.obs_id)
     expected = mc.read_obs_from_file(obs_path)
@@ -111,7 +110,7 @@ def test_main_app(test_name):
         data_client_mock.return_value.get_file_info.side_effect = gfi
 
         sys.argv = \
-            ('{} --no_validate --local {} --observation {} {} -o {} '
+            ('{} --debug --no_validate --local {} --observation {} {} -o {} '
              '--plugin {} --module {} --lineage {}'.
              format(APPLICATION, test_name, COLLECTION, dao_name.obs_id,
                     output_file, PLUGIN, PLUGIN, dao_name.lineage)).split()
