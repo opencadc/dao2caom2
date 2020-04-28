@@ -85,7 +85,7 @@ import test_main_app
 # structured by observation id, list of file ids that make up a multi-plane
 # observation
 DIR_NAME = 'processed'
-LOOKUP = { # 'dao_c122_2007_000882': ['dao_c122_2007_000882_v']
+LOOKUP = {'dao_c122_2007_000882': ['dao_c122_2007_000882_v']
           }
 
 
@@ -96,7 +96,7 @@ def pytest_generate_tests(metafunc):
 
 @patch('caom2utils.fits2caom2.CadcDataClient')
 def test_multi_plane(data_client_mock, test_name):
-    dao_name = DAOName(file_name=f'{LOOKUP[test_name][0]}.fits.header')
+    dao_name = DAOName(file_name=f'{LOOKUP[test_name][0]}.fits')
     lineage = _get_lineage(dao_name.obs_id)
     expected_fqn = f'{test_main_app.TEST_DATA_DIR}/{DIR_NAME}/' \
                    f'{dao_name.obs_id}.expected.xml'

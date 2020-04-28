@@ -1,43 +1,39 @@
-FROM python:3.6-alpine
+FROM opencadc/astropy:3.8-slim
 
-RUN apk --no-cache add \
-    bash \
-    coreutils \
-    gcc \
-    git \
-    g++ \
-    libffi-dev \
-    libxml2-dev \
-    libxslt-dev \
-    make \
-    musl-dev \
-    openssl-dev
+RUN apt-get update
+RUN apt-get install -y \
+    build-essential \
+    git
 
-RUN pip install aenum && \
-    pip install astropy && \
-    pip install cadcdata && \
+RUN pip install cadcdata && \
     pip install cadctap && \
+    pip install caom2 && \
     pip install caom2repo && \
-    pip install funcsigs && \
-    pip install future && \
-    pip install numpy && \
+    pip install deprecated && \
+    pip install ftputils && \
+    pip install importlib-metadata && \
+    pip install pytz && \
     pip install PyYAML && \
     pip install spherical-geometry && \
-    pip install vos && \
-    pip install xml-compare
+    pip install vos
 
 WORKDIR /usr/src/app
 
-RUN git clone https://github.com/opencadc-metadata-curation/caom2tools.git && \
+ARG OPENCADC_BRANCH=master
+ARG OPENCADC_REPO=opencadc
+ARG OMC_REPO=opencadc-metadata-curation
+
+RUN git clone https://github.com/${OPENCADC_REPO}/caom2tools.git --branch ${OPENCADC_BRANCH} --single-branch && \
+    pip install ./caom2tools/caom2 && \
+    pip install ./caom2tools/caom2utils
+
+RUN git clone https://github.com/${OMC_REPO}/caom2tools.git && \
   cd caom2tools && git pull origin master && \
   pip install ./caom2utils && pip install ./caom2pipe
   
-RUN git clone https://github.com/opencadc-metadata-curation/blank2caom2.git && \
-  cp ./blank2caom2/scripts/configyml / && \
-  cp ./blank2caom2/scripts/docker-entrypointsh / && \
-  pip install ./blank2caom2
-
-RUN apk --no-cache del git
+RUN git clone https://github.com/${OMC_REPO}/dao2caom2.git && \
+  cp ./dao2caom2/scripts/config.yml / && \
+  cp ./dao2caom2/scripts/docker-entrypoint.sh / && \
+  pip install ./dao2caom2
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
-

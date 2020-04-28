@@ -76,84 +76,22 @@ import traceback
 
 from astropy.coordinates import SkyCoord, FK5
 import astropy.units as u
+from enum import Enum
 
 from caom2 import Observation, TargetType, DataProductType, ProductType
-from caom2 import ObservationIntentType, CalibrationLevel
+from caom2 import ObservationIntentType, CalibrationLevel, TypedSet, PlaneURI
+from caom2 import ObservationURI
 from caom2utils import ObsBlueprint, get_gen_proc_arg_parser, gen_proc
 from caom2pipe import astro_composable as ac
 from caom2pipe import caom_composable as cc
 from caom2pipe import manage_composable as mc
+from dao2caom2 import dao_name as dn
 
 
-__all__ = ['dao_main_app', 'update', 'DAOName', 'COLLECTION', 'APPLICATION',
-           'to_caom2']
+__all__ = ['dao_main_app', 'update', 'APPLICATION', 'to_caom2']
 
 
 APPLICATION = 'dao2caom2'
-COLLECTION = 'DAO'
-
-
-class DAOName(mc.StorageName):
-    """Naming rules:
-    - support mixed-case file name storage, and mixed-case obs id values
-    - support uncompressed raw files and compressed product files in storage
-    - uncompressed product files have an extension added to the input
-      names - lower case if there's a single input, upper case if there's
-      multiple inputs, as far as I can tell right now.
-    """
-
-    DAO_NAME_PATTERN = '*'
-
-    def __init__(self, obs_id=None, fname_on_disk=None, file_name=None):
-        self.fname_in_ad = file_name
-        if obs_id is None:
-            obs_id = DAOName.get_obs_id(file_name)
-            file_id = mc.StorageName.remove_extensions(file_name)
-        else:
-            file_id = obs_id
-        super(DAOName, self).__init__(
-            obs_id, COLLECTION, DAOName.DAO_NAME_PATTERN, fname_on_disk)
-        self._file_id = file_id
-        self._logger = logging.getLogger(__name__)
-        self._logger.error(self)
-
-    def __str__(self):
-        return f'obs id {self._obs_id} file name {self.file_name} ' \
-               f'file id {self._file_id}'
-
-    def is_valid(self):
-        return True
-
-    @staticmethod
-    def is_processed(entry):
-        # the entry is a uri
-        file_id = mc.CaomName(entry).file_id
-        result = False
-        if (re.match('dao_[cr]\\d{3}_\\d{4}_\\d{6}_[aevBF]', file_id) or
-                re.match('dao_[p]\\d{3}_\\d{6}(u|v|y|r|i|)', file_id)):
-            result = True
-        return result
-
-    @staticmethod
-    def is_unprocessed_reticon(entry):
-        # the entry is a uri
-        file_id = mc.CaomName(entry).file_id
-        result = False
-        if re.match('dao_[r]\\d{3}_\\d{4}_\\d{6}', file_id):
-            result = True
-        return result
-
-    @staticmethod
-    def get_obs_id(file_name):
-        # observation ID differs from the file ID for processed data, except
-        # for composite processed observations (master biases and flats)
-        file_id = mc.StorageName.remove_extensions(file_name)
-        logging.error(f'file_id is {file_id}')
-        if re.match('dao_[cr]\\d{3}_\\d{4}_\\d{6}_[aev]', file_id):
-            obsID = file_id[0:-2]
-        else:
-            obsID = file_id
-        return obsID
 
 
 def get_artifact_product_type(header):
@@ -168,7 +106,8 @@ def get_artifact_product_type(header):
 def get_calibration_level(parameters):
     uri = parameters.get('uri')
     result = CalibrationLevel.RAW_STANDARD
-    if DAOName.is_processed(uri):
+    logging.error(f'uri is {uri}')
+    if dn.DAOName.is_processed(uri):
         result = CalibrationLevel.CALIBRATED
     return result
 
@@ -182,13 +121,13 @@ def get_data_product_type(header):
     return data_product_type
 
 
-def get_energy_function_naxis(parameters):
+def get_energy_axis_function_naxis(parameters):
     uri = parameters.get('uri')
     header = parameters.get('header')
     naxis = 1
     data_product_type = get_data_product_type(header)
     if data_product_type == DataProductType.SPECTRUM:
-        if DAOName.is_processed(uri):
+        if dn.DAOName.is_processed(uri):
             naxis = _get_naxis1(header)
         else:
             dispaxis = _get_dispaxis(header)
@@ -203,74 +142,116 @@ def get_energy_function_naxis(parameters):
     return naxis
 
 
-def get_energy_function_delta(header):
+def get_energy_axis_function_delta(parameters):
+    uri = parameters.get('uri')
+    header = parameters.get('header')
     cdelt = 1.0
-    data_product_type = get_data_product_type(header)
-    if data_product_type == DataProductType.SPECTRUM:
-        wavelength = _get_wavelength(header)
-        cdelt = header.get('DELTA_WL')
-        if wavelength is None:
-            pass
-        else:
-            if cdelt is None:
-                logging.error(f'hows the wavelength? xbin {header.get("XBIN")} '
-                              f'ybin {header.get("YBIN")}')
-                dispersion = header.get('DISPERSI')
-                dispaxis = _get_dispaxis(header)
-                if dispaxis == 1:
-                    xbin = mc.to_float(header.get('XBIN'))
-                else:
-                    xbin = mc.to_float(header.get('YBIN'))
-                cdelt = dispersion * 15.0 * xbin / 1000.0
-                logging.error(f'cdelt is {cdelt} dispersion is '
-                              f'{dispersion} xbin is {xbin}')
+    execution_path = _get_execution_path(parameters)
+    if execution_path is ExecutionPath.SPECT_CALIBRATED:
+        cdelt = header.get('CDELT1')
+    # elif execution_path is ExecutionPath.SPECT_RAW:
+    #     cdelt = header.get('DELTA_WL')
     else:
-        cdelt = header.get('BANDPASS')
+        data_product_type = get_data_product_type(header)
+        if data_product_type == DataProductType.SPECTRUM:
+            wavelength = _get_wavelength(header)
+            cdelt = header.get('DELTA_WL')
+            if wavelength is None:
+                pass
+            else:
+                if cdelt is None:
+                    logging.error(f'hows the wavelength? xbin {header.get("XBIN")} '
+                                  f'ybin {header.get("YBIN")}')
+                    dispersion = header.get('DISPERSI')
+                    dispaxis = _get_dispaxis(header)
+                    if dispaxis == 1:
+                        xbin = mc.to_float(header.get('XBIN'))
+                    else:
+                        xbin = mc.to_float(header.get('YBIN'))
+                    cdelt = dispersion * 15.0 * xbin / 1000.0
+                    logging.error(f'cdelt is {cdelt} dispersion is '
+                                  f'{dispersion} xbin is {xbin}')
+        else:
+            cdelt = header.get('BANDPASS')
     return cdelt
 
 
-def get_energy_function_pix(header):
+def get_energy_axis_function_refcoord_pix(parameters):
+    header = parameters.get('header')
     crpix = 1.0
-    data_product_type = get_data_product_type(header)
-    if data_product_type == DataProductType.SPECTRUM:
-        wavelength = _get_wavelength(header)
-        if wavelength is None:
-            pass
-        else:
-            crpix = header.get('REFPIXEL')
-            if crpix is None:
-                temp = header.get('DATASEC')
-                if temp is not None:
-                    datasec = re.sub(r'(\[)(\d+:\d+,\d+:\d+)(\])', r'\g<2>', temp)
-                    (dx, dy) = datasec.split(',')
-                    (xl, xh) = dx.split(':')
-                    (yl, yh) = dy.split(':')
-                    dispaxis = _get_dispaxis(header)
-                    if dispaxis == 1:
-                        crpix = (int(xh) - int(xl)) / 2.0 + int(xl)
-                    else:
-                        crpix = (int(yh) - int(yl)) / 2.0 + int(yl)
+    execution_path = _get_execution_path(parameters)
+    if execution_path is ExecutionPath.SPECT_CALIBRATED:
+        crpix = header.get('CRPIX1')
+    else:
+        data_product_type = get_data_product_type(header)
+        if data_product_type == DataProductType.SPECTRUM:
+            wavelength = _get_wavelength(header)
+            if wavelength is None:
+                pass
+            else:
+                crpix = header.get('REFPIXEL')
+                if crpix is None:
+                    temp = header.get('DATASEC')
+                    if temp is not None:
+                        datasec = re.sub(r'(\[)(\d+:\d+,\d+:\d+)(\])', r'\g<2>', temp)
+                        (dx, dy) = datasec.split(',')
+                        (xl, xh) = dx.split(':')
+                        (yl, yh) = dy.split(':')
+                        dispaxis = _get_dispaxis(header)
+                        if dispaxis == 1:
+                            crpix = (int(xh) - int(xl)) / 2.0 + int(xl)
+                        else:
+                            crpix = (int(yh) - int(yl)) / 2.0 + int(yl)
+    logging.error(f'get_energy_axis_function_refcoord_pix {execution_path} {crpix}')
     return crpix
 
 
-def get_energy_resolving_power(header):
+def get_energy_axis_function_refcoord_val(parameters):
+    header = parameters.get('header')
+    execution_path = _get_execution_path(parameters)
+    result = None
+    if execution_path in [ExecutionPath.IMAGING, ExecutionPath.SPECT_RAW]:
+        result = header.get('WAVELENG')
+    elif execution_path is ExecutionPath.SPECT_CALIBRATED:
+        result = header.get('CRVAL1')
+    logging.error(f'get_energy_axis_function_refcoord val {result}')
+    return result
+
+
+def get_energy_resolving_power(parameters):
     resolving_power = None
-    wavelength = _get_wavelength(header)
-    if wavelength is not None:
-        band_pass = mc.to_float(header.get('BANDPASS'))
-        data_product_type = get_data_product_type(header)
-        if data_product_type == DataProductType.IMAGE:
-            resolving_power = wavelength / band_pass
-        else:
-            # assume 2.5 pixel wide resolution element
-            if band_pass is None:
-                cdelt = get_energy_function_delta(header)
-                logging.error(f'no bandpadd cdelt {cdelt} wavln {wavelength}')
-                resolving_power = wavelength / (2.5 * cdelt)
-            else:
-                logging.error(f'bandpass {band_pass} wavln {wavelength}')
-                resolving_power = wavelength / (2.5 * band_pass)
+    execution_path = _get_execution_path(parameters)
+    numerator = get_energy_axis_function_refcoord_val(parameters)
+    denominator = get_energy_axis_function_delta(parameters)
+    if numerator is not None and denominator is not None:
+        if execution_path is ExecutionPath.IMAGING:
+            resolving_power = numerator / denominator
+        elif execution_path in [ExecutionPath.SPECT_RAW,
+                                ExecutionPath.SPECT_CALIBRATED]:
+            resolving_power = numerator / (2.5 * denominator)
     return resolving_power
+
+
+class ExecutionPath(Enum):
+    IMAGING = 1,
+    SPECT_CALIBRATED = 2,
+    SPECT_RAW = 3
+
+
+def _get_execution_path(parameters):
+    uri = parameters.get('uri')
+    header = parameters.get('header')
+    obs_mode = _get_obs_mode(header)
+    obs_type = _get_obs_type(header)
+    if obs_mode == 'imaging':
+        result = ExecutionPath.IMAGING
+    else:
+        result = ExecutionPath.SPECT_RAW
+        if (dn.DAOName.is_processed(uri) and obs_type in ['object',
+                                                          'comparison']):
+            result = ExecutionPath.SPECT_CALIBRATED
+    logging.error(f'obs mode {obs_mode} obs type {obs_type} ep {result}')
+    return result
 
 
 def get_geo_x(header):
@@ -415,7 +396,6 @@ def get_position_function_cd12(header):
 
 
 def get_position_function_cd21(header):
-    logging.error('called')
     result = None
     artifact_product_type = get_artifact_product_type(header)
     if artifact_product_type is ProductType.SCIENCE:
@@ -530,11 +510,9 @@ def _get_dispaxis(header):
     dispaxis = None
     if get_data_product_type(header) == DataProductType.SPECTRUM:
         dispaxis = header.get('DISPAXIS')
-        logging.error(f'dispaxis from header is {dispaxis}')
         if dispaxis is None:
             telescope = get_telescope_name(header)
             if telescope == 'DAO 1.2-m':
-                logging.error('am I here? for dispaxis?')
                 dispaxis = 2
             else:
                 dispaxis = 1
@@ -562,22 +540,82 @@ def _get_naxis2(header):
     return header.get('NAXIS2')
 
 
+def _get_obs_mode(header):
+    """
+    1. OBSMODE keyword => 'imaging' vs 'spectroscopy'
+    2. File name pattern
+
+    All energy is CTYPE = WAVE, CUNIT = A(ngstrom)
+    File Name Pattern
+    all imaging:                       CRVAL    'WAVELENG'
+                                       CDELT    'BANDPASS'
+                                       CRPIX    1
+                                       RP       CRVAL / CDELT
+
+    processed photographic plate spectrum
+    dao_[p]\d{3}_\d{6}(u|v|y|r|i|):
+                                       CRVAL   'CRVAL1'
+                                       CDELT   'CDELT1'
+                                       CRPIX   'CRPIX1'
+                                       RP      CRVAL/(2.5*CDELT)
+
+    unprocessed DAO RETICON spectrum
+    dao_[r]\d{3}_\d{4}_\d{6}:
+                                       CRVAL   ''
+                                       CDELT   ''
+                                       CRPIX   ''
+                                       RP      ''
+
+    unprocessed DAO CCD spectrum
+    dao_[c]\d{3}_\d{4}_\d{6}:
+                                       CRVAL   'WAVELENG'
+                                       CDELT   'DELTA_WL'
+                                       CRPIX   'REFPIXEL'
+                                       RP      CRVAL/(2.5*CDELT)
+
+                                       If no 'WAVELENG' USE 'DATASEC'
+
+                                       CDELT   'DISPERSI' * 15.0 * xbin/1000.0
+                                       CRPIX   'DATASEC' + math
+
+    processed DAO spectrum
+    dao_[cr]\d{3}_\d{4}_\d{6}_[evBF], obs.type in ['object', 'comparison']:
+                                       CRVAL   'CRVAL1'
+                                       CDELT   'CDELT1'
+                                       CRPIX   'CRPIX1'
+                                       RP      CRVAL/(2.5*CDELT)
+
+    :param header:
+    :return:
+    """
+    obs_mode = header.get('OBSMODE')
+    result = 'imaging'
+    if '-slit' in obs_mode:
+        result = 'spectroscopy'
+    return result
+
+
 def _get_obs_type(header):
     return header.get('OBSTYPE')
 
 
 def _get_position(header):
-    if header.get('EQUINOX') is None:
-        return None, None
-    else:
-        ra = header.get('RA', 0)
-        dec = header.get('DEC', 0)
-        equinox = f'J{header.get("EQUINOX")}'
-        fk5 = FK5(equinox=equinox)
-        coord = SkyCoord(f'{ra} {dec}', unit=(u.hourangle, u.deg), frame=fk5)
-        j2000 = FK5(equinox='J2000')
-        result = coord.transform_to(j2000)
-        return result.ra.degree, result.dec.degree
+    obs_type = _get_obs_type(header)
+    ra_deg = None
+    dec_deg = None
+    if obs_type in ['comparison', 'dark', 'object']:
+        if header.get('EQUINOX') is not None:
+            # DB - 11-09-19 - precession with astropy
+            ra = header.get('RA', 0)
+            dec = header.get('DEC', 0)
+            equinox = f'J{header.get("EQUINOX")}'
+            fk5 = FK5(equinox=equinox)
+            coord = SkyCoord(f'{ra} {dec}', unit=(u.hourangle, u.deg), frame=fk5)
+            j2000 = FK5(equinox='J2000')
+            result = coord.transform_to(j2000)
+            ra_deg = result.ra.degree
+            dec_deg = result.dec.degree
+    return ra_deg, dec_deg
 
 
 def _get_telescope(header):
@@ -601,6 +639,8 @@ def accumulate_bp(bp, uri):
     bp.clear('Observation.metaRelease')
     bp.add_fits_attribute('Observation.metaRelease',  'RELEASE')
     bp.add_fits_attribute('Observation.metaRelease',  'DATE-OBS')
+
+    bp.clear('Observation.algorithm.name')
 
     bp.set('Observation.telescope.name',  'get_telescope_name(header)')
     bp.set('Observation.telescope.geoLocationX',  'get_geo_x(header)')
@@ -628,6 +668,8 @@ def accumulate_bp(bp, uri):
     bp.clear('Plane.metaRelease')
     bp.add_fits_attribute('Plane.metaRelease',  'DATE-OBS')
 
+    bp.clear('Plane.provenance.lastExecuted')
+    bp.add_fits_attribute('Plane.provenance.lastExecuted', 'IRAF-TLM')
     bp.set('Plane.provenance.project', 'DAO Science Archive')
     bp.clear('Plane.provenance.name')
     bp.add_fits_attribute('Plane.provenance.name', 'PROCNAME')
@@ -659,18 +701,18 @@ def accumulate_bp(bp, uri):
     bp.set('Chunk.energy.axis.axis.ctype', 'WAVE')
     bp.set('Chunk.energy.axis.axis.cunit', 'Angstrom')
     bp.set('Chunk.energy.axis.function.delta',
-           'get_energy_function_delta(header)')
+           'get_energy_axis_function_delta(parameters)')
     bp.set('Chunk.energy.axis.function.naxis',
-           'get_energy_function_naxis(parameters)')
+           'get_energy_axis_function_naxis(parameters)')
     bp.set('Chunk.energy.axis.function.refCoord.pix',
-           'get_energy_function_pix(header)')
-    bp.clear('Chunk.energy.axis.function.refCoord.val')
-    bp.add_fits_attribute('Chunk.energy.axis.function.refCoord.val',
-                          'WAVELENG')
+           'get_energy_axis_function_refcoord_pix(parameters)')
+    bp.set('Chunk.energy.axis.function.refCoord.val',
+           'get_energy_axis_function_refcoord_val(parameters)')
     bp.set('Chunk.energy.specsys', 'TOPOCENT')
     bp.set('Chunk.energy.ssysobs', 'TOPOCENT')
     bp.set('Chunk.energy.ssyssrc', 'TOPOCENT')
-    bp.set('Chunk.energy.resolvingPower', 'get_energy_resolving_power(header)')
+    bp.set('Chunk.energy.resolvingPower',
+           'get_energy_resolving_power(parameters)')
     bp.clear('Chunk.energy.bandpassName')
     bp.add_fits_attribute('Chunk.energy.bandpassName', 'FILTER')
 
@@ -715,26 +757,27 @@ def update(observation, **kwargs):
     logging.debug('Begin update.')
     mc.check_param(observation, Observation)
 
-    headers = None
-    if 'headers' in kwargs:
-        headers = kwargs['headers']
-    fqn = None
-    if 'fqn' in kwargs:
-        fqn = kwargs['fqn']
+    headers = kwargs.get('headers')
+    fqn = kwargs.get('fqn')
+    logging.error(f'fqn is {fqn}')
+    dao_name = dn.DAOName(file_name=os.path.basename(fqn))
 
     # correct the *_axis values
     for plane in observation.planes.values():
         if plane.data_product_type == DataProductType.SPECTRUM:
             for artifact in plane.artifacts.values():
+                logging.error(f'update artifact {artifact.uri} file {dao_name.file_uri}')
+                if artifact.uri.replace('.gz', '') != dao_name.file_uri.replace('.gz', ''):
+                    continue
 
-                # provenance inputs
-                _update_provenance(plane, artifact, headers)
+                if dn.DAOName.is_processed(artifact.uri):
+                    _update_provenance(observation, plane, headers)
                 for part in artifact.parts.values():
                     for chunk in part.chunks:
                         chunk.observable_axis = 2
                         chunk.time_axis = 5
                         chunk.energy_axis = 1
-                        if DAOName.is_unprocessed_reticon(artifact.uri):
+                        if dn.DAOName.is_unprocessed_reticon(artifact.uri):
                             cc.reset_energy(chunk)
                         if artifact.product_type == ProductType.SCIENCE:
                             logging.error('science')
@@ -749,7 +792,8 @@ def update(observation, **kwargs):
                             else:
                                 cc.reset_position(chunk)
                             # no energy for calibration?
-                            if observation.type not in ['flat', 'comparison', 'dark']:
+                            if (observation.type not in
+                                    ['flat', 'comparison', 'dark']):
                                 cc.reset_energy(chunk)
         else:  # DataProductType.IMAGE
             logging.error('image')
@@ -768,10 +812,50 @@ def update(observation, **kwargs):
     return observation
 
 
-def _update_provenance(plane, artifact, headers):
-    pass
-    # if DAOName.is_processed(artifact.uri):
-    #     cc.update_plane_provenance(plane, headers,)
+def _update_provenance(observation, plane, headers):
+    logging.error(f'Begin _update_provenance for {plane.product_id} with'
+                  f'observation type: {observation.type}.')
+    plane_inputs = TypedSet(PlaneURI,)
+    if observation.type in ['object', 'flat', 'comparison']:
+        f_name = headers[0].get('BIAS')
+        if f_name is not None:
+            bias_name = dn.DAOName(file_name=f_name)
+            plane_uri = _make_uris(bias_name.obs_id, bias_name.product_id)
+            plane_inputs.add(plane_uri)
+    if observation.type in ['object', 'comparison']:
+        f_name = headers[0].get('FLAT')
+        if f_name is not None:
+            flat_name = dn.DAOName(file_name=f_name)
+            plane_uri = _make_uris(flat_name.obs_id, flat_name.product_id)
+            plane_inputs.add(plane_uri)
+        # referral to raw plane
+        plane_uri = _make_uris(observation.observation_id,
+                               observation.observation_id)
+        plane_inputs.add(plane_uri)
+    if observation.type == 'object':
+        f_name = headers[0].get('DCLOG1')
+        if f_name is not None:
+            ref_spec1_name = dn.DAOName(file_name=f_name.split()[2])
+            plane_uri = _make_uris(ref_spec1_name.obs_id,
+                                   ref_spec1_name.product_id)
+            plane_inputs.add(plane_uri)
+        if headers[0].get('DCLOG2') is not None:
+            ref_spec1_name = dn.DAOName(
+                file_name=headers[0].get('DCLOG2').split()[2])
+            plane_uri = _make_uris(ref_spec1_name.obs_id,
+                                   ref_spec1_name.product_id)
+            plane_inputs.add(plane_uri)
+    mc.update_typed_set(plane.provenance.inputs, plane_inputs)
+    logging.debug(f'End _update_provenance.')
+
+
+def _make_uris(obs_id, product_id):
+    obs_member_uri = ObservationURI(mc.CaomName.make_obs_uri_from_obs_id(
+        dn.COLLECTION, obs_id))
+    plane_uri = PlaneURI.get_plane_uri(obs_member_uri, product_id)
+    return plane_uri
+
+
 # def update_chunk_position(chunk, headers):
 #     naxis1 = headers[0].get('NAXIS1')
 #     naxis2 = headers[0].get('NAXIS2')
@@ -791,41 +875,48 @@ def _update_provenance(plane, artifact, headers):
 #     chunk.position = SpatialWCS()
 
 
-def _build_blueprints(uri):
+def _build_blueprints(uris):
     """This application relies on the caom2utils fits2caom2 ObsBlueprint
     definition for mapping FITS file values to CAOM model element
-    attributes. This method builds the DRAO-ST blueprint for a single
+    attributes. This method builds the DAO blueprint for a single
     artifact.
 
     The blueprint handles the mapping of values with cardinality of 1:1
     between the blueprint entries and the model attributes.
 
-    :param uri The artifact URI for the file to be processed."""
+    :param uris The artifact URI for the file to be processed."""
     module = importlib.import_module(__name__)
-    blueprint = ObsBlueprint(module=module)
-    accumulate_bp(blueprint, uri)
-    blueprints = {uri: blueprint}
+    blueprints = {}
+    for uri in uris:
+        blueprint = ObsBlueprint(module=module)
+        accumulate_bp(blueprint, uri)
+        blueprints[uri] = blueprint
     return blueprints
 
 
-def _get_uri(args):
+def _get_uris(args):
+    result = []
     if args.lineage:
-        ignore, uri = mc.decompose_lineage(args.lineage[0])
+        for ii in args.lineage:
+            ignore, uri = mc.decompose_lineage(ii)
+            result.append(uri)
     elif args.local:
-        obs_id = mc.StorageName.remove_extensions(
-            os.path.basename(args.local[0]))
-        uri = DAOName(obs_id=obs_id).file_uri
+        for ii in args.local:
+            obs_id = mc.StorageName.remove_extensions(os.path.basename(ii))
+            uri = dn.DAOName(obs_id=obs_id).file_uri
+            result.append(uri)
     elif args.observation:
-        uri = DAOName(obs_id=args.observation[1]).file_uri
+        uri = dn.DAOName(obs_id=args.observation[1]).file_uri
+        result.append(uri)
     else:
         raise mc.CadcException(f'Could not define uri from these args {args}')
-    return uri
+    return result
 
 
 def to_caom2():
     args = get_gen_proc_arg_parser().parse_args()
-    uri = _get_uri(args)
-    blueprints = _build_blueprints(uri)
+    uris = _get_uris(args)
+    blueprints = _build_blueprints(uris)
     return gen_proc(args, blueprints)
 
 
