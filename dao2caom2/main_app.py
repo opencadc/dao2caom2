@@ -741,9 +741,10 @@ def accumulate_bp(bp, uri):
     bp.set('Chunk.position.axis.function.cd21',
            'get_position_function_cd21(header)')
 
-    # composites
-    if re.match(r'ad:DAO/dao_[c]\d{3}_\d{4}_\d{6}_[aBF].\w', uri):
+    # derived observations
+    if dn.DAOName.is_derived(uri):
         bp.set('CompositeObservation.members', 'get_members(header)')
+        bp.add_fits_attribute('Observation.algorithm.name', 'PROCNAME')
     logging.debug('Done accumulate_bp.')
 
 
@@ -759,25 +760,24 @@ def update(observation, **kwargs):
 
     headers = kwargs.get('headers')
     fqn = kwargs.get('fqn')
-    logging.error(f'fqn is {fqn}')
     dao_name = dn.DAOName(file_name=os.path.basename(fqn))
 
     # correct the *_axis values
     for plane in observation.planes.values():
-        if plane.data_product_type == DataProductType.SPECTRUM:
-            for artifact in plane.artifacts.values():
-                logging.error(f'update artifact {artifact.uri} file {dao_name.file_uri}')
-                if artifact.uri.replace('.gz', '') != dao_name.file_uri.replace('.gz', ''):
-                    continue
+        for artifact in plane.artifacts.values():
+            if artifact.uri.replace('.gz', '') != dao_name.file_uri.replace('.gz', ''):
+                continue
+            logging.error(f'update artifact {artifact.uri} file {dao_name.file_uri}')
 
-                if dn.DAOName.is_processed(artifact.uri):
-                    _update_provenance(observation, plane, headers)
-                for part in artifact.parts.values():
-                    for chunk in part.chunks:
+            for part in artifact.parts.values():
+                for chunk in part.chunks:
+                    if plane.data_product_type == DataProductType.SPECTRUM:
                         chunk.observable_axis = 2
                         chunk.time_axis = 5
                         chunk.energy_axis = 1
-                        if dn.DAOName.is_unprocessed_reticon(artifact.uri):
+                        if (dn.DAOName.is_unprocessed_reticon(artifact.uri) or
+                            dn.DAOName.is_derived(artifact.uri) and
+                                observation.type == 'flat'):
                             cc.reset_energy(chunk)
                         if artifact.product_type == ProductType.SCIENCE:
                             logging.error('science')
@@ -795,11 +795,7 @@ def update(observation, **kwargs):
                             if (observation.type not in
                                     ['flat', 'comparison', 'dark']):
                                 cc.reset_energy(chunk)
-        else:  # DataProductType.IMAGE
-            logging.error('image')
-            for artifact in plane.artifacts.values():
-                for part in artifact.parts.values():
-                    for chunk in part.chunks:
+                    else:  # DataProductType.IMAGE
                         # no observable axis when image
                         cc.reset_observable(chunk)
                         if artifact.product_type == ProductType.CALIBRATION:
@@ -808,45 +804,67 @@ def update(observation, **kwargs):
                             if observation.type not in ['flat', 'dark']:
                                 cc.reset_energy(chunk)
 
+        if cc.is_composite(headers, 'FLAT_'):
+            cc.update_plane_provenance(plane, headers, 'FLAT_', dn.COLLECTION,
+                                       _repair_flat_provenance_value,
+                                       observation.observation_id)
+
+        if dn.DAOName.is_processed(dao_name.file_uri):
+            _update_plane_provenance(observation, plane, headers)
+
+        cc.update_observation_members(observation)
+
     logging.debug('Done update.')
     return observation
 
 
-def _update_provenance(observation, plane, headers):
-    logging.error(f'Begin _update_provenance for {plane.product_id} with'
+def _repair_flat_provenance_value(value, obs_id):
+    logging.debug(f'Begin _repair_flat_provenance_value for {obs_id}')
+    # values look like:
+    # FLAT_1  = 'dao_c122_2007_000916.fits'
+    # FLAT_2  = 'dao_c122_2007_000917.fits'
+    # FLAT_3  = 'dao_c122_2007_000918.fits'
+    # FLAT_4  = 'dao_c122_2007_000919.fits'
+    dao_name = dn.DAOName(file_name=value)
+    prov_prod_id = dao_name.product_id
+    prov_obs_id = dao_name.obs_id
+    logging.debug(f'End _repair_flat_provenance_value')
+    return prov_obs_id, prov_prod_id
+
+
+def _update_plane_provenance(observation, plane, headers):
+    logging.debug(f'Begin _update_plane_provenance for {plane.product_id} with'
                   f'observation type: {observation.type}.')
-    plane_inputs = TypedSet(PlaneURI,)
     if observation.type in ['object', 'flat', 'comparison']:
         f_name = headers[0].get('BIAS')
         if f_name is not None:
             bias_name = dn.DAOName(file_name=f_name)
             plane_uri = _make_uris(bias_name.obs_id, bias_name.product_id)
-            plane_inputs.add(plane_uri)
+            plane.provenance.inputs.add(plane_uri)
     if observation.type in ['object', 'comparison']:
         f_name = headers[0].get('FLAT')
         if f_name is not None:
             flat_name = dn.DAOName(file_name=f_name)
             plane_uri = _make_uris(flat_name.obs_id, flat_name.product_id)
-            plane_inputs.add(plane_uri)
+            plane.provenance.inputs.add(plane_uri)
         # referral to raw plane
         plane_uri = _make_uris(observation.observation_id,
                                observation.observation_id)
-        plane_inputs.add(plane_uri)
+        plane.provenance.inputs.add(plane_uri)
     if observation.type == 'object':
         f_name = headers[0].get('DCLOG1')
         if f_name is not None:
             ref_spec1_name = dn.DAOName(file_name=f_name.split()[2])
             plane_uri = _make_uris(ref_spec1_name.obs_id,
                                    ref_spec1_name.product_id)
-            plane_inputs.add(plane_uri)
+            plane.provenance.inputs.add(plane_uri)
         if headers[0].get('DCLOG2') is not None:
             ref_spec1_name = dn.DAOName(
                 file_name=headers[0].get('DCLOG2').split()[2])
             plane_uri = _make_uris(ref_spec1_name.obs_id,
                                    ref_spec1_name.product_id)
-            plane_inputs.add(plane_uri)
-    mc.update_typed_set(plane.provenance.inputs, plane_inputs)
-    logging.debug(f'End _update_provenance.')
+            plane.provenance.inputs.add(plane_uri)
+    logging.debug(f'End _update_plane_provenance.')
 
 
 def _make_uris(obs_id, product_id):

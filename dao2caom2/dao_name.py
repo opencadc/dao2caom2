@@ -127,6 +127,14 @@ class DAOName(mc.StorageName):
         return self._file_id
 
     @staticmethod
+    def is_derived(entry):
+        # entry is a uri
+        result = False
+        if re.match('ad:DAO/dao_[c]\\d{3}_\\d{4}_\\d{6}_[aBF].\\w', entry):
+            result = True
+        return result
+
+    @staticmethod
     def is_processed(entry):
         # the entry is a uri
         file_id = mc.CaomName(entry).file_id
@@ -146,9 +154,9 @@ class DAOName(mc.StorageName):
                 # unprocessed DAO CCD spectrum
                 re.match('dao_[c]\\d{3}_\\d{4}_\\d{6}', file_id) or
                 # unprocessed DAO RETICON spectrum
-                re.match(r'dao_[r]\d{3}_\d{4}_\d{6}', file_id) or
+                re.match('dao_[r]\\d{3}_\\d{4}_\\d{6}', file_id) or
                 # processed photographic plate spectrum
-                re.match(r'dao_[p]\d{3}_\d{6}(u|v|y|r|i|)', file_id)):
+                re.match('dao_[p]\\d{3}_\\d{6}(u|v|y|r|i|)', file_id)):
             result = True
         return result
 
@@ -166,10 +174,8 @@ class DAOName(mc.StorageName):
         # observation ID differs from the file ID for processed data, except
         # for composite processed observations (master biases and flats)
         file_id = mc.StorageName.remove_extensions(file_name)
-        logging.error(f'file_id is {file_id}')
+        obs_id = file_id
         if re.match('dao_[cr]\\d{3}_\\d{4}_\\d{6}_[aev]', file_id):
-            obsID = file_id[0:-2]
-        else:
-            obsID = file_id
-        return obsID
+            obs_id = file_id[0:-2]
+        return obs_id
 

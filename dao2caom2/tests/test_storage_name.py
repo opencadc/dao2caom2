@@ -70,4 +70,4 @@ from dao2caom2 import DAOName
 
 
 def test_is_valid():
-    assert DAOName('anything').is_valid()
+    assert DAOName(file_name='anything').is_valid()
