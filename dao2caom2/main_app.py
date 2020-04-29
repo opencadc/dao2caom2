@@ -492,7 +492,10 @@ def get_time_exposure(header):
     exptime = header.get('EXPTIME')
     ncombine = mc.to_float(header.get('NCOMBINE'))
     if ncombine is not None:
-        exptime = exptime * ncombine
+        # DB - approximation of exposure time for products (assume identical
+        # EXPTIME)
+        exptime *= ncombine
+    logging.error(f'exptime {exptime} ncombine {ncombine}')
     return exptime
 
 
@@ -771,6 +774,9 @@ def update(observation, **kwargs):
 
             for part in artifact.parts.values():
                 for chunk in part.chunks:
+                    time_delta = get_time_axis_delta(headers[0])
+                    cc.undo_astropy_cdfix_call(chunk, time_delta)
+
                     if plane.data_product_type == DataProductType.SPECTRUM:
                         chunk.observable_axis = 2
                         chunk.time_axis = 5
@@ -804,9 +810,13 @@ def update(observation, **kwargs):
                             if observation.type not in ['flat', 'dark']:
                                 cc.reset_energy(chunk)
 
-        if cc.is_composite(headers, 'FLAT_'):
+        if observation.type == 'flat' and cc.is_composite(headers, 'FLAT_'):
             cc.update_plane_provenance(plane, headers, 'FLAT_', dn.COLLECTION,
-                                       _repair_flat_provenance_value,
+                                       _repair_provenance_value,
+                                       observation.observation_id)
+        elif observation.type == 'bias' and cc.is_composite(headers, 'ZERO_'):
+            cc.update_plane_provenance(plane, headers, 'ZERO_', dn.COLLECTION,
+                                       _repair_provenance_value,
                                        observation.observation_id)
 
         if dn.DAOName.is_processed(dao_name.file_uri):
@@ -818,17 +828,23 @@ def update(observation, **kwargs):
     return observation
 
 
-def _repair_flat_provenance_value(value, obs_id):
-    logging.debug(f'Begin _repair_flat_provenance_value for {obs_id}')
+def _repair_provenance_value(value, obs_id):
+    logging.debug(f'Begin _repair_provenance_value for {obs_id}')
     # values look like:
     # FLAT_1  = 'dao_c122_2007_000916.fits'
     # FLAT_2  = 'dao_c122_2007_000917.fits'
     # FLAT_3  = 'dao_c122_2007_000918.fits'
     # FLAT_4  = 'dao_c122_2007_000919.fits'
+    #
+    # OR
+    #
+    # ZERO_18 = 'dao_c122_2016_012728.fits'
+    # ZERO_19 = 'dao_c122_2016_012729.fits'
+    # ZERO_20 = 'dao_c122_2016_012730.fits'
     dao_name = dn.DAOName(file_name=value)
     prov_prod_id = dao_name.product_id
     prov_obs_id = dao_name.obs_id
-    logging.debug(f'End _repair_flat_provenance_value')
+    logging.debug(f'End _repair_provenance_value')
     return prov_obs_id, prov_prod_id
 
 
