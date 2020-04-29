@@ -106,7 +106,6 @@ def get_artifact_product_type(header):
 def get_calibration_level(parameters):
     uri = parameters.get('uri')
     result = CalibrationLevel.RAW_STANDARD
-    logging.error(f'uri is {uri}')
     if dn.DAOName.is_processed(uri):
         result = CalibrationLevel.CALIBRATED
     return result
@@ -131,7 +130,6 @@ def get_energy_axis_function_naxis(parameters):
             naxis = _get_naxis1(header)
         else:
             dispaxis = _get_dispaxis(header)
-            logging.error(f'dispaxis in get energy function {dispaxis}')
             if dispaxis == 1:
                 naxis = _get_naxis1(header)
             elif dispaxis == 2:
@@ -250,7 +248,6 @@ def _get_execution_path(parameters):
         if (dn.DAOName.is_processed(uri) and obs_type in ['object',
                                                           'comparison']):
             result = ExecutionPath.SPECT_CALIBRATED
-    logging.error(f'obs mode {obs_mode} obs type {obs_type} ep {result}')
     return result
 
 
@@ -282,7 +279,8 @@ def get_obs_intent(header):
     return intent
 
 
-def get_position_function_coord1_pix(header):
+def get_position_function_coord1_pix(parameters):
+    header = parameters.get('header')
     result = None
     artifact_product_type = get_artifact_product_type(header)
     data_product_type = get_data_product_type(header)
@@ -290,7 +288,11 @@ def get_position_function_coord1_pix(header):
         if data_product_type == DataProductType.SPECTRUM:
             result = 1.0
         else:
-            result = _get_naxis1(header) / 2.0
+            calibration_level = get_calibration_level(parameters)
+            if calibration_level is CalibrationLevel.CALIBRATED:
+                result = header.get('CRPIX1')
+            else:
+                result = _get_naxis1(header) / 2.0
     else:
         if data_product_type == DataProductType.IMAGE:
             result = _get_naxis1(header) / 2.0
@@ -301,7 +303,8 @@ def get_position_function_coord1_pix(header):
     return result
 
 
-def get_position_function_coord2_pix(header):
+def get_position_function_coord2_pix(parameters):
+    header = parameters.get('header')
     result = None
     artifact_product_type = get_artifact_product_type(header)
     data_product_type = get_data_product_type(header)
@@ -309,7 +312,11 @@ def get_position_function_coord2_pix(header):
         if data_product_type == DataProductType.SPECTRUM:
             result = 1.0
         else:
-            result = _get_naxis2(header) / 2.0
+            calibration_level = get_calibration_level(parameters)
+            if calibration_level is CalibrationLevel.CALIBRATED:
+                result = header.get('CRPIX2')
+            else:
+                result = _get_naxis2(header) / 2.0
     else:
         if data_product_type == DataProductType.IMAGE:
             result = _get_naxis2(header) / 2.0
@@ -342,52 +349,60 @@ def _pattern(header, science_spectrum, science_image):
     return result
 
 
-def get_position_function_cd11(header):
+def get_position_function_cd11(parameters):
+    header = parameters.get('header')
     result = None
     artifact_product_type = get_artifact_product_type(header)
     data_product_type = get_data_product_type(header)
+    calibration_level = get_calibration_level(parameters)
     if artifact_product_type is ProductType.SCIENCE:
         if data_product_type == DataProductType.SPECTRUM:
             # DB - set entrance aperture to a fixed 5" by 5" because of lack
             # of detailed information
             result = -0.001388
         else:
-            platescale = mc.to_float(header.get('PLTSCALE'))
-            pixsize = mc.to_float(header.get('PIXSIZE'))
-            xbin = mc.to_float(header.get('XBIN'))
-            if (platescale is not None and
-                    pixsize is not None and
-                    xbin is not None):
-                logging.error('am i here?')
-                result = platescale * pixsize * xbin / 3600000.0
+            if calibration_level is CalibrationLevel.RAW_STANDARD:
+                platescale = mc.to_float(header.get('PLTSCALE'))
+                pixsize = mc.to_float(header.get('PIXSIZE'))
+                xbin = mc.to_float(header.get('XBIN'))
+                if (platescale is not None and
+                        pixsize is not None and
+                        xbin is not None):
+                    logging.error('am i here?')
+                    result = platescale * pixsize * xbin / 3600000.0
+            else:
+                result = header.get('CD1_1')
     else:
         obs_type = header.get('OBSTYPE')
-        if data_product_type == DataProductType.IMAGE and obs_type == 'dark':
-            platescale = mc.to_float(header.get('PLTSCALE', 0.0))
-            pixsize = mc.to_float(header.get('PIXSIZE', 0.0))
-            xbin = mc.to_float(header.get('XBIN', 0.0))
-            logging.error('must be here then')
-            result = platescale * pixsize * xbin / 3600000.0
+        if data_product_type == DataProductType.IMAGE:
+            if obs_type == 'dark':
+                platescale = mc.to_float(header.get('PLTSCALE', 0.0))
+                pixsize = mc.to_float(header.get('PIXSIZE', 0.0))
+                xbin = mc.to_float(header.get('XBIN', 0.0))
+                logging.error('must be here then')
+                result = platescale * pixsize * xbin / 3600000.0
+            if calibration_level is CalibrationLevel.CALIBRATED:
+                result = header.get('CD1_1')
         else:
             if obs_type == 'dark':
                 result = -0.001388
     return result
 
 
-def get_position_function_cd12(header):
+def get_position_function_cd12(parameters):
+    header = parameters.get('header')
     result = None
     artifact_product_type = get_artifact_product_type(header)
+    calibration_level = get_calibration_level(parameters)
     if artifact_product_type is ProductType.SCIENCE:
         data_product_type = get_data_product_type(header)
         if data_product_type == DataProductType.SPECTRUM:
             result = 0.0
-            # naxis1 = _get_naxis1(header)
-            # if naxis1 is None:
-            #     result = 0.0
-            # else:
-            #     result = mc.to_float(naxis1) / 2.0
         else:
-            result = 0.0
+            if calibration_level is CalibrationLevel.CALIBRATED:
+                result = header.get('CD1_2')
+            else:
+                result = 0.0
     else:
         obs_type = header.get('OBSTYPE')
         if obs_type == 'dark':
@@ -395,20 +410,20 @@ def get_position_function_cd12(header):
     return result
 
 
-def get_position_function_cd21(header):
+def get_position_function_cd21(parameters):
+    header = parameters.get('header')
     result = None
+    calibration_level = get_calibration_level(parameters)
     artifact_product_type = get_artifact_product_type(header)
     if artifact_product_type is ProductType.SCIENCE:
         data_product_type = get_data_product_type(header)
         if data_product_type == DataProductType.SPECTRUM:
             result = 0.0
-            # naxis2 = _get_naxis2(header)
-            # if naxis2 is None:
-            #     result = 0.0
-            # else:
-            #     result = mc.to_float(naxis2) / 2.0
         else:
-            result = 0.0
+            if calibration_level is CalibrationLevel.CALIBRATED:
+                result = header.get('CD2_1')
+            else:
+                result = 0.0
     else:
         obs_type = header.get('OBSTYPE')
         if obs_type == 'dark':
@@ -416,23 +431,28 @@ def get_position_function_cd21(header):
     return result
 
 
-def get_position_function_cd22(header):
+def get_position_function_cd22(parameters):
+    header = parameters.get('header')
     result = None
     artifact_product_type = get_artifact_product_type(header)
     data_product_type = get_data_product_type(header)
+    calibration_level = get_calibration_level(parameters)
     if artifact_product_type is ProductType.SCIENCE:
         if data_product_type == DataProductType.SPECTRUM:
             # DB - set entrance aperture to a fixed 5" by 5" because of lack
             # of detailed information
             result = 0.001388
         else:
-            platescale = mc.to_float(header.get('PLTSCALE'))
-            pixsize = mc.to_float(header.get('PIXSIZE'))
-            xbin = mc.to_float(header.get('XBIN'))
-            if (platescale is not None and
-                    pixsize is not None and
-                    xbin is not None):
-                result = platescale * pixsize * xbin / 3600000.0
+            if calibration_level is CalibrationLevel.CALIBRATED:
+                result = header.get('CD2_2')
+            else:
+                platescale = mc.to_float(header.get('PLTSCALE'))
+                pixsize = mc.to_float(header.get('PIXSIZE'))
+                xbin = mc.to_float(header.get('XBIN'))
+                if (platescale is not None and
+                        pixsize is not None and
+                        xbin is not None):
+                    result = platescale * pixsize * xbin / 3600000.0
     else:
         obs_type = header.get('OBSTYPE')
         if data_product_type == DataProductType.IMAGE and obs_type == 'dark':
@@ -476,7 +496,10 @@ def get_target_type(header):
 def get_telescope_name(header):
     telescope = _get_telescope(header)
     observatory = header.get('OBSERVAT')
-    return f'{observatory} {telescope}'
+    result = f'{observatory} {telescope}'
+    if telescope is None or observatory is None:
+        result = None
+    return result
 
 
 def get_time_axis_delta(header):
@@ -640,7 +663,7 @@ def accumulate_bp(bp, uri):
 
     bp.set('Observation.intent', 'get_obs_intent(header)')
     bp.clear('Observation.metaRelease')
-    bp.add_fits_attribute('Observation.metaRelease',  'RELEASE')
+    # from dao2caom2.config
     bp.add_fits_attribute('Observation.metaRelease',  'DATE-OBS')
 
     bp.clear('Observation.algorithm.name')
@@ -669,6 +692,7 @@ def accumulate_bp(bp, uri):
     bp.set('Plane.dataProductType', 'get_data_product_type(header)')
     bp.set('Plane.calibrationLevel', 'get_calibration_level(parameters)')
     bp.clear('Plane.metaRelease')
+    # from dao2caom2.config
     bp.add_fits_attribute('Plane.metaRelease',  'DATE-OBS')
 
     bp.clear('Plane.provenance.lastExecuted')
@@ -728,21 +752,21 @@ def accumulate_bp(bp, uri):
     bp.set('Chunk.position.axis.function.dimension.naxis2',
            'get_position_function_dimension_naxis2(header)')
     bp.set('Chunk.position.axis.function.refCoord.coord1.pix',
-           'get_position_function_coord1_pix(header)')
+           'get_position_function_coord1_pix(parameters)')
     bp.set('Chunk.position.axis.function.refCoord.coord1.val',
            'get_position_function_coord1_val(header)')
     bp.set('Chunk.position.axis.function.refCoord.coord2.pix',
-           'get_position_function_coord2_pix(header)')
+           'get_position_function_coord2_pix(parameters)')
     bp.set('Chunk.position.axis.function.refCoord.coord2.val',
            'get_position_function_coord2_val(header)')
     bp.set('Chunk.position.axis.function.cd11',
-           'get_position_function_cd11(header)')
+           'get_position_function_cd11(parameters)')
     bp.set('Chunk.position.axis.function.cd22',
-           'get_position_function_cd22(header)')
+           'get_position_function_cd22(parameters)')
     bp.set('Chunk.position.axis.function.cd12',
-           'get_position_function_cd12(header)')
+           'get_position_function_cd12(parameters)')
     bp.set('Chunk.position.axis.function.cd21',
-           'get_position_function_cd21(header)')
+           'get_position_function_cd21(parameters)')
 
     # derived observations
     if dn.DAOName.is_derived(uri):
@@ -802,6 +826,8 @@ def update(observation, **kwargs):
                                     ['flat', 'comparison', 'dark']):
                                 cc.reset_energy(chunk)
                     else:  # DataProductType.IMAGE
+                        if dn.DAOName.is_processed_image(artifact.uri):
+                            plane.provenance.producer = 'Spaceguard_C'
                         # no observable axis when image
                         cc.reset_observable(chunk)
                         if artifact.product_type == ProductType.CALIBRATION:
@@ -809,6 +835,9 @@ def update(observation, **kwargs):
                                 cc.reset_position(chunk)
                             if observation.type not in ['flat', 'dark']:
                                 cc.reset_energy(chunk)
+
+        if plane.product_id != dao_name.product_id:
+            continue
 
         if observation.type == 'flat' and cc.is_composite(headers, 'FLAT_'):
             cc.update_plane_provenance(plane, headers, 'FLAT_', dn.COLLECTION,
@@ -822,7 +851,9 @@ def update(observation, **kwargs):
         if dn.DAOName.is_processed(dao_name.file_uri):
             _update_plane_provenance(observation, plane, headers)
 
-        cc.update_observation_members(observation)
+        if (cc.is_composite(headers, 'FLAT_') or
+                cc.is_composite(headers, 'ZERO_')):
+            cc.update_observation_members(observation)
 
     logging.debug('Done update.')
     return observation

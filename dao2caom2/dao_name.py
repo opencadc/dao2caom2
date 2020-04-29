@@ -130,7 +130,7 @@ class DAOName(mc.StorageName):
     def is_derived(entry):
         # entry is a uri
         result = False
-        if re.match('ad:DAO/dao_[c]\\d{3}_\\d{4}_\\d{6}_[aBF].\\w', entry):
+        if re.match('ad:DAO/dao_[c]\\d{3}_\\d{4}_\\d{6}_[BF].\\w', entry):
             result = True
         return result
 
@@ -141,6 +141,14 @@ class DAOName(mc.StorageName):
         result = False
         if (re.match('dao_[cr]\\d{3}_\\d{4}_\\d{6}_[aevBF]', file_id) or
                 re.match('dao_[p]\\d{3}_\\d{6}(u|v|y|r|i|)', file_id)):
+            result = True
+        return result
+
+    @staticmethod
+    def is_processed_image(entry):
+        # entry is a uri
+        result = False
+        if re.match('ad:DAO/dao_[c]\\d{3}_\\d{4}_\\d{6}_[aBF].\\w', entry):
             result = True
         return result
 

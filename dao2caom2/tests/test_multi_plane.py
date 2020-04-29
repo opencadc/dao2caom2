@@ -85,8 +85,11 @@ import test_main_app
 # structured by observation id, list of file ids that make up a multi-plane
 # observation
 DIR_NAME = 'processed'
-LOOKUP = {'dao_c122_2007_000882': ['dao_c122_2007_000882_v']
-          }
+LOOKUP = {'dao_c122_2007_000882': ['dao_c122_2007_000882_v.fits.gz'],
+          'dao_c122_2007_000881': ['dao_c122_2007_000881.fits.gz',
+                                   'dao_c122_2007_000881_e.fits'],
+          'dao_c182_2016_004034': ['dao_c182_2016_004034.fits.gz',
+                                   'dao_c182_2016_004034_a.fits']}
 
 
 def pytest_generate_tests(metafunc):
@@ -134,7 +137,8 @@ def test_multi_plane(data_client_mock, test_name):
 def _get_lineage(obs_id):
     result = ''
     for ii in LOOKUP[obs_id]:
-        fits = mc.get_lineage(COLLECTION, ii, f'{ii}.fits.gz')
+        fits = mc.get_lineage(COLLECTION, mc.StorageName.remove_extensions(ii),
+                              ii)
         result = f'{result} {fits}'
     return result
 
@@ -143,5 +147,5 @@ def _get_local(obs_id):
     result = ''
     for ii in LOOKUP[obs_id]:
         result = f'{result} {test_main_app.TEST_DATA_DIR}/{DIR_NAME}/' \
-                 f'{ii}.fits.header'
+                 f'{mc.StorageName.remove_extensions(ii)}.fits.header'
     return result

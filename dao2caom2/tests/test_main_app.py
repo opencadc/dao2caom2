@@ -92,13 +92,13 @@ def pytest_generate_tests(metafunc):
 def test_main_app(data_client_mock, test_name):
     data_client_mock.return_value.get_file_info.side_effect = _get_file_info
     basename = os.path.basename(test_name)
-    dao_name = DAOName(obs_id=mc.StorageName.remove_extensions(basename))
+    dao_name = DAOName(file_name=basename.replace('.header', '.gz'))
 
     obs_path = f'{TEST_DATA_DIR}/{dao_name.obs_id}.expected.xml'
     output_file = f'{TEST_DATA_DIR}/{dao_name.obs_id}.actual.xml'
 
     sys.argv = \
-        (f'{APPLICATION} --debug --no_validate --local {test_name} '
+        (f'{APPLICATION} --no_validate --local {test_name} '
          f'--observation {COLLECTION} {dao_name.obs_id} -o {output_file} '
          f'--plugin {PLUGIN} --module {PLUGIN} --lineage '
          f'{dao_name.lineage}').split()

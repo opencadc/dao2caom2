@@ -13,6 +13,7 @@
   </caom2:proposal>
   <caom2:target>
     <caom2:name>processed flat</caom2:name>
+    <caom2:type>field</caom2:type>
     <caom2:standard>false</caom2:standard>
     <caom2:moving>false</caom2:moving>
   </caom2:target>
@@ -20,7 +21,7 @@
     <caom2:name>DAO 1.8-m</caom2:name>
     <caom2:geoLocationX>-2331180.0236165463</caom2:geoLocationX>
     <caom2:geoLocationY>-3532960.1603673417</caom2:geoLocationY>
-    <caom2:geoLocationZ>4755520.510544372</caom2:geoLocationZ>
+    <caom2:geoLocationZ>4755520.510544373</caom2:geoLocationZ>
   </caom2:telescope>
   <caom2:instrument>
     <caom2:name>Newtonian Imager</caom2:name>
@@ -34,60 +35,38 @@
       <caom2:productID>dao_c182_2016_002019_F</caom2:productID>
       <caom2:metaRelease>2016-06-04T04:49:04.000</caom2:metaRelease>
       <caom2:dataRelease>2016-06-04T04:49:39.000</caom2:dataRelease>
+      <caom2:dataProductType>image</caom2:dataProductType>
       <caom2:calibrationLevel>2</caom2:calibrationLevel>
       <caom2:provenance>
         <caom2:name>Spaceguard_C</caom2:name>
         <caom2:version>1.0</caom2:version>
         <caom2:project>DAO Science Archive</caom2:project>
         <caom2:producer>Spaceguard_C</caom2:producer>
-        <caom2:reference>http://www.cadc.hia.nrc.gc.ca/dao/</caom2:reference>
-        <caom2:lastExecuted>2016-10-20T22:03:22.000</caom2:lastExecuted>
+        <caom2:reference>https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/dao/</caom2:reference>
+        <caom2:lastExecuted>2018-10-05T17:13:57.000</caom2:lastExecuted>
         <caom2:inputs>
+          <caom2:planeURI>caom:DAO/dao_c182_2016_002031/dao_c182_2016_002031</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c182_2016_002029/dao_c182_2016_002029</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c182_2016_002020/dao_c182_2016_002020</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c182_2016_002022/dao_c182_2016_002022</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c182_2016_002030/dao_c182_2016_002030</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c182_2016_002026/dao_c182_2016_002026</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c182_2016_002028/dao_c182_2016_002028</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c182_2016_002027/dao_c182_2016_002027</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c182_2016_002024/dao_c182_2016_002024</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c182_2016_002023/dao_c182_2016_002023</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c182_2016_002019/dao_c182_2016_002019</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c182_2016_002025/dao_c182_2016_002025</caom2:planeURI>
           <caom2:planeURI>caom:DAO/dao_c182_2016_002005_B/dao_c182_2016_002005_B</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c182_2016_002021/dao_c182_2016_002021</caom2:planeURI>
         </caom2:inputs>
       </caom2:provenance>
-      <caom2:position/>
-      <caom2:energy>
-        <caom2:bounds>
-          <caom2:lower>5.55e-07</caom2:lower>
-          <caom2:upper>6.85e-07</caom2:upper>
-          <caom2:samples>
-            <caom2:sample>
-              <caom2:lower>5.55e-07</caom2:lower>
-              <caom2:upper>6.85e-07</caom2:upper>
-            </caom2:sample>
-          </caom2:samples>
-        </caom2:bounds>
-        <caom2:dimension>1</caom2:dimension>
-        <caom2:resolvingPower>4.76923076923</caom2:resolvingPower>
-        <caom2:sampleSize>1.3000000000000003e-07</caom2:sampleSize>
-        <caom2:bandpassName>SDSS r prime</caom2:bandpassName>
-        <caom2:emBand>Optical</caom2:emBand>
-      </caom2:energy>
-      <caom2:time>
-        <caom2:bounds>
-          <caom2:lower>57543.2007407</caom2:lower>
-          <caom2:upper>57543.2023917</caom2:upper>
-          <caom2:samples>
-            <caom2:sample>
-              <caom2:lower>57543.2007407</caom2:lower>
-              <caom2:upper>57543.2023917</caom2:upper>
-            </caom2:sample>
-          </caom2:samples>
-        </caom2:bounds>
-        <caom2:dimension>1</caom2:dimension>
-        <caom2:resolution>10.9701</caom2:resolution>
-        <caom2:sampleSize>0.0016509999986737967</caom2:sampleSize>
-        <caom2:exposure>10.9701</caom2:exposure>
-      </caom2:time>
-      <caom2:polarization/>
       <caom2:artifacts>
         <caom2:artifact caom2:id="00000000-0000-0000-1d5d-0158ad60beb5" caom2:lastModified="2017-11-10T18:35:42.370" caom2:maxLastModified="2017-11-10T18:35:42.370" caom2:metaChecksum="md5:f3db39333dc34f8f098efb9d8b44942e" caom2:accMetaChecksum="md5:12a49f0ba751bcdd118aed2d4236e899">
           <caom2:uri>ad:DAO/dao_c182_2016_002019_F.fits.gz</caom2:uri>
           <caom2:productType>calibration</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>
-          <caom2:contentLength>9336960</caom2:contentLength>
           <caom2:contentChecksum>md5:cd325f44b1d39ffc71e237305fb074c3</caom2:contentChecksum>
           <caom2:parts>
             <caom2:part caom2:id="00000000-0000-0000-1d5d-0158ad60beb7" caom2:lastModified="2016-11-28T23:59:10.530" caom2:maxLastModified="2016-11-28T23:59:10.530" caom2:metaChecksum="md5:32d27775ead2e59a87af38da2acb0dcb" caom2:accMetaChecksum="md5:b2277374ae51c9dfa9e8f7170c5b0700">
@@ -126,7 +105,7 @@
                       </caom2:axis>
                       <caom2:function>
                         <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>0.001651</caom2:delta>
+                        <caom2:delta>0.00165059375</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>0.5</caom2:pix>
                           <caom2:val>57543.2007407</caom2:val>
@@ -134,7 +113,7 @@
                       </caom2:function>
                     </caom2:axis>
                     <caom2:timesys>UTC</caom2:timesys>
-                    <caom2:exposure>10.9701</caom2:exposure>
+                    <caom2:exposure>142.6113</caom2:exposure>
                     <caom2:resolution>10.9701</caom2:resolution>
                   </caom2:time>
                 </caom2:chunk>
@@ -146,18 +125,19 @@
     </caom2:plane>
   </caom2:planes>
   <caom2:members>
-    <caom2:observationURI>caom:DAO/dao_c182_2016_002022</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c182_2016_002027</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c182_2016_002020</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c182_2016_002024</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c182_2016_002023</caom2:observationURI>
     <caom2:observationURI>caom:DAO/dao_c182_2016_002026</caom2:observationURI>
     <caom2:observationURI>caom:DAO/dao_c182_2016_002029</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c182_2016_002030</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c182_2016_002031</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c182_2016_002021</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c182_2016_002020</caom2:observationURI>
     <caom2:observationURI>caom:DAO/dao_c182_2016_002025</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c182_2016_002028</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c182_2016_002023</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c182_2016_002022</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c182_2016_002024</caom2:observationURI>
     <caom2:observationURI>caom:DAO/dao_c182_2016_002019</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c182_2016_002005_B</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c182_2016_002028</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c182_2016_002030</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c182_2016_002021</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c182_2016_002027</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c182_2016_002031</caom2:observationURI>
   </caom2:members>
 </caom2:Observation>
