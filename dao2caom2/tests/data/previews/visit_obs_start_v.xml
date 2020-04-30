@@ -1,0 +1,66 @@
+<caom2:Observation xmlns:caom2="http://www.opencadc.org/caom2/xml/v2.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="caom2:SimpleObservation" caom2:id="00000000-0000-0000-1b4c-0158ad5fe335" caom2:lastModified="2020-01-20T17:07:58.390" caom2:maxLastModified="2020-01-20T17:07:58.390" caom2:metaChecksum="md5:ab03f1b471f30004936531f41c3c713b" caom2:accMetaChecksum="md5:54a024dcbfd60ad5cb5b8de9c764c829">
+  <caom2:collection>DAO</caom2:collection>
+  <caom2:observationID>dao_c122_2007_000882</caom2:observationID>
+  <caom2:metaRelease>2007-01-25T05:58:23.000</caom2:metaRelease>
+  <caom2:algorithm>
+    <caom2:name>exposure</caom2:name>
+  </caom2:algorithm>
+  <caom2:type>object</caom2:type>
+  <caom2:intent>science</caom2:intent>
+  <caom2:target>
+    <caom2:name>HD19832</caom2:name>
+    <caom2:type>object</caom2:type>
+    <caom2:standard>false</caom2:standard>
+  </caom2:target>
+  <caom2:telescope>
+    <caom2:name>DAO 1.2-m</caom2:name>
+    <caom2:geoLocationX>-2331226.7883358444</caom2:geoLocationX>
+    <caom2:geoLocationY>-3532798.982897074</caom2:geoLocationY>
+    <caom2:geoLocationZ>4755607.321828939</caom2:geoLocationZ>
+  </caom2:telescope>
+  <caom2:instrument>
+    <caom2:name>McKellar Spectrograph</caom2:name>
+  </caom2:instrument>
+  <caom2:environment>
+    <caom2:humidity>80.8</caom2:humidity>
+    <caom2:photometric>false</caom2:photometric>
+  </caom2:environment>
+  <caom2:planes>
+    <caom2:plane caom2:id="00000000-0000-0000-8fc1-016fc3ecc543" caom2:lastModified="2020-01-20T17:07:58.390" caom2:maxLastModified="2020-01-20T17:07:58.390" caom2:metaChecksum="md5:003d409886e6c5dd00f683ff9a3c4dcc" caom2:accMetaChecksum="md5:932fd70cf554596ddb8e69a72e0f6740">
+      <caom2:productID>dao_c122_2007_000882</caom2:productID>
+      <caom2:metaRelease>2007-01-25T05:58:23.000</caom2:metaRelease>
+      <caom2:dataRelease>2008-01-25T05:58:23.000</caom2:dataRelease>
+      <caom2:dataProductType>spectrum</caom2:dataProductType>
+      <caom2:calibrationLevel>1</caom2:calibrationLevel>
+      <caom2:artifacts>
+        <caom2:artifact caom2:id="00000000-0000-0000-8fc1-016fc3ecc549" caom2:lastModified="2020-01-20T17:07:58.390" caom2:maxLastModified="2020-01-20T17:07:58.390" caom2:metaChecksum="md5:2de90aaac6fef597d51751df989cc7ab" caom2:accMetaChecksum="md5:e7a60029b9a4d94fd503f982c4a5c14a">
+          <caom2:uri>ad:DAO/dao_c122_2007_000882.fits.gz</caom2:uri>
+          <caom2:productType>science</caom2:productType>
+          <caom2:releaseType>data</caom2:releaseType>
+          <caom2:contentType>application/fits</caom2:contentType>
+          <caom2:contentLength>295321</caom2:contentLength>
+          <caom2:contentChecksum>md5:3f27923d0065b31f335262fe9a7d557a</caom2:contentChecksum>
+          <caom2:parts/>
+        </caom2:artifact>
+      </caom2:artifacts>
+    </caom2:plane>
+    <caom2:plane caom2:id="00000000-0000-0000-1b4c-0158ad5fee58" caom2:lastModified="2017-11-10T18:35:13.673" caom2:maxLastModified="2017-11-10T18:35:13.673" caom2:metaChecksum="md5:6a9fac2a7487e86381387b10b08a1764" caom2:accMetaChecksum="md5:36e90d6a44a8d75525b8c344d1fbe4e4">
+      <caom2:productID>dao_c122_2007_000882_v</caom2:productID>
+      <caom2:metaRelease>2007-01-25T05:58:23.000</caom2:metaRelease>
+      <caom2:dataRelease>2008-01-25T05:58:23.000</caom2:dataRelease>
+      <caom2:dataProductType>spectrum</caom2:dataProductType>
+      <caom2:calibrationLevel>2</caom2:calibrationLevel>
+      <caom2:artifacts>
+        <caom2:artifact caom2:id="00000000-0000-0000-1b4c-0158ad5fee65" caom2:lastModified="2017-11-10T18:35:13.673" caom2:maxLastModified="2017-11-10T18:35:13.673" caom2:metaChecksum="md5:938ebc812daf212b68749ca9a3d7a485" caom2:accMetaChecksum="md5:9142da179c32bbd597b393ffb6cdfa24">
+          <caom2:uri>ad:DAO/dao_c122_2007_000882_v.fits</caom2:uri>
+          <caom2:productType>science</caom2:productType>
+          <caom2:releaseType>data</caom2:releaseType>
+          <caom2:contentType>application/fits</caom2:contentType>
+          <caom2:contentLength>25920</caom2:contentLength>
+          <caom2:contentChecksum>md5:ca391fca2b173540b27744103f6ece88</caom2:contentChecksum>
+          <caom2:parts/>
+        </caom2:artifact>
+      </caom2:artifacts>
+    </caom2:plane>
+  </caom2:planes>
+</caom2:Observation>
