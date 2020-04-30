@@ -68,7 +68,7 @@
 
 import logging
 from caom2pipe import name_builder_composable as nbc
-from dao2caom2 import main_app
+from dao2caom2 import dao_name
 
 
 __all__ = ['DAOBuilder']
@@ -87,4 +87,4 @@ class DAOBuilder(nbc.StorageNameBuilder):
         :return:
         """
         self._logger.debug(f'Build a StorageName instance for {entry}.')
-        return main_app.DAOName(file_name=entry)
+        return dao_name.DAOName(file_name=entry)

@@ -1,4 +1,4 @@
-FROM opencadc/astropy:3.8-slim
+FROM opencadc/matplotlib:3.8-slim
 
 RUN apt-get update
 RUN apt-get install -y \
@@ -16,6 +16,8 @@ RUN pip install cadcdata && \
     pip install PyYAML && \
     pip install spherical-geometry && \
     pip install vos
+
+RUN apt-get install -y imagemagick
 
 WORKDIR /usr/src/app
 
