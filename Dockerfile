@@ -10,7 +10,7 @@ RUN pip install cadcdata && \
     pip install caom2 && \
     pip install caom2repo && \
     pip install deprecated && \
-    pip install ftputils && \
+    pip install ftputil && \
     pip install importlib-metadata && \
     pip install pytz && \
     pip install PyYAML && \
