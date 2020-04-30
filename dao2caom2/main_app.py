@@ -787,8 +787,16 @@ def update(observation, **kwargs):
 
     headers = kwargs.get('headers')
     fqn = kwargs.get('fqn')
-    dao_name = dn.DAOName(file_name=os.path.basename(fqn))
+    uri = kwargs.get('uri')
+    dao_name = None
+    if uri is not None:
+        dao_name = dn.DAOName(artifact_uri=uri)
+    if fqn is not None:
+        dao_name = dn.DAOName(file_name=os.path.basename(fqn))
 
+    if dao_name is None:
+        raise mc.CadcException(f'Need one of fqn or uri defined for '
+                               f'{observation.observation_id}')
     # correct the *_axis values
     for plane in observation.planes.values():
         for artifact in plane.artifacts.values():

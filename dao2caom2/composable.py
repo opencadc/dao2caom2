@@ -87,7 +87,7 @@ def _run():
         is used by airflow for task instance management and reporting.
     """
     builder = collection_builder.DAOBuilder()
-    return rc.run_by_todo(builder=builder, command_name=APPLICATION,
+    return rc.run_by_todo(name_builder=builder, command_name=APPLICATION,
                           meta_visitors=meta_visitors,
                           data_visitors=data_visitors)
 
