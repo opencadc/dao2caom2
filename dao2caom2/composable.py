@@ -72,11 +72,11 @@ import sys
 import traceback
 
 from caom2pipe import run_composable as rc
-from dao2caom2 import APPLICATION, collection_builder
+from dao2caom2 import APPLICATION, collection_builder, preview_augmentation
 
 
 meta_visitors = []
-data_visitors = []
+data_visitors = [preview_augmentation]
 
 
 def _run():
