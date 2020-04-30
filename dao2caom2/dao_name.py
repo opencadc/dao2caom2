@@ -112,6 +112,10 @@ class DAOName(mc.StorageName):
                f'file id {self._file_id}'
 
     @property
+    def file_id(self):
+        return self._file_id
+
+    @property
     def file_name(self):
         return self._file_name
 
@@ -123,8 +127,18 @@ class DAOName(mc.StorageName):
         return True
 
     @property
+    def prev(self):
+        """The preview file name for the file."""
+        return '{}_prev.jpg'.format(self.file_id)
+
+    @property
     def product_id(self):
         return self._file_id
+
+    @property
+    def thumb(self):
+        """The thumbnail file name for the file."""
+        return '{}_prev_256.jpg'.format(self.file_id)
 
     @staticmethod
     def is_derived(entry):
