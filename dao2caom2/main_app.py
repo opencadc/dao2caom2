@@ -158,8 +158,6 @@ def get_energy_axis_function_delta(parameters):
                 pass
             else:
                 if cdelt is None:
-                    logging.error(f'hows the wavelength? xbin {header.get("XBIN")} '
-                                  f'ybin {header.get("YBIN")}')
                     dispersion = header.get('DISPERSI')
                     dispaxis = _get_dispaxis(header)
                     if dispaxis == 1:
@@ -167,8 +165,6 @@ def get_energy_axis_function_delta(parameters):
                     else:
                         xbin = mc.to_float(header.get('YBIN'))
                     cdelt = dispersion * 15.0 * xbin / 1000.0
-                    logging.error(f'cdelt is {cdelt} dispersion is '
-                                  f'{dispersion} xbin is {xbin}')
         else:
             cdelt = header.get('BANDPASS')
     return cdelt
@@ -200,7 +196,6 @@ def get_energy_axis_function_refcoord_pix(parameters):
                             crpix = (int(xh) - int(xl)) / 2.0 + int(xl)
                         else:
                             crpix = (int(yh) - int(yl)) / 2.0 + int(yl)
-    logging.error(f'get_energy_axis_function_refcoord_pix {execution_path} {crpix}')
     return crpix
 
 
@@ -212,7 +207,6 @@ def get_energy_axis_function_refcoord_val(parameters):
         result = header.get('WAVELENG')
     elif execution_path is ExecutionPath.SPECT_CALIBRATED:
         result = header.get('CRVAL1')
-    logging.error(f'get_energy_axis_function_refcoord val {result}')
     return result
 
 
@@ -350,120 +344,106 @@ def _pattern(header, science_spectrum, science_image):
 
 
 def get_position_function_cd11(parameters):
-    header = parameters.get('header')
-    result = None
-    artifact_product_type = get_artifact_product_type(header)
-    data_product_type = get_data_product_type(header)
-    calibration_level = get_calibration_level(parameters)
-    if artifact_product_type is ProductType.SCIENCE:
-        if data_product_type == DataProductType.SPECTRUM:
-            # DB - set entrance aperture to a fixed 5" by 5" because of lack
-            # of detailed information
-            result = -0.001388
-        else:
-            if calibration_level is CalibrationLevel.RAW_STANDARD:
-                platescale = mc.to_float(header.get('PLTSCALE'))
-                pixsize = mc.to_float(header.get('PIXSIZE'))
-                xbin = mc.to_float(header.get('XBIN'))
-                if (platescale is not None and
-                        pixsize is not None and
-                        xbin is not None):
-                    logging.error('am i here?')
-                    result = platescale * pixsize * xbin / 3600000.0
-            else:
-                result = header.get('CD1_1')
-    else:
+    def science_spectrum(header, key):
+        # DB - set entrance aperture to a fixed 5" by 5" because of lack
+        # of detailed information
+        return -0.001388
+
+    def cal(header, key, data_product_type):
+        result = None
         obs_type = header.get('OBSTYPE')
-        if data_product_type == DataProductType.IMAGE:
-            if obs_type == 'dark':
-                platescale = mc.to_float(header.get('PLTSCALE', 0.0))
-                pixsize = mc.to_float(header.get('PIXSIZE', 0.0))
-                xbin = mc.to_float(header.get('XBIN', 0.0))
-                logging.error('must be here then')
-                result = platescale * pixsize * xbin / 3600000.0
-            if calibration_level is CalibrationLevel.CALIBRATED:
-                result = header.get('CD1_1')
+        if data_product_type == DataProductType.IMAGE and obs_type == 'dark':
+            result = _get_position_by_scale_size_bin(header, key)
         else:
             if obs_type == 'dark':
                 result = -0.001388
-    return result
+        return result
+
+    return _get_position_template(parameters, 'CD1_1', science_spectrum,
+                                  _get_header_value,
+                                  _get_position_by_scale_size_bin, cal)
 
 
 def get_position_function_cd12(parameters):
-    header = parameters.get('header')
-    result = None
-    artifact_product_type = get_artifact_product_type(header)
-    calibration_level = get_calibration_level(parameters)
-    if artifact_product_type is ProductType.SCIENCE:
-        data_product_type = get_data_product_type(header)
-        if data_product_type == DataProductType.SPECTRUM:
-            result = 0.0
-        else:
-            if calibration_level is CalibrationLevel.CALIBRATED:
-                result = header.get('CD1_2')
-            else:
-                result = 0.0
-    else:
-        obs_type = header.get('OBSTYPE')
-        if obs_type == 'dark':
-            result = 0.0
-    return result
+    def science_spectrum(header, key):
+        return 0.0
+
+    return _get_position_template(parameters, 'CD1_2', science_spectrum,
+                                  _get_header_value, science_spectrum,
+                                  _get_position_dark)
 
 
 def get_position_function_cd21(parameters):
-    header = parameters.get('header')
-    result = None
-    calibration_level = get_calibration_level(parameters)
-    artifact_product_type = get_artifact_product_type(header)
-    if artifact_product_type is ProductType.SCIENCE:
-        data_product_type = get_data_product_type(header)
-        if data_product_type == DataProductType.SPECTRUM:
-            result = 0.0
-        else:
-            if calibration_level is CalibrationLevel.CALIBRATED:
-                result = header.get('CD2_1')
-            else:
-                result = 0.0
-    else:
-        obs_type = header.get('OBSTYPE')
-        if obs_type == 'dark':
-            result = 0.0
-    return result
+    def science_spectrum(header, key):
+        return 0.0
+
+    return _get_position_template(parameters, 'CD2_1', science_spectrum,
+                                  _get_header_value, science_spectrum,
+                                  _get_position_dark)
 
 
 def get_position_function_cd22(parameters):
+    def science_spectrum(header, key):
+        # DB - set entrance aperture to a fixed 5" by 5" because of lack
+        # of detailed information
+        return 0.001388
+
+    def cal(header, key, data_product_type):
+        result = None
+        obs_type = header.get('OBSTYPE')
+        if data_product_type == DataProductType.IMAGE and obs_type == 'dark':
+            result = _get_position_by_scale_size_bin(header, key)
+        else:
+            if obs_type == 'dark':
+                result = 0.001388
+        return result
+
+    return _get_position_template(parameters, 'CD2_2', science_spectrum,
+                                  _get_header_value,
+                                  _get_position_by_scale_size_bin, cal)
+
+
+def _get_position_template(parameters, key, science_spectrum,
+                           science_image_calib,
+                           science_image_raw, cal):
     header = parameters.get('header')
-    result = None
     artifact_product_type = get_artifact_product_type(header)
     data_product_type = get_data_product_type(header)
     calibration_level = get_calibration_level(parameters)
     if artifact_product_type is ProductType.SCIENCE:
         if data_product_type == DataProductType.SPECTRUM:
-            # DB - set entrance aperture to a fixed 5" by 5" because of lack
-            # of detailed information
-            result = 0.001388
+            result = science_spectrum(header, key)
         else:
             if calibration_level is CalibrationLevel.CALIBRATED:
-                result = header.get('CD2_2')
+                result = science_image_calib(header, key)
             else:
-                platescale = mc.to_float(header.get('PLTSCALE'))
-                pixsize = mc.to_float(header.get('PIXSIZE'))
-                xbin = mc.to_float(header.get('XBIN'))
-                if (platescale is not None and
-                        pixsize is not None and
-                        xbin is not None):
-                    result = platescale * pixsize * xbin / 3600000.0
+                result = science_image_raw(header, key)
     else:
-        obs_type = header.get('OBSTYPE')
-        if data_product_type == DataProductType.IMAGE and obs_type == 'dark':
-            platescale = mc.to_float(header.get('PLTSCALE', 0.0))
-            pixsize = mc.to_float(header.get('PIXSIZE', 0.0))
-            xbin = mc.to_float(header.get('XBIN', 0.0))
-            logging.error('must also be here then')
-            result = platescale * pixsize * xbin / 3600000.0
-        else:
-            if obs_type == 'dark':
-                result = 0.001388
+        result = cal(header, key, data_product_type)
+    return result
+
+
+def _get_header_value(header, key):
+    return header.get(key)
+
+
+def _get_position_by_scale_size_bin(header, key):
+    result = None
+    platescale = mc.to_float(header.get('PLTSCALE'))
+    pixsize = mc.to_float(header.get('PIXSIZE'))
+    xbin = mc.to_float(header.get('XBIN'))
+    if (platescale is not None and
+            pixsize is not None and
+            xbin is not None):
+        result = platescale * pixsize * xbin / 3600000.0
+    return result
+
+
+def _get_position_dark(header, key, data_product_type):
+    result = None
+    obs_type = header.get('OBSTYPE')
+    if obs_type == 'dark':
+        result = 0.0
     return result
 
 
@@ -518,7 +498,6 @@ def get_time_exposure(header):
         # DB - approximation of exposure time for products (assume identical
         # EXPTIME)
         exptime *= ncombine
-    logging.error(f'exptime {exptime} ncombine {ncombine}')
     return exptime
 
 
@@ -802,7 +781,6 @@ def update(observation, **kwargs):
         for artifact in plane.artifacts.values():
             if artifact.uri.replace('.gz', '') != dao_name.file_uri.replace('.gz', ''):
                 continue
-            logging.error(f'update artifact {artifact.uri} file {dao_name.file_uri}')
 
             for part in artifact.parts.values():
                 for chunk in part.chunks:
@@ -818,12 +796,9 @@ def update(observation, **kwargs):
                                 observation.type == 'flat'):
                             cc.reset_energy(chunk)
                         if artifact.product_type == ProductType.SCIENCE:
-                            logging.error('science')
                             chunk.position_axis_1 = 3
                             chunk.position_axis_2 = 4
                         else:
-                            logging.error(f'not science {artifact.product_type}'
-                                          f' type {observation.type}')
                             if observation.type == 'dark':
                                 chunk.position_axis_1 = 3
                                 chunk.position_axis_2 = 4
