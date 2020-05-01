@@ -904,25 +904,6 @@ def _make_uris(obs_id, product_id):
     return plane_uri
 
 
-# def update_chunk_position(chunk, headers):
-#     naxis1 = headers[0].get('NAXIS1')
-#     naxis2 = headers[0].get('NAXIS2')
-#     ra = headers[0].get('RA')
-#     dec = headers[0].get('DEC')
-#     equinox = headers[0].get('EQUINOX')
-#     platescale = mc.to_float(headers[0].get('PLTSCALE'))
-#     pixsize = mc.to_float(headers[0].get('PIXSIZE'))
-#     xbin = mc.to_float(headers[0].get('XBIN'))
-#     cd11 = platescale * pixsize * xbin / 3600000.0
-#     cd22 = cd11
-#     cd12 = mc.to_float(naxis1) / 2.0
-#     cd21 = cd12
-#     chunk.position_axis_1 = 1
-#     chunk.position_axis_2 = 2
-#     from caom2 import SpatialWCS
-#     chunk.position = SpatialWCS()
-
-
 def _build_blueprints(uris):
     """This application relies on the caom2utils fits2caom2 ObsBlueprint
     definition for mapping FITS file values to CAOM model element

@@ -161,44 +161,16 @@ def test_visit(ad_put_mock):
         for f_name in value:
             kwargs['science_file'] = f_name
 
-            test_name = dao_name.DAOName(file_name=f_name)
-            check_number = 1
-            assert len(obs.planes[test_name.product_id].artifacts) == \
-                check_number, f'initial condition {f_name}'
-
             try:
-                test_result = preview_augmentation.visit(obs, **kwargs)
+                ignore = preview_augmentation.visit(obs, **kwargs)
             except Exception as e:
-                import logging
-                logging.error(e)
-                import traceback
-                logging.error(traceback.format_exc())
-                assert False
+                assert False, f'{str(e)}'
 
-            assert test_result is not None, f'expect a result {f_name}'
-
-            check_number = 2
-            end_artifact_count = 3
-            expected_call_count = 2
+            test_name = dao_name.DAOName(file_name=f_name)
             f_name_list = [test_name.prev_uri, test_name.thumb_uri]
-
-            assert test_result['artifacts'] == check_number, \
-                f'artifacts should be added {f_name}'
-
-            assert len(obs.planes[test_name.product_id].artifacts) == \
-                   end_artifact_count, f'new artifacts {f_name}'
-
             for p in f_name_list:
-                assert p in obs.planes[test_name.product_id].artifacts.keys(), \
-                    f'no preview {p}'
                 artifact = obs.planes[test_name.product_id].artifacts[p]
                 assert artifact.content_checksum.uri == test_checksums[p], \
                     f'wrong checksum {p} {artifact.content_checksum} ' \
                     f'{test_checksums[p]}'
-
-            assert ad_put_mock.called, f'ad put mock not called {f_name}'
-            assert ad_put_mock.call_count == expected_call_count, \
-                f'ad put called wrong number of times {f_name}'
-            ad_put_mock.reset_mock()
-
     # assert False
