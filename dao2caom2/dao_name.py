@@ -105,7 +105,7 @@ class DAOName(mc.StorageName):
             obs_id, COLLECTION, DAOName.DAO_NAME_PATTERN, fname_on_disk)
         self._file_id = file_id
         self._logger = logging.getLogger(__name__)
-        self._logger.error(self)
+        self._logger.debug(self)
 
     def __str__(self):
         return f'obs id {self._obs_id} file name {self.file_name} ' \

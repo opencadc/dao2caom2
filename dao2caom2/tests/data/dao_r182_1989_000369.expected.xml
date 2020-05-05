@@ -48,11 +48,6 @@
               <caom2:name>0</caom2:name>
               <caom2:chunks>
                 <caom2:chunk caom2:id="00000000-0000-0000-2fc0-01642905a6ce" caom2:lastModified="2018-06-22T19:43:26.310" caom2:maxLastModified="2018-06-22T19:43:26.310" caom2:metaChecksum="md5:90f307ce729af505899dd381ec5ab42f" caom2:accMetaChecksum="md5:b0a392dd92cc366f91d0d6707cb08551">
-                  <caom2:naxis>2</caom2:naxis>
-                  <caom2:observableAxis>2</caom2:observableAxis>
-                  <caom2:positionAxis1>3</caom2:positionAxis1>
-                  <caom2:positionAxis2>4</caom2:positionAxis2>
-                  <caom2:timeAxis>5</caom2:timeAxis>
                   <caom2:observable>
                     <caom2:dependent>
                       <caom2:axis>

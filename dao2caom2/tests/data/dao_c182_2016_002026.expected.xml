@@ -56,9 +56,6 @@
               <caom2:name>0</caom2:name>
               <caom2:chunks>
                 <caom2:chunk caom2:id="00000000-0000-0000-b720-015519cb8909" caom2:lastModified="2017-04-05T01:40:39.127" caom2:maxLastModified="2017-04-05T01:40:39.127" caom2:metaChecksum="md5:3e6700127b0ce817acdf2783fd7f72b9" caom2:accMetaChecksum="md5:96e48d90230139a3c167f2c9740874b8">
-                  <caom2:naxis>2</caom2:naxis>
-                  <caom2:energyAxis>4</caom2:energyAxis>
-                  <caom2:timeAxis>3</caom2:timeAxis>
                   <caom2:energy>
                     <caom2:axis>
                       <caom2:axis>

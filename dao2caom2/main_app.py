@@ -679,7 +679,6 @@ def accumulate_bp(bp, uri):
     bp.clear('Plane.provenance.name')
     bp.add_fits_attribute('Plane.provenance.name', 'PROCNAME')
     bp.set_default('Plane.provenance.name', 'DAO unprocessed data')
-    # bp.set('Plane.provenance.name', 'DAO unprocessed data')
     bp.set('Plane.provenance.producer', 'NRC Herzberg')
     bp.set('Plane.provenance.reference',
            'https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/dao/')
@@ -788,17 +787,11 @@ def update(observation, **kwargs):
                     cc.undo_astropy_cdfix_call(chunk, time_delta)
 
                     if plane.data_product_type == DataProductType.SPECTRUM:
-                        chunk.observable_axis = 2
-                        chunk.time_axis = 5
-                        chunk.energy_axis = 1
                         if (dn.DAOName.is_unprocessed_reticon(artifact.uri) or
                             dn.DAOName.is_derived(artifact.uri) and
                                 observation.type == 'flat'):
                             cc.reset_energy(chunk)
-                        if artifact.product_type == ProductType.SCIENCE:
-                            chunk.position_axis_1 = 3
-                            chunk.position_axis_2 = 4
-                        else:
+                        if not artifact.product_type == ProductType.SCIENCE:
                             if observation.type == 'dark':
                                 chunk.position_axis_1 = 3
                                 chunk.position_axis_2 = 4
@@ -818,6 +811,40 @@ def update(observation, **kwargs):
                                 cc.reset_position(chunk)
                             if observation.type not in ['flat', 'dark']:
                                 cc.reset_energy(chunk)
+
+                    # WCS axis wisdom from Pat:
+                    #
+                    # In general, assigning axis indices above the value of
+                    # naxis is allowed but more or less pointless. The only use
+                    # case that would justify it is that in a FITS file there
+                    # could be a header with NAXIS=2 and WCSAXES=4 which would
+                    # tell the fits reader to look for CTYPE1 through 4 and
+                    # axes 3 and 4 are metadata. Assign those values to Chunk
+                    # only if you care about capturing that the extra wcs
+                    # metadata was really in the fits header and so the order
+                    # could be preserved; in general do not assign the 3 and 4.
+
+                    chunk.energy_axis = None
+                    chunk.observable_axis = None
+                    chunk.time_axis = None
+                    naxis = headers[0].get('NAXIS')
+                    naxis1 = headers[0].get('NAXIS1')
+                    naxis2 = headers[0].get('NAXIS2')
+                    chunk.naxis = None
+                    chunk.position_axis_1 = None
+                    chunk.position_axis_2 = None
+                    if naxis is not None:
+                        if (naxis1 is not None and naxis2 is not None and
+                                naxis == 2 and chunk.position is not None and
+                                plane.data_product_type is
+                                DataProductType.IMAGE):
+                            chunk.naxis = 2
+                            chunk.position_axis_1 = 1
+                            chunk.position_axis_2 = 2
+                        if (naxis1 is not None and naxis == 1 and
+                                chunk.energy is not None):
+                            chunk.naxis = 1
+                            chunk.energy_axis = 1
 
         if plane.product_id != dao_name.product_id:
             continue
