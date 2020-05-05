@@ -293,6 +293,7 @@ def get_position_function_coord1_pix(parameters):
         return _get_naxis1(header) / 2.0
 
     def cal(header, key, data_product_type):
+        result = None
         if data_product_type == DataProductType.IMAGE:
             result = science_image_raw(header, key)
         else:
@@ -314,6 +315,7 @@ def get_position_function_coord2_pix(parameters):
         return _get_naxis2(header) / 2.0
 
     def cal(header, key, data_product_type):
+        result = None
         if data_product_type == DataProductType.IMAGE:
             result = science_image_raw(header, key)
         else:
