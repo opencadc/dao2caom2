@@ -212,7 +212,7 @@ class DAOPreview(mc.PreviewVisitor):
                              preview_fqn):
         pylab.clf()
         pylab.grid(True)
-        pylab.plot(wln, flux, color='k' )
+        pylab.plot(wln, flux, color='k')
         pylab.xlabel(x_label, color='k')
         pylab.ylabel('Intensity', color='k')
         pylab.xlim(wln.min(), wln.max())
@@ -227,4 +227,5 @@ class DAOPreview(mc.PreviewVisitor):
 
 def visit(observation, **kwargs):
     previewer = DAOPreview(**kwargs)
-    return previewer.visit(observation)
+    dao_name = dn.DAOName(file_name=previewer.science_file)
+    return previewer.visit(observation, dao_name)

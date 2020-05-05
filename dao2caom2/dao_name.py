@@ -141,6 +141,16 @@ class DAOName(mc.StorageName):
         return '{}_prev_256.jpg'.format(self.file_id)
 
     @staticmethod
+    def get_obs_id(file_name):
+        # observation ID differs from the file ID for processed data, except
+        # for composite processed observations (master biases and flats)
+        file_id = mc.StorageName.remove_extensions(file_name)
+        obs_id = file_id
+        if re.match('dao_[cr]\\d{3}_\\d{4}_\\d{6}_[aev]', file_id):
+            obs_id = file_id[0:-2]
+        return obs_id
+
+    @staticmethod
     def is_derived(entry):
         # entry is a uri
         result = False
@@ -159,30 +169,6 @@ class DAOName(mc.StorageName):
         return result
 
     @staticmethod
-    def is_processed_image(entry):
-        # entry is a uri
-        result = False
-        if re.match('ad:DAO/dao_[c]\\d{3}_\\d{4}_\\d{6}_[aBF].\\w', entry):
-            result = True
-        return result
-
-    @staticmethod
-    def is_spectrum(entry):
-        # entry is a uri
-        file_id = mc.CaomName(entry).file_id
-        result = False
-        # processed DAO spectrum
-        if (re.match('dao_[cr]\\d{3}_\\d{4}_\\d{6}_[aevBF]', file_id) or
-                # unprocessed DAO CCD spectrum
-                re.match('dao_[c]\\d{3}_\\d{4}_\\d{6}', file_id) or
-                # unprocessed DAO RETICON spectrum
-                re.match('dao_[r]\\d{3}_\\d{4}_\\d{6}', file_id) or
-                # processed photographic plate spectrum
-                re.match('dao_[p]\\d{3}_\\d{6}(u|v|y|r|i|)', file_id)):
-            result = True
-        return result
-
-    @staticmethod
     def is_unprocessed_reticon(entry):
         # the entry is a uri
         file_id = mc.CaomName(entry).file_id
@@ -192,12 +178,10 @@ class DAOName(mc.StorageName):
         return result
 
     @staticmethod
-    def get_obs_id(file_name):
-        # observation ID differs from the file ID for processed data, except
-        # for composite processed observations (master biases and flats)
-        file_id = mc.StorageName.remove_extensions(file_name)
-        obs_id = file_id
-        if re.match('dao_[cr]\\d{3}_\\d{4}_\\d{6}_[aev]', file_id):
-            obs_id = file_id[0:-2]
-        return obs_id
+    def override_provenance(entry):
+        # entry is a uri
+        result = False
+        if re.match('ad:DAO/dao_[c]\\d{3}_\\d{4}_\\d{6}_[aBF].\\w', entry):
+            result = True
+        return result
 

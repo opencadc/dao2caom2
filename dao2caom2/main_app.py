@@ -67,6 +67,19 @@
 # ***********************************************************************
 #
 
+"""
+DB - github comments - 30-04-20
+
+In the original dao2caom2 the FITS header OBSMODE value is checked first to
+see if the file is an 'Imaging' or 'Spectroscopy' observation.
+
+Use the INSTRUME value and if "Imager" is in the string it's an image. This is
+better than depending on file naming patterns, since if I ever do a special
+preview for spectropolarimeter observations it will capture that info as well.
+(OBSMODE = single-slit spectroscopy for regular spectroscopy and
+spectropolarimetry for historical reasons).
+
+"""
 import importlib
 import logging
 import os
@@ -112,8 +125,8 @@ def get_calibration_level(parameters):
 
 
 def get_data_product_type(header):
-    obs_mode = header.get('OBSMODE')
-    if obs_mode is not None and obs_mode.strip() == 'Imaging':
+    obs_mode = _get_obs_mode(header)
+    if obs_mode == 'Imaging':
         data_product_type = DataProductType.IMAGE
     else:
         data_product_type = DataProductType.SPECTRUM
@@ -136,19 +149,16 @@ def get_energy_axis_function_naxis(parameters):
                 naxis = _get_naxis2(header)
             else:
                 raise mc.CadcException(
-                    f'Could not find dispaxis for \'TODO\'')
+                    f'Could not find dispaxis for {uri}')
     return naxis
 
 
 def get_energy_axis_function_delta(parameters):
     uri = parameters.get('uri')
     header = parameters.get('header')
-    cdelt = 1.0
     execution_path = _get_execution_path(parameters)
     if execution_path is ExecutionPath.SPECT_CALIBRATED:
         cdelt = header.get('CDELT1')
-    # elif execution_path is ExecutionPath.SPECT_RAW:
-    #     cdelt = header.get('DELTA_WL')
     else:
         data_product_type = get_data_product_type(header)
         if data_product_type == DataProductType.SPECTRUM:
@@ -187,7 +197,8 @@ def get_energy_axis_function_refcoord_pix(parameters):
                 if crpix is None:
                     temp = header.get('DATASEC')
                     if temp is not None:
-                        datasec = re.sub(r'(\[)(\d+:\d+,\d+:\d+)(\])', r'\g<2>', temp)
+                        datasec = re.sub(r'(\[)(\d+:\d+,\d+:\d+)(\])',
+                                         r'\g<2>', temp)
                         (dx, dy) = datasec.split(',')
                         (xl, xh) = dx.split(':')
                         (yl, yh) = dy.split(':')
@@ -235,7 +246,7 @@ def _get_execution_path(parameters):
     header = parameters.get('header')
     obs_mode = _get_obs_mode(header)
     obs_type = _get_obs_type(header)
-    if obs_mode == 'imaging':
+    if obs_mode == 'Imaging':
         result = ExecutionPath.IMAGING
     else:
         result = ExecutionPath.SPECT_RAW
@@ -261,6 +272,7 @@ def get_geo_z(header):
 
 
 def get_members(header):
+    # this function exists so fits2caom2 creates the correct Observation type
     pass
 
 
@@ -274,51 +286,45 @@ def get_obs_intent(header):
 
 
 def get_position_function_coord1_pix(parameters):
-    header = parameters.get('header')
-    result = None
-    artifact_product_type = get_artifact_product_type(header)
-    data_product_type = get_data_product_type(header)
-    if artifact_product_type is ProductType.SCIENCE:
-        if data_product_type == DataProductType.SPECTRUM:
-            result = 1.0
-        else:
-            calibration_level = get_calibration_level(parameters)
-            if calibration_level is CalibrationLevel.CALIBRATED:
-                result = header.get('CRPIX1')
-            else:
-                result = _get_naxis1(header) / 2.0
-    else:
+    def science_spectrum(header, key):
+        return 1.0
+
+    def science_image_raw(header, key):
+        return _get_naxis1(header) / 2.0
+
+    def cal(header, key, data_product_type):
         if data_product_type == DataProductType.IMAGE:
-            result = _get_naxis1(header) / 2.0
+            result = science_image_raw(header, key)
         else:
             obs_type = header.get('OBSTYPE')
             if obs_type == 'dark':
                 result = 1.0
-    return result
+        return result
+
+    return _get_position_template(parameters, 'CRPIX1', science_spectrum,
+                                  _get_header_value,
+                                  science_image_raw, cal)
 
 
 def get_position_function_coord2_pix(parameters):
-    header = parameters.get('header')
-    result = None
-    artifact_product_type = get_artifact_product_type(header)
-    data_product_type = get_data_product_type(header)
-    if artifact_product_type is ProductType.SCIENCE:
-        if data_product_type == DataProductType.SPECTRUM:
-            result = 1.0
-        else:
-            calibration_level = get_calibration_level(parameters)
-            if calibration_level is CalibrationLevel.CALIBRATED:
-                result = header.get('CRPIX2')
-            else:
-                result = _get_naxis2(header) / 2.0
-    else:
+    def science_spectrum(header, key):
+        return 1.0
+
+    def science_image_raw(header, key):
+        return _get_naxis2(header) / 2.0
+
+    def cal(header, key, data_product_type):
         if data_product_type == DataProductType.IMAGE:
-            result = _get_naxis2(header) / 2.0
+            result = science_image_raw(header, key)
         else:
             obs_type = header.get('OBSTYPE')
             if obs_type == 'dark':
                 result = 1.0
-    return result
+        return result
+
+    return _get_position_template(parameters, 'CRPIX2', science_spectrum,
+                                  _get_header_value,
+                                  science_image_raw, cal)
 
 
 def get_position_function_coord1_val(header):
@@ -329,18 +335,6 @@ def get_position_function_coord1_val(header):
 def get_position_function_coord2_val(header):
     ignore_ra, dec = _get_position(header)
     return dec
-
-
-def _pattern(header, science_spectrum, science_image):
-    result = None
-    artifact_product_type = get_artifact_product_type(header)
-    if artifact_product_type is ProductType.SCIENCE:
-        data_product_type = get_data_product_type(header)
-        if data_product_type == DataProductType.SPECTRUM:
-            result = science_spectrum()
-        else:
-            result = science_image()
-    return result
 
 
 def get_position_function_cd11(parameters):
@@ -452,7 +446,7 @@ def get_position_function_dimension_naxis1(header):
     if data_product_type == DataProductType.SPECTRUM:
         result = 1
     else:
-        result = header.get('NAXIS1')
+        result = _get_naxis1(header)
     return result
 
 
@@ -461,7 +455,7 @@ def get_position_function_dimension_naxis2(header):
     if data_product_type == DataProductType.SPECTRUM:
         result = 1
     else:
-        result = header.get('NAXIS2')
+        result = _get_naxis2(header)
     return result
 
 
@@ -594,9 +588,12 @@ def _get_obs_mode(header):
     :return:
     """
     obs_mode = header.get('OBSMODE')
-    result = 'imaging'
+    # DB 30-04-20
+    # I added an obsmodes hash to allow it to be imaging or Imaging but all
+    # should be 'Imaging'.
+    result = 'Imaging'
     if '-slit' in obs_mode:
-        result = 'spectroscopy'
+        result = 'Spectroscopy'
     return result
 
 
@@ -779,7 +776,8 @@ def update(observation, **kwargs):
     # correct the *_axis values
     for plane in observation.planes.values():
         for artifact in plane.artifacts.values():
-            if artifact.uri.replace('.gz', '') != dao_name.file_uri.replace('.gz', ''):
+            if (artifact.uri.replace('.gz', '') !=
+                    dao_name.file_uri.replace('.gz', '')):
                 continue
 
             for part in artifact.parts.values():
@@ -809,7 +807,7 @@ def update(observation, **kwargs):
                                     ['flat', 'comparison', 'dark']):
                                 cc.reset_energy(chunk)
                     else:  # DataProductType.IMAGE
-                        if dn.DAOName.is_processed_image(artifact.uri):
+                        if dn.DAOName.override_provenance(artifact.uri):
                             plane.provenance.producer = 'Spaceguard_C'
                         # no observable axis when image
                         cc.reset_observable(chunk)
@@ -821,6 +819,20 @@ def update(observation, **kwargs):
 
         if plane.product_id != dao_name.product_id:
             continue
+
+        # provenance: inputs vs members
+        #
+        # DB - 29-04-20
+        # The inconsistencies are consistent for both telescope for the
+        # derived observations: the processed, co-added flats (files with F
+        # suffix) and co-added biases (files with B suffix).  These should
+        # have the ‘members’ list added to the inputs.  From the definition of
+        # provenance:inputs I’m assuming for the science observations,
+        # processed comparison arcs, and processed flats having a composite
+        # flat and/or bias observation as an ‘input’ is okay rather than
+        # breaking these down into their individual members (since those
+        # derived observations will all be available in the archive with
+        # proper provenance provided).
 
         if observation.type == 'flat' and cc.is_composite(headers, 'FLAT_'):
             cc.update_plane_provenance(plane, headers, 'FLAT_', dn.COLLECTION,
