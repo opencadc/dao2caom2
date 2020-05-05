@@ -488,7 +488,7 @@ def get_time_axis_val(header):
 
 
 def get_time_exposure(header):
-    exptime = header.get('EXPTIME')
+    exptime = mc.to_float(header.get('EXPTIME'))
     ncombine = mc.to_float(header.get('NCOMBINE'))
     if ncombine is not None:
         # DB - approximation of exposure time for products (assume identical
@@ -498,7 +498,7 @@ def get_time_exposure(header):
 
 
 def get_time_resolution(header):
-    exptime = header.get('EXPTIME')
+    exptime = mc.to_float(header.get('EXPTIME'))
     ncombine = mc.to_float(header.get('NCOMBINE'))
     if ncombine is None:
         ncombine = 1
