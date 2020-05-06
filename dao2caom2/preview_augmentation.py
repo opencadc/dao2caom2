@@ -96,7 +96,8 @@ class DAOPreview(mc.PreviewVisitor):
         hdu_list = fits.open(science_fqn)
         header = hdu_list[0].header
 
-        if 'v' in storage_name.file_name:
+        if ('e' in storage_name.file_name or 'p' in storage_name.file_name or
+                'v' in storage_name.file_name):
             count += self._do_cal_processed(
                 hdu_list, header, science_fqn, storage_name, preview_fqn,
                 thumb_fqn, obs_id)
@@ -131,7 +132,7 @@ class DAOPreview(mc.PreviewVisitor):
             logging.info(f'Object: {object_type}')
 
             # if daoplate, daoPlate = False if 'v' in science_fqn:
-            if 'v' in science_fqn:
+            if 'v' in science_fqn or 'e' in science_fqn:
                 flux = hdu_list[0].data
             else:
                 flux = hdu_list[0].data[0]
@@ -153,7 +154,8 @@ class DAOPreview(mc.PreviewVisitor):
         count = 0
         detector = header.get('DETECTOR')
         instrument = header.get('INSTRUME')
-        if detector in ['SITe-4', 'UBC-1', 'SITe-2', 'SITe-5', 'E2V-1', 'E2V-4']:
+        if detector in ['SITe-4', 'UBC-1', 'SITe-2', 'SITe-5', 'E2V-1',
+                        'E2V-4']:
             # unprocessed CCD data
             if detector == 'SITe-4':
                 axis = 'NAXIS2'
@@ -202,9 +204,10 @@ class DAOPreview(mc.PreviewVisitor):
                 for i in range(0, naxis1):
                     wl.append(i + 1)
                 wln = np.array(wl)
-                self._write_files_to_disk(wln, flux, 'Pixel',
-                                     f'{storage_name.file_id}: {object_type}',
-                                          thumb_fqn, preview_fqn)
+                self._write_files_to_disk(
+                    wln, flux, 'Pixel',
+                    f'{storage_name.file_id}: {object_type}', thumb_fqn,
+                    preview_fqn)
                 count = 2
         return count
 

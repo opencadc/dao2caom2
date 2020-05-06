@@ -103,6 +103,8 @@ def test_visit(ad_put_mock):
         'dao_c182_2017_010870.xml': ['dao_c182_2017_010870.fits.gz'],
         'dao_c182_2017_019322.xml': ['dao_c182_2017_019322.fits.gz'],
         'dao_c182_2017_016292.xml': ['dao_c182_2017_016292.fits.gz'],
+        'visit_obs_start_e.xml':
+            ['dao_c122_2007_000881.fits.gz', 'dao_c122_2007_000881_e.fits']
     }
 
     test_checksums = {
@@ -145,7 +147,16 @@ def test_visit(ad_put_mock):
         'ad:DAO/dao_c182_2017_016292_prev.jpg':
             'md5:88266cc671db81ad3804ed9f00662f51',
         'ad:DAO/dao_c182_2017_016292_prev_256.jpg':
-            'md5:41c5e368839076d5efbcdad09be094af'}
+            'md5:41c5e368839076d5efbcdad09be094af',
+        'ad:DAO/dao_c122_2007_000881_prev.jpg':
+            'md5:16ad2bc4747fb2360813a4cc34f0ad84',
+        'ad:DAO/dao_c122_2007_000881_prev_256.jpg':
+            'md5:33ac01e8211e535552495b496dc286fb',
+        'ad:DAO/dao_c122_2007_000881_e_prev.jpg':
+            'md5:854bf08b08ec703fcca4fd57d1890360',
+        'ad:DAO/dao_c122_2007_000881_e_prev_256.jpg':
+            'md5:43764c2acc3dd93d3c4b7086a4eee58c',
+    }
 
     kwargs = {'working_directory': TEST_FILES_DIR,
               'cadc_client': cadc_client_mock,
