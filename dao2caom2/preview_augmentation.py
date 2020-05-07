@@ -66,6 +66,11 @@
 #
 # ***********************************************************************
 
+"""
+DB - 06-05-20
+Thumbnails and Previews are proprietary for science datasets.
+
+"""
 import logging
 import os
 
@@ -144,12 +149,13 @@ class DAOPreview(mc.PreviewVisitor):
 
             wln = np.array(wl)
             self._write_files_to_disk(wln, flux, 'Wavelength ($\AA$)',
-                                 f'{storage_name.file_id}: {object_type}',
+                                      f'{storage_name.file_id}: {object_type}',
                                       thumb_fqn, preview_fqn)
             count = 2
         return count
 
-    def _do_sci(self, hdu_list, header, storage_name, science_fqn, preview_fqn, thumb_fqn):
+    def _do_sci(self, hdu_list, header, storage_name, science_fqn, preview_fqn,
+                thumb_fqn):
         logging.debug(f'Do science preview augmentation with {science_fqn}')
         count = 0
         detector = header.get('DETECTOR')
