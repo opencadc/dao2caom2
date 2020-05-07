@@ -129,7 +129,7 @@ class DAOName(mc.StorageName):
     @property
     def prev(self):
         """The preview file name for the file."""
-        return '{}_prev.jpg'.format(self.file_id)
+        return '{}_1024.png'.format(self.file_id)
 
     @property
     def product_id(self):
@@ -138,7 +138,7 @@ class DAOName(mc.StorageName):
     @property
     def thumb(self):
         """The thumbnail file name for the file."""
-        return '{}_prev_256.jpg'.format(self.file_id)
+        return '{}_256.png'.format(self.file_id)
 
     @staticmethod
     def get_obs_id(file_name):

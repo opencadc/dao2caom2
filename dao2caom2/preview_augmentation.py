@@ -227,14 +227,14 @@ class DAOPreview(mc.PreviewVisitor):
         pylab.xlim(wln.min(), wln.max())
         pylab.ylim(0, flux.max())
         pylab.title(title, color='k', fontweight='bold')
-        temp_fn = 'temp.jpg'
-        pylab.savefig(temp_fn, format='jpg')
+        temp_fn = 'temp.png'
+        pylab.savefig(temp_fn, format='png')
         mc.exec_cmd(f'convert -resize 256x256 {temp_fn} {thumb_fqn}')
         mc.exec_cmd(f'convert -resize 1024x1024 {temp_fn} {preview_fqn}')
         self.add_to_delete(f'{self._working_dir}/{temp_fn}')
 
 
 def visit(observation, **kwargs):
-    previewer = DAOPreview(**kwargs)
+    previewer = DAOPreview(mime_type='image/png', **kwargs)
     dao_name = dn.DAOName(file_name=previewer.science_file)
     return previewer.visit(observation, dao_name)

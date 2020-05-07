@@ -21,8 +21,6 @@ RUN apt-get install -y imagemagick
 
 WORKDIR /usr/src/app
 
-RUN pip install imageio
-
 ARG OPENCADC_BRANCH=master
 ARG OPENCADC_REPO=opencadc
 ARG OMC_REPO=opencadc-metadata-curation
