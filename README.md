@@ -7,6 +7,32 @@ These are Linux-centric instructions.
 
 In an empty directory (the 'working directory'), on a machine with Docker installed:
 
+1. Set up credentials. Due to the current state state of CADC hosts, proxy certificates will not work, therefore you must use a netrc file.
+
+    In the 'working directory', create a file named 'netrc'. 
+This is the expected netrc file that will have the credentials required for the 
+CADC services. These credentials allow the user to read, write, and delete 
+CAOM2 observations, and read file header metadata and files 
+from data. This file should have content that looks like the following:
+
+   ```
+   machine www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca login canfarusername password canfarpassword
+   machine www.canfar.net login canfarusername password canfarpassword
+   machine sc2.canfar.net login canfarusername password canfarpassword
+   machine ws-cadc.canfar.net login canfarusername password canfarpassword
+   ```
+   
+   1. Replace canfarusername and canfarpassword with your CADC username and 
+   password values.
+
+   1. The permissions for this file must be 600 (owner rw only).
+   
+   1. The man page for netrc:
+   https://www.systutorials.com/docs/linux/man/5-netrc/
+   
+   1. The name and location of this file may be changed by modifying the 
+   netrc_filename entry in the config.yml file. This entry requires a 
+   fully-qualified pathname.
 1. In the master branch of this repository, one time only, find the scripts directory, and copy the file dao_run.sh to the working directory. e.g.:
 
    ```
