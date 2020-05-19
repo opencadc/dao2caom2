@@ -17,7 +17,7 @@ todo_file_name: todo.txt
 # when True, the application will look for files with
 # .fits, .gz, .json endings as defining the work to be 
 # done.
-use_local_files: True
+use_local_files: False
 # values DEBUG INFO WARNING ERROR
 logging_level: DEBUG
 # values True False
@@ -46,7 +46,7 @@ progress_file_name: progress.txt
 #
 # ad stream value - sorry
 # set stream to 'default', if using TaskType STORE or PULL
-stream: default
+stream: raw
 archive: DAO
 collection: DAO
 #
@@ -83,5 +83,6 @@ task_types:
   - modify
 features:
   supports_composite: False
+  supports_latest_caom: False
   use_file_names: True
   use_urls: False
