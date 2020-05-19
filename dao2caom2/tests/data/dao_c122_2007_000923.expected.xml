@@ -1,0 +1,111 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<caom2:Observation xmlns:caom2="http://www.opencadc.org/caom2/xml/v2.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="caom2:SimpleObservation" caom2:id="00000000-0000-0000-8870-01544511a152" caom2:lastModified="2017-04-04T20:17:06.957" caom2:maxLastModified="2017-11-20T04:52:49.877" caom2:metaChecksum="md5:66823aa1bb3091686587463e25a24384" caom2:accMetaChecksum="md5:8715c8bfc9fb09c4ccf54029d799992f">
+  <caom2:collection>DAO</caom2:collection>
+  <caom2:observationID>dao_c122_2007_000923</caom2:observationID>
+  <caom2:metaRelease>2007-01-25T22:20:00.000</caom2:metaRelease>
+  <caom2:algorithm>
+    <caom2:name>exposure</caom2:name>
+  </caom2:algorithm>
+  <caom2:type>flat</caom2:type>
+  <caom2:intent>calibration</caom2:intent>
+  <caom2:target>
+    <caom2:name>FLAT</caom2:name>
+    <caom2:type>object</caom2:type>
+    <caom2:standard>false</caom2:standard>
+    <caom2:moving>false</caom2:moving>
+  </caom2:target>
+  <caom2:telescope>
+    <caom2:name>DAO 1.2-m</caom2:name>
+    <caom2:geoLocationX>-2331226.7854122813</caom2:geoLocationX>
+    <caom2:geoLocationY>-3532798.978466634</caom2:geoLocationY>
+    <caom2:geoLocationZ>4755607.337178416</caom2:geoLocationZ>
+  </caom2:telescope>
+  <caom2:instrument>
+    <caom2:name>McKellar Spectrograph</caom2:name>
+  </caom2:instrument>
+  <caom2:environment>
+    <caom2:humidity>97.0</caom2:humidity>
+    <caom2:photometric>false</caom2:photometric>
+  </caom2:environment>
+  <caom2:planes>
+    <caom2:plane caom2:id="00000000-0000-0000-8870-01544511a8b8" caom2:lastModified="2016-04-23T21:41:06.593" caom2:maxLastModified="2017-11-20T04:52:49.877" caom2:metaChecksum="md5:0b712f8122e76d13a0a9e8d3eea0999f" caom2:accMetaChecksum="md5:0f6022a17b56c852184f0d03b91fbcb2">
+      <caom2:productID>dao_c122_2007_000923</caom2:productID>
+      <caom2:metaRelease>2007-01-25T22:20:00.000</caom2:metaRelease>
+      <caom2:dataRelease>2007-01-25T22:20:00.000</caom2:dataRelease>
+      <caom2:dataProductType>spectrum</caom2:dataProductType>
+      <caom2:calibrationLevel>1</caom2:calibrationLevel>
+      <caom2:provenance>
+        <caom2:name>DAO unprocessed data</caom2:name>
+        <caom2:project>DAO Science Archive</caom2:project>
+        <caom2:producer>NRC Herzberg</caom2:producer>
+        <caom2:reference>https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/dao/</caom2:reference>
+      </caom2:provenance>
+      <caom2:artifacts>
+        <caom2:artifact caom2:id="00000000-0000-0000-8870-01544511a8c0" caom2:lastModified="2017-11-20T04:52:49.877" caom2:maxLastModified="2017-11-20T04:52:49.877" caom2:metaChecksum="md5:8804c24a60fc00a43a076e34fed825cf" caom2:accMetaChecksum="md5:8fac729156b9b36ac7f83f120e0bf1e4">
+          <caom2:uri>ad:DAO/dao_c122_2007_000923.fits.gz</caom2:uri>
+          <caom2:productType>calibration</caom2:productType>
+          <caom2:releaseType>data</caom2:releaseType>
+          <caom2:contentType>application/fits</caom2:contentType>
+          <caom2:contentChecksum>md5:9d65651b97503770421c6d29d7e1842e</caom2:contentChecksum>
+          <caom2:parts>
+            <caom2:part caom2:id="00000000-0000-0000-8870-01544511a8c2" caom2:lastModified="2016-04-23T21:41:06.593" caom2:maxLastModified="2016-04-23T21:41:06.593" caom2:metaChecksum="md5:f2a828f589a93082a2f00d5b7e6f1c64" caom2:accMetaChecksum="md5:fdd6ce2907381c00df6f216a76f67f38">
+              <caom2:name>0</caom2:name>
+              <caom2:chunks>
+                <caom2:chunk caom2:id="00000000-0000-0000-8870-01544511a8c4" caom2:lastModified="2017-04-04T20:17:06.957" caom2:maxLastModified="2017-04-04T20:17:06.957" caom2:metaChecksum="md5:0ee85e864bdbf4e92d09a89fa3da9e3d" caom2:accMetaChecksum="md5:1619177b4d964423545f95075f168d4e">
+                  <caom2:observable>
+                    <caom2:dependent>
+                      <caom2:axis>
+                        <caom2:ctype>FLUX</caom2:ctype>
+                        <caom2:cunit>COUNTS</caom2:cunit>
+                      </caom2:axis>
+                      <caom2:bin>1</caom2:bin>
+                    </caom2:dependent>
+                  </caom2:observable>
+                  <caom2:energy>
+                    <caom2:axis>
+                      <caom2:axis>
+                        <caom2:ctype>WAVE</caom2:ctype>
+                        <caom2:cunit>m</caom2:cunit>
+                      </caom2:axis>
+                      <caom2:function>
+                        <caom2:naxis>4200</caom2:naxis>
+                        <caom2:delta>7.2e-12</caom2:delta>
+                        <caom2:refCoord>
+                          <caom2:pix>2048.5</caom2:pix>
+                          <caom2:val>6.6e-07</caom2:val>
+                        </caom2:refCoord>
+                      </caom2:function>
+                    </caom2:axis>
+                    <caom2:specsys>TOPOCENT</caom2:specsys>
+                    <caom2:ssysobs>TOPOCENT</caom2:ssysobs>
+                    <caom2:ssyssrc>TOPOCENT</caom2:ssyssrc>
+                    <caom2:resolvingPower>36666.66666666667</caom2:resolvingPower>
+                  </caom2:energy>
+                  <caom2:time>
+                    <caom2:axis>
+                      <caom2:axis>
+                        <caom2:ctype>TIME</caom2:ctype>
+                        <caom2:cunit>d</caom2:cunit>
+                      </caom2:axis>
+                      <caom2:function>
+                        <caom2:naxis>1</caom2:naxis>
+                        <caom2:delta>3.47222222222222e-05</caom2:delta>
+                        <caom2:refCoord>
+                          <caom2:pix>0.5</caom2:pix>
+                          <caom2:val>54125.9305556</caom2:val>
+                        </caom2:refCoord>
+                      </caom2:function>
+                    </caom2:axis>
+                    <caom2:timesys>UTC</caom2:timesys>
+                    <caom2:exposure>3.0</caom2:exposure>
+                    <caom2:resolution>3.0</caom2:resolution>
+                  </caom2:time>
+                </caom2:chunk>
+              </caom2:chunks>
+            </caom2:part>
+          </caom2:parts>
+        </caom2:artifact>
+      </caom2:artifacts>
+    </caom2:plane>
+  </caom2:planes>
+</caom2:Observation>

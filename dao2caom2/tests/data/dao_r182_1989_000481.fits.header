@@ -1,0 +1,37 @@
+SIMPLE  =                    T / conforms to FITS standard                      
+BITPIX  =                   16 / array data type                                
+NAXIS   =                    2 / number of array dimensions                     
+NAXIS1  =                 2000                                                  
+NAXIS2  =                    2                                                  
+                                                                                
+                               /                                                
+BTIME   =                    2 / BASELINE INTEGRATION TIME                      
+UT      = '11:24:38'           / UT at start of exposure                        
+DATE-OBS= '1989-07-11T11:24:38' / UT date/time at start of exposure             
+                                                                                
+RA      = '00:00:00'           / RA determined from OBJECT value                
+DEC     = '00:00:00'           / Dec determined from OBJECT value               
+                                                                                
+LMDAREF =                    0 / WAVELENGTH REFERENCE POINT                     
+PIXLREF =                    0 / CORRESPONDING PIXEL REFERENCE                  
+                                                                                
+ORIGIN  = 'NRC-Herzberg'                                                        
+INSTRUME= 'Cassegrain Spectrograph'                                             
+OBSERVER= 'UNDERHILL'                                                           
+OBJECT  = 'HEAT LAMPS'                                                          
+EQUINOX =               2000.0                                                  
+TELESCOP= '1.8-m   '                                                            
+DETECTOR= 'RETICON '                                                            
+OBSMODE = 'single-slit spectroscopy'                                            
+EXPTIME =                  240 / Integration time (s)                           
+UTMIDDLE=    11.44388888888889 / UT at mid-exposure                             
+UT-DATE = '1989-07-11'         / The UT date at start of exposure               
+RELEASE = '1990-07-11T11:24:38' / Date when the proprietary period expires      
+MJD-OBS =    47718.47543981481 / Modified JD at start of exposure               
+EXPNUM  = 'dao_r182_1989_000481' / The unique DAO archive exposure number       
+OBSERVAT= 'DAO     '                                                            
+OBSTYPE = 'flat    '                                                            
+                                                                                
+HISTORY                                                                         
+COMMENT  WR STARS : DAO 1.8M : 10/11 JULY 1989                                  
+END                                                                             

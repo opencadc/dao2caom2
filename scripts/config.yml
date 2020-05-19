@@ -1,10 +1,10 @@
-working_directory: /usr/src/app/blankt2caom2
+working_directory: /usr/src/app
 # the netrc_filename value must be a fully-qualified name
-# netrc_filename: /usr/src/app/netrc
+netrc_filename: /usr/src/app/netrc
 # this is the name of the proxy certificate file supplied 
 # to the container. It must be a fully-qualified name. 
 # One of netrc_filename or proxy_filename must have a value.
-proxy_file_name: /usr/src/app/cadcproxy.pem
+# proxy_file_name: /usr/src/app/cadcproxy.pem
 # operational value is ivo://cadc.nrc.ca/caom2repo
 # - modifies entries on sc2.canfar.net
 resource_id: ivo://cadc.nrc.ca/sc2repo
@@ -47,8 +47,8 @@ progress_file_name: progress.txt
 # ad stream value - sorry
 # set stream to 'default', if using TaskType STORE or PULL
 stream: default
-archive: BLANK
-collection: BLANK
+archive: DAO
+collection: DAO
 #
 # CADC service execution metrics
 #
@@ -80,6 +80,7 @@ interval: 600
 # - pull - put a file retrieved from a URL
 task_types: 
   - ingest
+  - modify
 features:
   supports_composite: False
   use_file_names: True

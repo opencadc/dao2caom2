@@ -1,0 +1,30 @@
+<caom2:Observation xmlns:caom2="http://www.opencadc.org/caom2/xml/v2.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="caom2:SimpleObservation" caom2:id="00000000-0000-0000-2fc0-016429059b5c" caom2:lastModified="2018-06-22T19:43:26.310" caom2:maxLastModified="2018-06-22T19:43:26.310" caom2:metaChecksum="md5:cde2888393a91e430d6411b4a1c9f9e2" caom2:accMetaChecksum="md5:ad88423169cbe36bbeea5d43127ed018">
+  <caom2:collection>DAO</caom2:collection>
+  <caom2:observationID>dao_r182_1989_000369</caom2:observationID>
+  <caom2:metaRelease>1989-07-11T05:15:12.000</caom2:metaRelease>
+  <caom2:algorithm>
+    <caom2:name>exposure</caom2:name>
+  </caom2:algorithm>
+  <caom2:type>object</caom2:type>
+  <caom2:intent>science</caom2:intent>
+  <caom2:planes>
+    <caom2:plane caom2:id="00000000-0000-0000-2fc0-01642905a6c3" caom2:lastModified="2018-06-22T19:43:26.310" caom2:maxLastModified="2018-06-22T19:43:26.310" caom2:metaChecksum="md5:0af297f3549768f335cfe0a8e5b5672c" caom2:accMetaChecksum="md5:f01a6eadaa2cdb6a9955928b85110370">
+      <caom2:productID>dao_r182_1989_000369</caom2:productID>
+      <caom2:metaRelease>1989-07-11T05:15:12.000</caom2:metaRelease>
+      <caom2:dataRelease>1990-07-11T05:15:12.000</caom2:dataRelease>
+      <caom2:dataProductType>spectrum</caom2:dataProductType>
+      <caom2:calibrationLevel>1</caom2:calibrationLevel>
+      <caom2:artifacts>
+        <caom2:artifact caom2:id="00000000-0000-0000-2fc0-01642905a6cb" caom2:lastModified="2018-06-22T19:43:26.310" caom2:maxLastModified="2018-06-22T19:43:26.310" caom2:metaChecksum="md5:3143dbe508a706796cd357892e1ae311" caom2:accMetaChecksum="md5:6949c0f31265e51868e085cd06b9f02f">
+          <caom2:uri>ad:DAO/dao_r182_1989_000369.fits.gz</caom2:uri>
+          <caom2:productType>science</caom2:productType>
+          <caom2:releaseType>data</caom2:releaseType>
+          <caom2:contentType>application/fits</caom2:contentType>
+          <caom2:contentLength>7489</caom2:contentLength>
+          <caom2:contentChecksum>md5:e4e153121805745792991935e04de322</caom2:contentChecksum>
+          <caom2:parts/>
+        </caom2:artifact>
+      </caom2:artifacts>
+    </caom2:plane>
+  </caom2:planes>
+</caom2:Observation>

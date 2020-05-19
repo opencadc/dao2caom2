@@ -1,0 +1,95 @@
+SIMPLE  =                    T / Fits standard                                  
+BITPIX  =                  -32 / Bits per pixel                                 
+NAXIS   =                    2 / Number of axes                                 
+NAXIS1  =                 2291 / Axis length                                    
+NAXIS2  =                 1028 / Axis length                                    
+EXTEND  =                    F / File may contain extensions                    
+DATE    = '2018-10-06T14:15:07' / Date FITS file was generated                  
+ORIGIN  = 'NOAO-IRAF FITS Image Kernel July 2003' / FITS file originator        
+IRAF-TLM= '2018-10-06T14:15:31' / Time of last modification                     
+OBJECT  = 'sha0011 20>5@133'   /                                                
+IRAF-MAX=           0.000000E0  /  DATA MAX                                     
+IRAF-MIN=           0.000000E0  /  DATA MIN                                     
+WEQUINOX=        2000.00000000 / Mean equinox                                   
+MJD-OBS =   5.760430969000E+04 / Modified Julian date at start                  
+RADESYS = 'ICRS    '           / Astrometric system                             
+CTYPE1  = 'RA---TAN'           / WCS projection type for this axis              
+CUNIT1  = 'deg     '           / Axis unit                                      
+CRVAL1  =      317.20479411189 / World coordinate on this axis                  
+CRPIX1  =      1182.2037031749 / Reference pixel on this axis                   
+CTYPE2  = 'DEC--TAN'           / WCS projection type for this axis              
+CUNIT2  = 'deg     '           / Axis unit                                      
+CRVAL2  =     11.2072902527673 / World coordinate on this axis                  
+CRPIX2  =      519.83589481433 / Reference pixel on this axis                   
+EXPTIME =                   90 / Maximum equivalent exposure time (s)           
+GAIN    =   3.200000000000E+00 / Maximum equivalent gain (e-/ADU)               
+SATURATE=   4.869625789886E+04 / Saturation Level (ADU)                         
+COMMENT                                                                         
+SOFTNAME= 'SWarp   '           / The software that processed those data         
+SOFTVERS= '2.38.0  '           / Version of the software                        
+SOFTDATE= '2015-10-17'         / Release date of the software                   
+SOFTAUTH= '2010-2012 IAP/CNRS/UPMC' / Maintainer of the software                
+SOFTINST= 'IAP  http://www.iap.fr' / Institute                                  
+COMMENT                                                                         
+AUTHOR  = 'dave_balam'         / Who ran the software                           
+COMMENT                                                                         
+COMMENT  Propagated FITS keywords                                               
+DATE-OBS= '2016-08-04T07:25:57'                                                 
+UT      = '07:25:57'                                                            
+UTDEC   =   3.102083000000E-01                                                  
+UTMIDDLE= '2016-08-04T07:26:42.00'                                              
+TELESCOP= '1.8-m   '           / This telescope                                 
+OBSMODE = 'Imaging '           / Observing mode                                 
+OBSTYPE = 'object            ' / OBSERVATION TYPE                               
+WAVELENG=                 4700 / Newt. filter central wavelength                
+BANDPASS=                 1500 / Newt. filter bandpass width                    
+JD      =   2.457604810208E+06                                                  
+HJD     =   2.457604815363E+06                                                  
+LJD     =   2.457604000000E+06                                                  
+DETECTOR= 'E2V-1   '           / detector name                                  
+FILTER  = 'SDSS g prime'       / Newt. filter name                              
+INSTRUME= 'Newtonian Imager'   / Instrument used                                
+OBSERVER= 'Balam   '           / Observer                                       
+DAOPRGID= 'DAO182_2016C4'      / DAO observing program identification           
+PINAME  = 'Balam   '           / Principal investigator name                    
+EXPNUM  = 'dao_c182_2016_004034'                                                
+RELEASE = '2017-08-04T07:28:01'                                                 
+COMMENT                                                                         
+COMMENT  Axis-dependent config parameters                                       
+RESAMPT1= 'LANCZOS2'           / RESAMPLING_TYPE config parameter               
+CENTERT1= 'ALL     '           / CENTER_TYPE config parameter                   
+PSCALET1= 'MANUAL  '           / PIXELSCALE_TYPE config parameter               
+RESAMPT2= 'LANCZOS2'           / RESAMPLING_TYPE config parameter               
+CENTERT2= 'ALL     '           / CENTER_TYPE config parameter                   
+PSCALET2= 'MANUAL  '           / PIXELSCALE_TYPE config parameter               
+WRA     = '21:08:51.07'                                                         
+WDEC    = '11:10:56.37'                                                         
+WEPOCH  =                2000.                                                  
+WCSRFCAT= 'ua2     '                                                            
+WCSIMCAT= 'temp2   '                                                            
+WCSMATCH=                  205                                                  
+WCSNREF =                  200                                                  
+WCSTOL  =               9.0000                                                  
+RA      = '21:08:50.678'                                                        
+DEC     = '+11:12:23.33'                                                        
+CROTA1  =             1.049757                                                  
+SECPIX1 =               0.6174                                                  
+SECPIX2 =               0.6192                                                  
+WCSSEP  =                1.521                                                  
+CD1_1   =  -1.7137312678225E-4                                                  
+CD1_2   =  -3.2187675786318E-6                                                  
+CD2_1   =  -3.1426085034798E-6                                                  
+CD2_2   =  1.71842700527038E-4                                                  
+IMWCS   = 'WCSTools 3.8.4, 1 September 2011, Doug Mink (dmink@cfa.harvard.edu)' 
+WCSDIM  =                    2                                                  
+LTM1_1  =                   1.                                                  
+LTM2_2  =                   1.                                                  
+WAT0_001= 'system=image'                                                        
+WAT1_001= 'wtype=tan axtype=ra'                                                 
+WAT2_001= 'wtype=tan axtype=dec'                                                
+FLAT    = 'dao_c182_2016_003933_F.fits' / combined flat                         
+BIAS    = 'dao_c182_2016_003944_B.fits' / combined bias                         
+PRODUCT = 'dao_c182_2016_004034_a'                                              
+PROCNAME= 'Spaceguard_C'                                                        
+PROCVERS=                 1.00                                                  
+END                                                                             
