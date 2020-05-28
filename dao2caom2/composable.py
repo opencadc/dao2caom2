@@ -67,6 +67,11 @@
 # ***********************************************************************
 #
 
+"""
+Application to create CAOM2 observations from DAO FITS files. Based on
+code and configuration from wcaom2archive/dao2caom2.
+"""
+
 import logging
 import sys
 import traceback
@@ -75,8 +80,8 @@ from caom2pipe import run_composable as rc
 from dao2caom2 import APPLICATION, collection_builder, preview_augmentation
 
 
-meta_visitors = []
-data_visitors = [preview_augmentation]
+META_VISITORS = []
+DATA_VISITORS = [preview_augmentation]
 
 
 def _run():
@@ -88,8 +93,8 @@ def _run():
     """
     builder = collection_builder.DAOBuilder()
     return rc.run_by_todo(name_builder=builder, command_name=APPLICATION,
-                          meta_visitors=meta_visitors,
-                          data_visitors=data_visitors)
+                          meta_visitors=META_VISITORS,
+                          data_visitors=DATA_VISITORS)
 
 
 def run():
@@ -110,8 +115,8 @@ def _run_state():
     """
     builder = collection_builder.DAOBuilder()
     return rc.run_by_state(builder=builder, command_name=APPLICATION,
-                           meta_visitors=meta_visitors,
-                           data_visitors=data_visitors)
+                           meta_visitors=META_VISITORS,
+                           data_visitors=DATA_VISITORS)
 
 
 def run_state():

@@ -101,6 +101,8 @@ class DAOName(mc.StorageName):
             file_id = mc.StorageName.remove_extensions(file_name)
         else:
             file_id = obs_id
+        if fname_on_disk is None:
+            fname_on_disk = file_name
         super(DAOName, self).__init__(
             obs_id, COLLECTION, DAOName.DAO_NAME_PATTERN, fname_on_disk)
         self._file_id = file_id
@@ -109,7 +111,7 @@ class DAOName(mc.StorageName):
 
     def __str__(self):
         return f'obs id {self._obs_id} file name {self.file_name} ' \
-               f'file id {self._file_id}'
+               f'file id {self._file_id} fname on disk {self.fname_on_disk}'
 
     @property
     def file_id(self):
