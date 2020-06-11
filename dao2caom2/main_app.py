@@ -877,7 +877,7 @@ def update(observation, **kwargs):
 
         if (cc.is_composite(headers, 'FLAT_') or
                 cc.is_composite(headers, 'ZERO_')):
-            cc.update_observation_members(observation)
+            _update_observation_members(observation)
 
     logging.debug('Done update.')
     return observation
@@ -901,6 +901,40 @@ def _repair_provenance_value(value, obs_id):
     prov_obs_id = dao_name.obs_id
     logging.debug(f'End _repair_provenance_value')
     return prov_obs_id, prov_prod_id
+
+
+def _update_observation_members(observation):
+    """Must filter results because:
+    DB - 11-06-20
+    For the spectra there is a minor issue with members for master flat,
+    *_F, observations.  The master bias used in the processing, the *_B.fits
+    file, shouldn’t be a member for the master flats.
+
+    The master bias is in the list of inputs though:  Inputs for master flat
+    are the unprocessed flats and the master bias.  The master bias is
+    subtracted pixel-by-pixel from each unprocessed flat as part of the
+    processing before the flats are then co-added.
+    """
+    def filter_fun(x):
+        result = True
+        if dn.DAOName.is_master_flat(observation.observation_id):
+            if dn.DAOName.is_master_bias(
+                    x.get_observation_uri().uri):
+                result = False
+        return result
+
+    inputs = []
+    members_inputs = TypedSet(ObservationURI,)
+    for plane in observation.planes.values():
+        if (plane.provenance is not None and
+                plane.provenance.inputs is not None):
+            inputs = filter(filter_fun, plane.provenance.inputs)
+
+    for entry in inputs:
+        members_inputs.add(entry.get_observation_uri())
+        logging.debug('Adding Observation URI {}'.format(
+            entry.get_observation_uri()))
+    mc.update_typed_set(observation.members, members_inputs)
 
 
 def _update_plane_provenance(observation, plane, headers):
