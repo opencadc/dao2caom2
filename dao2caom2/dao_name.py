@@ -161,6 +161,16 @@ class DAOName(mc.StorageName):
         return result
 
     @staticmethod
+    def is_master_bias(entry):
+        # entry is an obs uri
+        return entry.endswith('_B')
+
+    @staticmethod
+    def is_master_flat(entry):
+        # entry is an obs id
+        return entry.endswith('_F')
+
+    @staticmethod
     def is_processed(entry):
         # the entry is a uri
         file_id = mc.CaomName(entry).file_id
