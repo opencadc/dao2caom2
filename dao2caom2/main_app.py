@@ -904,7 +904,8 @@ def _repair_provenance_value(value, obs_id):
 
 
 def _update_observation_members(observation):
-    """Must filter results because:
+    """
+    Must filter results because:
     DB - 11-06-20
     For the spectra there is a minor issue with members for master flat,
     *_F, observations.  The master bias used in the processing, the *_B.fits
@@ -914,6 +915,11 @@ def _update_observation_members(observation):
     are the unprocessed flats and the master bias.  The master bias is
     subtracted pixel-by-pixel from each unprocessed flat as part of the
     processing before the flats are then co-added.
+
+    The composite/derived master flats (F) and master biases (B) should
+    never be members.  At least for any processing that is currently being
+    done.  For now the only members should those given by the
+    NCOMBINE x ZERO_# or FLAT_# keyword values.
     """
     def filter_fun(x):
         result = True
