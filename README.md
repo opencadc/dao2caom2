@@ -70,6 +70,28 @@ https://github.com/opencadc-metadata-curation/collection2caom2/wiki/Docker-and-C
 
 1. For some insight into what's happening, see: https://github.com/opencadc-metadata-curation/collection2caom2
 
+# How to Run dao2caom2 in a cron job:
+
+In an empty directory (the 'working directory'), on a machine with Docker installed:
+
+1. In the master branch of this repository, find the scripts directory, and copy the file dao_run_state.sh to the working directory. e.g.:
+
+  ```
+  wget https://raw.github.com/opencadc-metadata-curation/dao2caom2/master/scripts/dao_run_state.sh
+  ```
+
+2. Ensure the script is executable:
+
+```
+chmod +x dao_run_state.sh
+```
+
+3. To run the application:
+
+```
+./dao_run_state.sh
+```
+
 # Test Files
 
 Current active instruments/detectors for "DAO" collection.  
