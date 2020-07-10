@@ -1,10 +1,10 @@
 working_directory: /usr/src/app
 # the netrc_filename value must be a fully-qualified name
-netrc_filename: /usr/src/app/netrc
+# netrc_filename: /usr/src/app/netrc
 # this is the name of the proxy certificate file supplied 
 # to the container. It must be a fully-qualified name. 
 # One of netrc_filename or proxy_filename must have a value.
-# proxy_file_name: /usr/src/app/cadcproxy.pem
+proxy_file_name: /usr/src/app/cadcproxy.pem
 # - modifies entries on sc2.canfar.net
 # operational value is ivo://cadc.nrc.ca/ams
 # resource_id: ivo://cadc.nrc.ca/ams
@@ -77,12 +77,10 @@ interval: 600
 # - modify - create a footprint and previews for an existing CAOM model record
 # - pull - put a file retrieved from a URL
 task_types: 
-  - store
   - ingest
   - modify
 features:
   supports_composite: False
-  supports_latest_caom: False
   supports_multiple_files: False
   use_file_names: True
   use_urls: False
