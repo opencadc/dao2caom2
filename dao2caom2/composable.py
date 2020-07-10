@@ -76,8 +76,12 @@ import logging
 import sys
 import traceback
 
+from caom2pipe import data_source_composable as dsc
+from caom2pipe import manage_composable as mc
 from caom2pipe import run_composable as rc
 from dao2caom2 import APPLICATION, collection_builder, preview_augmentation
+
+DAO_BOOKMARK = 'dao_timestamp'
 
 
 META_VISITORS = []
@@ -114,9 +118,13 @@ def _run_state():
     processed.
     """
     builder = collection_builder.DAOBuilder()
-    return rc.run_by_state(builder=builder, command_name=APPLICATION,
+    config = mc.Config()
+    config.get_executors()
+    source = dsc.QueryTimeBoxDataSource(config, preview_suffix='png')
+    return rc.run_by_state(name_builder=builder, command_name=APPLICATION,
+                           bookmark_name=DAO_BOOKMARK,
                            meta_visitors=META_VISITORS,
-                           data_visitors=DATA_VISITORS)
+                           data_visitors=DATA_VISITORS, source=source)
 
 
 def run_state():

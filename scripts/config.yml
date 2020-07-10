@@ -7,8 +7,10 @@ working_directory: /usr/src/app
 proxy_file_name: /usr/src/app/cadcproxy.pem
 # - modifies entries on sc2.canfar.net
 # operational value is ivo://cadc.nrc.ca/ams
-# resource_id: ivo://cadc.nrc.ca/ams
-resource_id: ivo://cadc.nrc.ca/sc2repo
+resource_id: ivo://cadc.nrc.ca/ams
+# resource_id: ivo://cadc.nrc.ca/sc2repo
+# queries files by date
+tap_id: ivo://cadc.nrc.ca/ad
 # file that contains the list of entries to process
 todo_file_name: todo.txt
 # values True False
@@ -17,7 +19,7 @@ todo_file_name: todo.txt
 # done.
 use_local_files: False
 # values DEBUG INFO WARNING ERROR
-logging_level: DEBUG
+logging_level: INFO
 # values True False
 log_to_file: True
 # fully qualified name for a directory to write log files
