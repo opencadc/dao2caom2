@@ -135,7 +135,10 @@ class DAOName(mc.StorageName):
 
     @property
     def product_id(self):
-        return self._file_id
+        if self._file_id.startswith('d'):
+            return self._file_id
+        else:
+            return 'sky_camera_image'
 
     @property
     def thumb(self):
