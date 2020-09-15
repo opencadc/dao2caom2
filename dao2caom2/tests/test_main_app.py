@@ -84,7 +84,8 @@ def pytest_generate_tests(metafunc):
     files = []
     if os.path.exists(TEST_DATA_DIR):
         files = [os.path.join(TEST_DATA_DIR, name) for name in
-                 os.listdir(TEST_DATA_DIR) if name.endswith('header')]
+                 os.listdir(TEST_DATA_DIR) if (name.endswith('header') or
+                                               name.endswith('.fits'))]
     metafunc.parametrize('test_name', files)
 
 

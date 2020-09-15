@@ -461,6 +461,10 @@ def get_position_function_dimension_naxis2(header):
     return result
 
 
+def get_skycam_release_date(header):
+    return ac.get_datetime(header.get('CLOCKVAL'))
+
+
 def get_target_type(header):
     target_type = TargetType.FIELD
     data_product_type = get_data_product_type(header)
@@ -475,6 +479,8 @@ def get_telescope_name(header):
     result = f'{observatory} {telescope}'
     if telescope is None or observatory is None:
         result = None
+    if telescope is None and observatory == 'DAO':
+        result = 'DAO Skycam'
     return result
 
 
@@ -483,8 +489,14 @@ def get_time_axis_delta(header):
     return exptime / (24.0 * 3600.0)
 
 
-def get_time_axis_val(header):
-    return ac.get_datetime(header.get('DATE-OBS'))
+def get_time_axis_val(params):
+    header = params.get('header')
+    uri = params.get('uri')
+    ignore_scheme, ignore_path, f_name = mc.decompose_uri(uri)
+    keyword = 'DATE-OBS'
+    if f_name.startswith('a'):
+        keyword = 'CLOCKVAL'
+    return ac.get_datetime(header.get(keyword))
 
 
 def get_time_exposure(header):
@@ -524,13 +536,22 @@ def _get_dispaxis(header):
 
 def _get_geo(header):
     telescope = _get_telescope(header)
+    result = None
     if telescope == '1.2-m':
-        return ac.get_location(48.52092, -123.42006, 225.0)
+        result = ac.get_location(48.52092, -123.42006, 225.0)
     elif telescope == '1.8-m':
-        return ac.get_location(48.51967, -123.41833, 232.0)
-    else:
+        result = ac.get_location(48.51967, -123.41833, 232.0)
+    elif telescope is None:
+        observatory = header.get('OBSERVAT')
+        if observatory == 'DAO':
+            # DB 10-09-20
+            # Google Maps to give you latitude/longitude if desired. 48.519497
+            # and -123.416502.  Not sure of the elevation.
+            result = ac.get_location(48.519497, -123.416502, 210.0)
+    if result is None:
         raise mc.CadcException(f'Unexpected telescope value of {telescope} for '
                                f'{header.get("DAOPRGID")}')
+    return result
 
 
 def _get_naxis1(header):
@@ -634,22 +655,52 @@ def accumulate_bp(bp, uri):
     """Configure the telescope-specific ObsBlueprint at the CAOM model 
     Observation level."""
     logging.debug('Begin accumulate_bp.')
-    bp.configure_position_axes((1, 2))
-    bp.configure_time_axis(3)
-    bp.configure_energy_axis(4)
-    bp.configure_observable_axis(5)
-
-    bp.set('Observation.intent', 'get_obs_intent(header)')
-    bp.clear('Observation.metaRelease')
-    # from dao2caom2.config
-    bp.add_fits_attribute('Observation.metaRelease',  'DATE-OBS')
-
+    scheme, collection, f_name = mc.decompose_uri(uri)
+    if f_name.startswith('d'):
+        _accumulate_dao_bp(bp)
+    else:
+        _accumulate_skycam_bp(bp)
     bp.clear('Observation.algorithm.name')
 
     bp.set('Observation.telescope.name',  'get_telescope_name(header)')
     bp.set('Observation.telescope.geoLocationX',  'get_geo_x(header)')
     bp.set('Observation.telescope.geoLocationY',  'get_geo_y(header)')
     bp.set('Observation.telescope.geoLocationZ',  'get_geo_z(header)')
+
+    bp.set('Chunk.time.axis.axis.ctype', 'TIME')
+    bp.set('Chunk.time.axis.axis.cunit', 'd')
+    bp.set('Chunk.time.axis.function.naxis', '1')
+    bp.set('Chunk.time.axis.function.delta', 'get_time_axis_delta(header)')
+    bp.set('Chunk.time.axis.function.refCoord.pix', '0.5')
+    bp.set(
+        'Chunk.time.axis.function.refCoord.val', 'get_time_axis_val(params)')
+
+    bp.set('Chunk.observable.axis.axis.ctype', 'FLUX')
+    bp.set('Chunk.observable.axis.axis.cunit', 'COUNTS')
+    bp.set('Chunk.observable.axis.function.refCoord.pix', 1)
+
+    bp.set('Chunk.energy.axis.axis.ctype', 'WAVE')
+    bp.set('Chunk.energy.axis.axis.cunit', 'Angstrom')
+    bp.set('Chunk.energy.specsys', 'TOPOCENT')
+    bp.set('Chunk.energy.ssysobs', 'TOPOCENT')
+    bp.set('Chunk.energy.ssyssrc', 'TOPOCENT')
+
+    # derived observations
+    if dn.DAOName.is_derived(uri):
+        bp.set('CompositeObservation.members', 'get_members(header)')
+        bp.add_fits_attribute('Observation.algorithm.name', 'PROCNAME')
+    logging.debug('Done accumulate_bp.')
+
+
+def _accumulate_dao_bp(bp):
+    bp.configure_position_axes((1, 2))
+    bp.configure_time_axis(3)
+    bp.configure_energy_axis(4)
+    bp.configure_observable_axis(5)
+    bp.set('Observation.intent', 'get_obs_intent(header)')
+    bp.clear('Observation.metaRelease')
+    # from dao2caom2.config
+    bp.add_fits_attribute('Observation.metaRelease',  'DATE-OBS')
 
     bp.set('Observation.target.type',  'get_target_type(header)')
     bp.clear('Observation.target.moving')
@@ -687,14 +738,6 @@ def accumulate_bp(bp, uri):
     bp.set_default('Plane.provenance.version', None)
 
     bp.set('Artifact.productType', 'get_artifact_product_type(header)')
-
-    bp.set('Chunk.time.axis.axis.ctype', 'TIME')
-    bp.set('Chunk.time.axis.axis.cunit', 'd')
-    bp.set('Chunk.time.axis.function.naxis', '1')
-    bp.set('Chunk.time.axis.function.delta', 'get_time_axis_delta(header)')
-    bp.set('Chunk.time.axis.function.refCoord.pix', '0.5')
-    bp.set(
-        'Chunk.time.axis.function.refCoord.val', 'get_time_axis_val(header)')
     bp.set('Chunk.time.exposure', 'get_time_exposure(header)')
     bp.set('Chunk.time.resolution', 'get_time_resolution(header)')
 
@@ -702,8 +745,6 @@ def accumulate_bp(bp, uri):
     bp.set('Chunk.observable.axis.axis.cunit', 'COUNTS')
     bp.set('Chunk.observable.axis.function.refCoord.pix', 1)
 
-    bp.set('Chunk.energy.axis.axis.ctype', 'WAVE')
-    bp.set('Chunk.energy.axis.axis.cunit', 'Angstrom')
     bp.set('Chunk.energy.axis.function.delta',
            'get_energy_axis_function_delta(parameters)')
     bp.set('Chunk.energy.axis.function.naxis',
@@ -712,9 +753,6 @@ def accumulate_bp(bp, uri):
            'get_energy_axis_function_refcoord_pix(parameters)')
     bp.set('Chunk.energy.axis.function.refCoord.val',
            'get_energy_axis_function_refcoord_val(parameters)')
-    bp.set('Chunk.energy.specsys', 'TOPOCENT')
-    bp.set('Chunk.energy.ssysobs', 'TOPOCENT')
-    bp.set('Chunk.energy.ssyssrc', 'TOPOCENT')
     bp.set('Chunk.energy.resolvingPower',
            'get_energy_resolving_power(parameters)')
     bp.clear('Chunk.energy.bandpassName')
@@ -745,11 +783,36 @@ def accumulate_bp(bp, uri):
     bp.set('Chunk.position.axis.function.cd21',
            'get_position_function_cd21(parameters)')
 
-    # derived observations
-    if dn.DAOName.is_derived(uri):
-        bp.set('CompositeObservation.members', 'get_members(header)')
-        bp.add_fits_attribute('Observation.algorithm.name', 'PROCNAME')
-    logging.debug('Done accumulate_bp.')
+
+def _accumulate_skycam_bp(bp):
+    # DB - 10-07-20
+    # https://github.com/opencadc-metadata-curation/dao2caom2/issues/10
+    bp.configure_time_axis(1)
+    bp.configure_observable_axis(2)
+    bp.configure_energy_axis(3)
+    bp.set('Observation.metaRelease', 'get_skycam_release_date(header)')
+    bp.set('Observation.intent', ObservationIntentType.CALIBRATION)
+    bp.set('Observation.instrument.name', 'Sky Camera')
+    bp.set('Plane.calibrationLevel', 1)
+    bp.set('Plane.dataProductType', DataProductType.IMAGE)
+    bp.set('Plane.dataRelease', 'get_skycam_release_date(header)')
+    bp.set('Plane.metaRelease', 'get_skycam_release_date(header)')
+    bp.set('Plane.provenance.project', 'DAO Science Archive')
+    bp.set('Plane.provenance.producer',
+           'NRC Herzberg Astronomy and Astrophysics Research Centre')
+    bp.set('Plane.provenance.name', 'DAO Sky Camera image')
+    bp.set('Plane.provenance.reference',
+           'https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/dao/')
+    bp.set('Artifact.productType', ProductType.CALIBRATION)
+
+    bp.set('Chunk.energy.axis.function.delta', 3000.0)
+    bp.set('Chunk.energy.axis.function.naxis', 1)
+    bp.set('Chunk.energy.axis.function.refCoord.pix', 0.5)
+    bp.set('Chunk.energy.axis.function.refCoord.val', 4000.0)
+    bp.set('Chunk.energy.resolvingPower', 5500.0/3000.0)
+
+    bp.add_fits_attribute('Chunk.time.exposure', 'EXPTIME')
+    bp.add_fits_attribute('Chunk.time.resolution', 'EXPTIME')
 
 
 def update(observation, **kwargs):
@@ -786,65 +849,69 @@ def update(observation, **kwargs):
                     time_delta = get_time_axis_delta(headers[0])
                     cc.undo_astropy_cdfix_call(chunk, time_delta)
 
-                    if plane.data_product_type == DataProductType.SPECTRUM:
-                        if (dn.DAOName.is_unprocessed_reticon(artifact.uri) or
-                            dn.DAOName.is_derived(artifact.uri) and
-                                observation.type == 'flat'):
-                            cc.reset_energy(chunk)
-                        if not artifact.product_type == ProductType.SCIENCE:
-                            if observation.type == 'dark':
-                                chunk.position_axis_1 = 3
-                                chunk.position_axis_2 = 4
-                            else:
-                                cc.reset_position(chunk)
-                            # no energy for calibration?
-                            if (observation.type not in
-                                    ['flat', 'comparison', 'dark']):
+                    if dao_name.file_name.startswith('d'):
+                        if plane.data_product_type == DataProductType.SPECTRUM:
+                            if (dn.DAOName.is_unprocessed_reticon(artifact.uri) or
+                                dn.DAOName.is_derived(artifact.uri) and
+                                    observation.type == 'flat'):
                                 cc.reset_energy(chunk)
-                    else:  # DataProductType.IMAGE
-                        if dn.DAOName.override_provenance(artifact.uri):
-                            plane.provenance.producer = 'Spaceguard_C'
-                        # no observable axis when image
-                        cc.reset_observable(chunk)
-                        if artifact.product_type == ProductType.CALIBRATION:
-                            if observation.type != 'dark':
-                                cc.reset_position(chunk)
-                            if observation.type not in ['flat', 'dark']:
-                                cc.reset_energy(chunk)
+                            if not artifact.product_type == ProductType.SCIENCE:
+                                if observation.type == 'dark':
+                                    chunk.position_axis_1 = 3
+                                    chunk.position_axis_2 = 4
+                                else:
+                                    cc.reset_position(chunk)
+                                # no energy for calibration?
+                                if (observation.type not in
+                                        ['flat', 'comparison', 'dark']):
+                                    cc.reset_energy(chunk)
+                        else:  # DataProductType.IMAGE
+                            if dn.DAOName.override_provenance(artifact.uri):
+                                plane.provenance.producer = 'Spaceguard_C'
+                            # no observable axis when image
+                            cc.reset_observable(chunk)
+                            if artifact.product_type == ProductType.CALIBRATION:
+                                if observation.type != 'dark':
+                                    cc.reset_position(chunk)
+                                if observation.type not in ['flat', 'dark']:
+                                    cc.reset_energy(chunk)
 
-                    # WCS axis wisdom from Pat:
-                    #
-                    # In general, assigning axis indices above the value of
-                    # naxis is allowed but more or less pointless. The only use
-                    # case that would justify it is that in a FITS file there
-                    # could be a header with NAXIS=2 and WCSAXES=4 which would
-                    # tell the fits reader to look for CTYPE1 through 4 and
-                    # axes 3 and 4 are metadata. Assign those values to Chunk
-                    # only if you care about capturing that the extra wcs
-                    # metadata was really in the fits header and so the order
-                    # could be preserved; in general do not assign the 3 and 4.
+                        # WCS axis wisdom from Pat:
+                        #
+                        # In general, assigning axis indices above the value of
+                        # naxis is allowed but more or less pointless. The
+                        # only use case that would justify it is that in a FITS
+                        # file there could be a header with NAXIS=2 and
+                        # WCSAXES=4 which would tell the fits reader to look
+                        # for CTYPE1 through 4 and axes 3 and 4 are metadata.
+                        # Assign those values to Chunk only if you care about
+                        # capturing that the extra wcs metadata was really in
+                        # the fits header and so the order could be preserved;
+                        # in general do not assign the 3 and 4.
 
-                    chunk.energy_axis = None
-                    chunk.observable_axis = None
-                    chunk.time_axis = None
-                    naxis = headers[0].get('NAXIS')
-                    naxis1 = headers[0].get('NAXIS1')
-                    naxis2 = headers[0].get('NAXIS2')
-                    chunk.naxis = None
-                    chunk.position_axis_1 = None
-                    chunk.position_axis_2 = None
-                    if naxis is not None:
-                        if (naxis1 is not None and naxis2 is not None and
-                                naxis == 2 and chunk.position is not None and
-                                plane.data_product_type is
-                                DataProductType.IMAGE):
-                            chunk.naxis = 2
-                            chunk.position_axis_1 = 1
-                            chunk.position_axis_2 = 2
-                        if (naxis1 is not None and naxis == 1 and
-                                chunk.energy is not None):
-                            chunk.naxis = 1
-                            chunk.energy_axis = 1
+                        chunk.energy_axis = None
+                        chunk.observable_axis = None
+                        chunk.time_axis = None
+                        naxis = headers[0].get('NAXIS')
+                        naxis1 = headers[0].get('NAXIS1')
+                        naxis2 = headers[0].get('NAXIS2')
+                        chunk.naxis = None
+                        chunk.position_axis_1 = None
+                        chunk.position_axis_2 = None
+                        if naxis is not None:
+                            if (naxis1 is not None and naxis2 is not None and
+                                    naxis == 2 and chunk.position is not None and
+                                    plane.data_product_type is
+                                    DataProductType.IMAGE):
+                                chunk.naxis = 2
+                                chunk.position_axis_1 = 1
+                                chunk.position_axis_2 = 2
+                            if (naxis1 is not None and naxis == 1 and
+                                    chunk.energy is not None):
+                                chunk.naxis = 1
+                                chunk.energy_axis = 1
+                    else:
+                        chunk.energy_axis = None
 
         if plane.product_id != dao_name.product_id:
             continue

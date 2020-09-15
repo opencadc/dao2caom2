@@ -74,9 +74,12 @@ Thumbnails and Previews are proprietary for science datasets.
 import logging
 import os
 
+import matplotlib.image as image
+import matplotlib.pyplot as plt
 import numpy as np
 
 from astropy.io import fits
+from astropy.visualization import ZScaleInterval, SqrtStretch, ImageNormalize
 from matplotlib import pylab
 
 from caom2 import ReleaseType, ProductType
@@ -106,6 +109,8 @@ class DAOPreview(mc.PreviewVisitor):
             count += self._do_cal_processed(
                 hdu_list, header, science_fqn, storage_name, preview_fqn,
                 thumb_fqn, obs_id)
+        elif storage_name.file_name.startswith('a'):
+            count += DAOPreview._do_skycam(science_fqn, preview_fqn, thumb_fqn)
         else:
             count += self._do_sci(hdu_list, header, storage_name, science_fqn,
                                   preview_fqn, thumb_fqn)
@@ -215,6 +220,37 @@ class DAOPreview(mc.PreviewVisitor):
                     f'{storage_name.file_id}: {object_type}', thumb_fqn,
                     preview_fqn)
                 count = 2
+        return count
+
+    @staticmethod
+    def _do_skycam(science_fqn, preview_fqn, thumb_fqn):
+        hdulist = fits.open(science_fqn)
+        image_data = hdulist[0].data
+        hdulist.close()
+        norm = ImageNormalize(image_data[330:950, 215:750],
+                              interval=ZScaleInterval(),
+                              stretch=SqrtStretch())
+        plt.imshow(image_data, cmap='gray', norm=norm)
+        plt.gca().invert_yaxis()
+        plt.axis('off')
+        with np.errstate(invalid='ignore'):
+            plt.savefig(preview_fqn, dpi=100, bbox_inches='tight',
+                        pad_inches=0, format='png')
+        count = 1
+        count += DAOPreview._gen_thumbnail(preview_fqn, thumb_fqn)
+        return count
+
+    @staticmethod
+    def _gen_thumbnail(preview_fqn, thumb_fqn):
+        logging.debug(f'Generating thumbnail for file {preview_fqn}.')
+        count = 0
+        if os.path.exists(preview_fqn):
+            thumb = image.thumbnail(preview_fqn, thumb_fqn, scale=0.25)
+            if thumb is not None:
+                count = 1
+        else:
+            logging.warning(f'Could not find {preview_fqn} for thumbnail '
+                            f'generation.')
         return count
 
     def _write_files_to_disk(self, wln, flux, x_label, title, thumb_fqn,
