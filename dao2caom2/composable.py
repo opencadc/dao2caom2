@@ -79,7 +79,7 @@ import traceback
 from caom2pipe import data_source_composable as dsc
 from caom2pipe import manage_composable as mc
 from caom2pipe import run_composable as rc
-from dao2caom2 import APPLICATION, collection_builder, preview_augmentation
+from dao2caom2 import APPLICATION, preview_augmentation
 
 DAO_BOOKMARK = 'dao_timestamp'
 
@@ -95,8 +95,7 @@ def _run():
     :return 0 if successful, -1 if there's any sort of failure. Return status
         is used by airflow for task instance management and reporting.
     """
-    builder = collection_builder.DAOBuilder()
-    return rc.run_by_todo(name_builder=builder, command_name=APPLICATION,
+    return rc.run_by_todo(command_name=APPLICATION,
                           meta_visitors=META_VISITORS,
                           data_visitors=DATA_VISITORS)
 
@@ -117,14 +116,14 @@ def _run_state():
     """Uses a state file with a timestamp to control which entries will be
     processed.
     """
-    builder = collection_builder.DAOBuilder()
     config = mc.Config()
     config.get_executors()
     source = dsc.QueryTimeBoxDataSource(config, preview_suffix='png')
-    return rc.run_by_state(name_builder=builder, command_name=APPLICATION,
+    return rc.run_by_state(command_name=APPLICATION,
                            bookmark_name=DAO_BOOKMARK,
                            meta_visitors=META_VISITORS,
-                           data_visitors=DATA_VISITORS, source=source)
+                           data_visitors=DATA_VISITORS,
+                           source=source)
 
 
 def run_state():
