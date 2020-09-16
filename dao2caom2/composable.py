@@ -97,7 +97,7 @@ def _run():
         is used by airflow for task instance management and reporting.
     """
     name_builder = nbc.FileNameBuilder(dao_name.DAOName)
-    return rc.run_by_todo(name_builder=name_builder, command_name=APPLICATION,
+    return rc.run_by_todo(builder=name_builder, command_name=APPLICATION,
                           meta_visitors=META_VISITORS,
                           data_visitors=DATA_VISITORS)
 
@@ -122,7 +122,7 @@ def _run_state():
     config.get_executors()
     source = dsc.QueryTimeBoxDataSource(config, preview_suffix='png')
     name_builder = nbc.FileNameBuilder(dao_name.DAOName)
-    return rc.run_by_state(name_builder=name_builder,
+    return rc.run_by_state(builder=name_builder,
                            command_name=APPLICATION,
                            bookmark_name=DAO_BOOKMARK,
                            meta_visitors=META_VISITORS,
