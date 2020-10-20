@@ -92,6 +92,9 @@ chmod +x dao_run_state.sh
 ./dao_run_state.sh
 ```
 
+Note that the e-transfer script daoFileIngest knows whether or not the files should be compressed before being stored at CADC.
+
+
 # Test Files
 
 Current active instruments/detectors for "DAO" collection.  
