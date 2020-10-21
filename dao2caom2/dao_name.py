@@ -90,7 +90,7 @@ class DAOName(mc.StorageName):
     DAO_NAME_PATTERN = '*'
 
     def __init__(self, obs_id=None, fname_on_disk=None, file_name=None,
-                 artifact_uri=None):
+                 artifact_uri=None, entry=None):
         if artifact_uri is not None:
             scheme, archive, file_name = mc.decompose_uri(artifact_uri)
         if file_name is not None:
@@ -104,7 +104,8 @@ class DAOName(mc.StorageName):
         if fname_on_disk is None:
             fname_on_disk = file_name
         super(DAOName, self).__init__(
-            obs_id, COLLECTION, DAOName.DAO_NAME_PATTERN, fname_on_disk)
+            obs_id, COLLECTION, DAOName.DAO_NAME_PATTERN, fname_on_disk,
+            entry=entry)
         self._file_id = file_id
         self._logger = logging.getLogger(__name__)
         self._logger.debug(self)
