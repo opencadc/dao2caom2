@@ -1,7 +1,7 @@
 #!/bin/bash
 
 COLLECTION="dao"
-IMAGE="bucket.canfar.net/${COLLECTION}2caom2"
+IMAGE="opencadc/${COLLECTION}2caom2"
 
 echo "Get image ${IMAGE}"
 docker pull ${IMAGE} || exit $?
