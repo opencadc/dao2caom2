@@ -165,7 +165,7 @@ def get_energy_axis_function_delta(parameters):
             wavelength = _get_wavelength(header)
             cdelt = header.get('DELTA_WL')
             if wavelength is None:
-                pass
+                cdelt = None
             else:
                 if cdelt is None:
                     dispersion = header.get('DISPERSI')
@@ -191,7 +191,7 @@ def get_energy_axis_function_refcoord_pix(parameters):
         if data_product_type == DataProductType.SPECTRUM:
             wavelength = _get_wavelength(header)
             if wavelength is None:
-                pass
+                crpix = None
             else:
                 crpix = header.get('REFPIXEL')
                 if crpix is None:
@@ -595,8 +595,11 @@ def _get_obs_mode(header):
                                        CRPIX   'REFPIXEL'
                                        RP      CRVAL/(2.5*CDELT)
 
-                                       If no 'WAVELENG' USE 'DATASEC'
+                                       # DB 04-02-21
+                                       If no 'WAVELENG' no energy
 
+                                       CRVAL   'WAVELENG'
+                                       no `DELTA_WL', 'REFPIXEL'
                                        CDELT   'DISPERSI' * 15.0 * xbin/1000.0
                                        CRPIX   'DATASEC' + math
 
@@ -660,6 +663,13 @@ def accumulate_bp(bp, uri):
         _accumulate_dao_bp(bp)
     else:
         _accumulate_skycam_bp(bp)
+
+    meta_producer = mc.get_version(APPLICATION)
+    bp.set('Observation.metaProducer', meta_producer)
+    bp.set('Plane.metaProducer', meta_producer)
+    bp.set('Artifact.metaProducer', meta_producer)
+    bp.set('Chunk.metaProducer', meta_producer)
+
     bp.clear('Observation.algorithm.name')
 
     bp.set('Observation.telescope.name',  'get_telescope_name(header)')
@@ -865,6 +875,13 @@ def update(observation, **kwargs):
                                 if (observation.type not in
                                         ['flat', 'comparison', 'dark']):
                                     cc.reset_energy(chunk)
+                            # DB 04-03-21
+                            #  If WAVELENG isn’t present (for unprocessed
+                            #  spectra) then all energy metadata should be
+                            #  ignored
+                            if (not dn.DAOName.is_processed(artifact.uri) and
+                                    headers[0].get('WAVELENG') is None):
+                                cc.reset_energy(chunk)
                         else:  # DataProductType.IMAGE
                             if dn.DAOName.override_provenance(artifact.uri):
                                 plane.provenance.producer = 'Spaceguard_C'

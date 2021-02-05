@@ -1,15 +1,15 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<caom2:Observation xmlns:caom2="http://www.opencadc.org/caom2/xml/v2.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="caom2:SimpleObservation" caom2:id="00000000-0000-0000-b49b-01641e752f06" caom2:lastModified="2018-06-20T18:29:42.267" caom2:maxLastModified="2018-06-20T18:29:42.267" caom2:metaChecksum="md5:7587df90a7c42ab6ab7772957a97569b" caom2:accMetaChecksum="md5:58337c10c2ac4ab1eb2a267729423216" caom2:metaProducer="dao2caom2/0.3.1">
+<caom2:Observation xmlns:caom2="http://www.opencadc.org/caom2/xml/v2.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="caom2:SimpleObservation" caom2:id="00000000-0000-0000-0678-016616e5310c" caom2:lastModified="2020-07-31T07:38:25.429" caom2:maxLastModified="2021-02-04T01:18:04.135" caom2:metaChecksum="md5:e8a4ccde76d21704df9cb98fba75905d" caom2:accMetaChecksum="md5:4d5cb692b4a3163bb22563fd8ca23a7f" caom2:metaProducer="dao2caom2/0.3.1">
   <caom2:collection>DAO</caom2:collection>
-  <caom2:observationID>dao_r122_1989_003111</caom2:observationID>
-  <caom2:metaRelease>1989-09-03T11:52:49.000</caom2:metaRelease>
+  <caom2:observationID>dao_c122_2005_007071</caom2:observationID>
+  <caom2:metaRelease>2005-05-31T21:05:08.000</caom2:metaRelease>
   <caom2:algorithm>
     <caom2:name>exposure</caom2:name>
   </caom2:algorithm>
-  <caom2:type>comparison</caom2:type>
+  <caom2:type>flat</caom2:type>
   <caom2:intent>calibration</caom2:intent>
   <caom2:target>
-    <caom2:name>FE AR ARC</caom2:name>
+    <caom2:name>QE test BG39</caom2:name>
     <caom2:type>object</caom2:type>
     <caom2:standard>false</caom2:standard>
     <caom2:moving>false</caom2:moving>
@@ -24,10 +24,10 @@
     <caom2:name>McKellar Spectrograph</caom2:name>
   </caom2:instrument>
   <caom2:planes>
-    <caom2:plane caom2:id="00000000-0000-0000-b49b-01641e7537c7" caom2:lastModified="2018-06-20T18:29:42.267" caom2:maxLastModified="2018-06-20T18:29:42.267" caom2:metaChecksum="md5:931cb3549e4dc591e0bd3d3670993824" caom2:accMetaChecksum="md5:a301b6bea4cc9e9931d2f6914bfd04d0" caom2:metaProducer="dao2caom2/0.3.1">
-      <caom2:productID>dao_r122_1989_003111</caom2:productID>
-      <caom2:metaRelease>1989-09-03T11:52:49.000</caom2:metaRelease>
-      <caom2:dataRelease>1990-09-03T11:52:49.000</caom2:dataRelease>
+    <caom2:plane caom2:id="00000000-0000-0000-0678-016616e53a7c" caom2:lastModified="2020-07-31T07:38:25.429" caom2:maxLastModified="2021-02-04T01:18:04.135" caom2:metaChecksum="md5:2be972f2e481024e02b0dfa937547b31" caom2:accMetaChecksum="md5:29b6a00a2e4d8fd2b9d23b580942aceb" caom2:metaProducer="dao2caom2/0.3.1">
+      <caom2:productID>dao_c122_2005_007071</caom2:productID>
+      <caom2:metaRelease>2005-05-31T21:05:08.000</caom2:metaRelease>
+      <caom2:dataRelease>2005-05-31T21:05:08.000</caom2:dataRelease>
       <caom2:dataProductType>spectrum</caom2:dataProductType>
       <caom2:calibrationLevel>1</caom2:calibrationLevel>
       <caom2:provenance>
@@ -37,17 +37,17 @@
         <caom2:reference>https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/dao/</caom2:reference>
       </caom2:provenance>
       <caom2:artifacts>
-        <caom2:artifact caom2:id="00000000-0000-0000-b49b-01641e7537cf" caom2:lastModified="2018-06-20T18:29:42.267" caom2:maxLastModified="2018-06-20T18:29:42.267" caom2:metaChecksum="md5:177280fc5b62fa74f87466587fb394ad" caom2:accMetaChecksum="md5:77faa55e270ad9b021a73773ae4ac3b3" caom2:metaProducer="dao2caom2/0.3.1">
-          <caom2:uri>ad:DAO/dao_r122_1989_003111.fits.gz</caom2:uri>
+        <caom2:artifact caom2:id="00000000-0000-0000-0678-016616e53a83" caom2:lastModified="2018-09-26T17:20:28.400" caom2:maxLastModified="2020-07-31T07:38:25.429" caom2:metaChecksum="md5:5621177a4bda840f0e4c1d9275537271" caom2:accMetaChecksum="md5:1b9c2c3762b67c71e6e6d366dc871a45" caom2:metaProducer="dao2caom2/0.3.1">
+          <caom2:uri>ad:DAO/dao_c122_2005_007071.fits.gz</caom2:uri>
           <caom2:productType>calibration</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>
-          <caom2:contentChecksum>md5:dfb5ddab74844d911dd54552415dd8ab</caom2:contentChecksum>
+          <caom2:contentChecksum>md5:a5432f4821739a11e3c94e8537404d3a</caom2:contentChecksum>
           <caom2:parts>
-            <caom2:part caom2:id="00000000-0000-0000-b49b-01641e7537d1" caom2:lastModified="2018-06-20T18:29:42.267" caom2:maxLastModified="2018-06-20T18:29:42.267" caom2:metaChecksum="md5:d31f62f2d1a0cf2c2ef1b385d05db83b" caom2:accMetaChecksum="md5:fe32b627ed59b8995b9e5ecd0ebb63a1">
+            <caom2:part caom2:id="00000000-0000-0000-0678-016616e53a85" caom2:lastModified="2018-09-26T17:20:28.400" caom2:maxLastModified="2020-07-31T07:38:25.429" caom2:metaChecksum="md5:98c015f2762d2ea7cf17dae5f19b826b" caom2:accMetaChecksum="md5:0f1d6a4a415a4d765bafe55136d286d9">
               <caom2:name>0</caom2:name>
               <caom2:chunks>
-                <caom2:chunk caom2:id="00000000-0000-0000-b49b-01641e7537d2" caom2:lastModified="2018-06-20T18:29:42.267" caom2:maxLastModified="2018-06-20T18:29:42.267" caom2:metaChecksum="md5:1f9031893d5e8433541852b89e6629d1" caom2:accMetaChecksum="md5:3a2a72fb962925050922ab4137b9eb02" caom2:metaProducer="dao2caom2/0.3.1">
+                <caom2:chunk caom2:id="00000000-0000-0000-0678-016616e53a86" caom2:lastModified="2020-07-31T07:38:25.429" caom2:maxLastModified="2020-07-31T07:38:25.429" caom2:metaChecksum="md5:d89d670c73328084de0b5bece1f57e4a" caom2:accMetaChecksum="md5:157e88c99233dfdb4b79397ae0f29749" caom2:metaProducer="dao2caom2/0.3.1">
                   <caom2:observable>
                     <caom2:dependent>
                       <caom2:axis>
@@ -65,16 +65,16 @@
                       </caom2:axis>
                       <caom2:function>
                         <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>0.0009375</caom2:delta>
+                        <caom2:delta>0.001157407407407407</caom2:delta>
                         <caom2:refCoord>
                           <caom2:pix>0.5</caom2:pix>
-                          <caom2:val>47772.4950116</caom2:val>
+                          <caom2:val>53521.87856481481</caom2:val>
                         </caom2:refCoord>
                       </caom2:function>
                     </caom2:axis>
                     <caom2:timesys>UTC</caom2:timesys>
-                    <caom2:exposure>81.0</caom2:exposure>
-                    <caom2:resolution>81.0</caom2:resolution>
+                    <caom2:exposure>100.0</caom2:exposure>
+                    <caom2:resolution>100.0</caom2:resolution>
                   </caom2:time>
                 </caom2:chunk>
               </caom2:chunks>

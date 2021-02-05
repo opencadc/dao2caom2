@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<caom2:Observation xmlns:caom2="http://www.opencadc.org/caom2/xml/v2.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="caom2:SimpleObservation" caom2:id="00000000-0000-0000-fdd1-015519cb0fbd" caom2:lastModified="2017-04-05T01:40:35.690" caom2:maxLastModified="2017-11-20T17:39:53.710" caom2:metaChecksum="md5:c90b6fe66f5eb54a3eff2c6fc42a1228" caom2:accMetaChecksum="md5:3187eaed6681871934fa1a1d52411894">
+<caom2:Observation xmlns:caom2="http://www.opencadc.org/caom2/xml/v2.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="caom2:SimpleObservation" caom2:id="00000000-0000-0000-fdd1-015519cb0fbd" caom2:lastModified="2017-04-05T01:40:35.690" caom2:maxLastModified="2017-11-20T17:39:53.710" caom2:metaChecksum="md5:c90b6fe66f5eb54a3eff2c6fc42a1228" caom2:accMetaChecksum="md5:3187eaed6681871934fa1a1d52411894" caom2:metaProducer="dao2caom2/0.3.1">
   <caom2:collection>DAO</caom2:collection>
   <caom2:observationID>dao_c182_2016_002022</caom2:observationID>
   <caom2:metaRelease>2016-06-04T04:51:45.000</caom2:metaRelease>
@@ -32,7 +32,7 @@
     <caom2:photometric>false</caom2:photometric>
   </caom2:environment>
   <caom2:planes>
-    <caom2:plane caom2:id="00000000-0000-0000-fdd1-015519cb167f" caom2:lastModified="2016-06-04T05:03:10.047" caom2:maxLastModified="2017-11-20T17:39:53.710" caom2:metaChecksum="md5:021d27007a7cd349167fc9719cc9ab3e" caom2:accMetaChecksum="md5:b8fa1e27fabbcb9b3bef1243c692556a">
+    <caom2:plane caom2:id="00000000-0000-0000-fdd1-015519cb167f" caom2:lastModified="2016-06-04T05:03:10.047" caom2:maxLastModified="2017-11-20T17:39:53.710" caom2:metaChecksum="md5:021d27007a7cd349167fc9719cc9ab3e" caom2:accMetaChecksum="md5:b8fa1e27fabbcb9b3bef1243c692556a" caom2:metaProducer="dao2caom2/0.3.1">
       <caom2:productID>dao_c182_2016_002022</caom2:productID>
       <caom2:metaRelease>2016-06-04T04:51:45.000</caom2:metaRelease>
       <caom2:dataRelease>2016-06-04T04:52:25.000</caom2:dataRelease>
@@ -45,7 +45,7 @@
         <caom2:reference>https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/dao/</caom2:reference>
       </caom2:provenance>
       <caom2:artifacts>
-        <caom2:artifact caom2:id="00000000-0000-0000-fdd1-015519cb1686" caom2:lastModified="2017-11-20T17:39:53.710" caom2:maxLastModified="2017-11-20T17:39:53.710" caom2:metaChecksum="md5:ad68847ccbfcf0c6a689f85bc69adb74" caom2:accMetaChecksum="md5:5d7aeaeb70c5c8e4c25e66767c9397f9">
+        <caom2:artifact caom2:id="00000000-0000-0000-fdd1-015519cb1686" caom2:lastModified="2017-11-20T17:39:53.710" caom2:maxLastModified="2017-11-20T17:39:53.710" caom2:metaChecksum="md5:ad68847ccbfcf0c6a689f85bc69adb74" caom2:accMetaChecksum="md5:5d7aeaeb70c5c8e4c25e66767c9397f9" caom2:metaProducer="dao2caom2/0.3.1">
           <caom2:uri>ad:DAO/dao_c182_2016_002022.fits.gz</caom2:uri>
           <caom2:productType>calibration</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
@@ -55,7 +55,7 @@
             <caom2:part caom2:id="00000000-0000-0000-fdd1-015519cb1688" caom2:lastModified="2016-06-04T05:03:10.047" caom2:maxLastModified="2016-06-04T05:03:10.047" caom2:metaChecksum="md5:e4cf1afc5556d8e8be57c99f7bb60652" caom2:accMetaChecksum="md5:ec00cf906f53e2a0af45acfe2f520eb8">
               <caom2:name>0</caom2:name>
               <caom2:chunks>
-                <caom2:chunk caom2:id="00000000-0000-0000-fdd1-015519cb168a" caom2:lastModified="2017-04-05T01:40:35.690" caom2:maxLastModified="2017-04-05T01:40:35.690" caom2:metaChecksum="md5:527cad2cb22f90cfc04a1444bf141e9a" caom2:accMetaChecksum="md5:ad27b69843110234a76ef596cf218330">
+                <caom2:chunk caom2:id="00000000-0000-0000-fdd1-015519cb168a" caom2:lastModified="2017-04-05T01:40:35.690" caom2:maxLastModified="2017-04-05T01:40:35.690" caom2:metaChecksum="md5:527cad2cb22f90cfc04a1444bf141e9a" caom2:accMetaChecksum="md5:ad27b69843110234a76ef596cf218330" caom2:metaProducer="dao2caom2/0.3.1">
                   <caom2:energy>
                     <caom2:axis>
                       <caom2:axis>
