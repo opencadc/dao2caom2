@@ -663,6 +663,13 @@ def accumulate_bp(bp, uri):
         _accumulate_dao_bp(bp)
     else:
         _accumulate_skycam_bp(bp)
+
+    meta_producer = mc.get_version(APPLICATION)
+    bp.set('Observation.metaProducer', meta_producer)
+    bp.set('Plane.metaProducer', meta_producer)
+    bp.set('Artifact.metaProducer', meta_producer)
+    bp.set('Chunk.metaProducer', meta_producer)
+
     bp.clear('Observation.algorithm.name')
 
     bp.set('Observation.telescope.name',  'get_telescope_name(header)')

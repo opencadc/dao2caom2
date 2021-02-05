@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<caom2:Observation xmlns:caom2="http://www.opencadc.org/caom2/xml/v2.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="caom2:SimpleObservation" caom2:id="00000000-0000-0000-d40f-015eb2f50af4" caom2:lastModified="2017-09-24T08:16:08.480" caom2:maxLastModified="2017-11-22T16:25:10.277" caom2:metaChecksum="md5:5bef60df3d69642016d02fa5cfb42fb3" caom2:accMetaChecksum="md5:319bdebeae1a1aca16abbd10429a00df">
+<caom2:Observation xmlns:caom2="http://www.opencadc.org/caom2/xml/v2.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="caom2:SimpleObservation" caom2:id="00000000-0000-0000-d40f-015eb2f50af4" caom2:lastModified="2017-09-24T08:16:08.480" caom2:maxLastModified="2017-11-22T16:25:10.277" caom2:metaChecksum="md5:5bef60df3d69642016d02fa5cfb42fb3" caom2:accMetaChecksum="md5:319bdebeae1a1aca16abbd10429a00df" caom2:metaProducer="dao2caom2/0.3.1">
   <caom2:collection>DAO</caom2:collection>
   <caom2:observationID>dao_c182_2017_016292</caom2:observationID>
   <caom2:metaRelease>2017-09-24T08:04:42.000</caom2:metaRelease>
@@ -32,7 +32,7 @@
     <caom2:photometric>false</caom2:photometric>
   </caom2:environment>
   <caom2:planes>
-    <caom2:plane caom2:id="00000000-0000-0000-d40f-015eb2f51912" caom2:lastModified="2017-09-24T08:16:08.480" caom2:maxLastModified="2017-11-22T16:25:10.277" caom2:metaChecksum="md5:67bc9b1bf6fed788637e6b524fb95a4d" caom2:accMetaChecksum="md5:61ff085a2a6213840229d8895d8e6867">
+    <caom2:plane caom2:id="00000000-0000-0000-d40f-015eb2f51912" caom2:lastModified="2017-09-24T08:16:08.480" caom2:maxLastModified="2017-11-22T16:25:10.277" caom2:metaChecksum="md5:67bc9b1bf6fed788637e6b524fb95a4d" caom2:accMetaChecksum="md5:61ff085a2a6213840229d8895d8e6867" caom2:metaProducer="dao2caom2/0.3.1">
       <caom2:productID>dao_c182_2017_016292</caom2:productID>
       <caom2:metaRelease>2017-09-24T08:04:42.000</caom2:metaRelease>
       <caom2:dataRelease>2018-09-24T08:08:16.000</caom2:dataRelease>
@@ -45,7 +45,7 @@
         <caom2:reference>https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/dao/</caom2:reference>
       </caom2:provenance>
       <caom2:artifacts>
-        <caom2:artifact caom2:id="00000000-0000-0000-d40f-015eb2f51917" caom2:lastModified="2017-11-22T16:25:10.277" caom2:maxLastModified="2017-11-22T16:25:10.277" caom2:metaChecksum="md5:8715ed7f3392fac9e8e5a0a89d0ae455" caom2:accMetaChecksum="md5:b96167859e7a3917a2aa53010356d323">
+        <caom2:artifact caom2:id="00000000-0000-0000-d40f-015eb2f51917" caom2:lastModified="2017-11-22T16:25:10.277" caom2:maxLastModified="2017-11-22T16:25:10.277" caom2:metaChecksum="md5:8715ed7f3392fac9e8e5a0a89d0ae455" caom2:accMetaChecksum="md5:b96167859e7a3917a2aa53010356d323" caom2:metaProducer="dao2caom2/0.3.1">
           <caom2:uri>ad:DAO/dao_c182_2017_016292.fits.gz</caom2:uri>
           <caom2:productType>science</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
@@ -55,7 +55,7 @@
             <caom2:part caom2:id="00000000-0000-0000-d40f-015eb2f51919" caom2:lastModified="2017-09-24T08:16:08.480" caom2:maxLastModified="2017-09-24T08:16:08.480" caom2:metaChecksum="md5:1f9ae314e7256cde3c49e9cb3439db36" caom2:accMetaChecksum="md5:4015b11e20a025fba943ac2d6069d22a">
               <caom2:name>0</caom2:name>
               <caom2:chunks>
-                <caom2:chunk caom2:id="00000000-0000-0000-d40f-015eb2f5191a" caom2:lastModified="2017-09-24T08:16:08.480" caom2:maxLastModified="2017-09-24T08:16:08.480" caom2:metaChecksum="md5:f104f94f18404d66515bd02a96b12946" caom2:accMetaChecksum="md5:3e60527ea55a67f77ef2c8e38946590a">
+                <caom2:chunk caom2:id="00000000-0000-0000-d40f-015eb2f5191a" caom2:lastModified="2017-09-24T08:16:08.480" caom2:maxLastModified="2017-09-24T08:16:08.480" caom2:metaChecksum="md5:f104f94f18404d66515bd02a96b12946" caom2:accMetaChecksum="md5:3e60527ea55a67f77ef2c8e38946590a" caom2:metaProducer="dao2caom2/0.3.1">
                   <caom2:naxis>2</caom2:naxis>
                   <caom2:positionAxis1>1</caom2:positionAxis1>
                   <caom2:positionAxis2>2</caom2:positionAxis2>
