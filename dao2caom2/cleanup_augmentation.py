@@ -3,7 +3,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2018.                            (c) 2018.
+#  (c) 2021.                            (c) 2021.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -62,82 +62,39 @@
 #  <http://www.gnu.org/licenses/>.      pas le cas, consultez :
 #                                       <http://www.gnu.org/licenses/>.
 #
-#  $Revision: 4 $
+#  : 4 $
 #
 # ***********************************************************************
 #
 
-"""
-Application to create CAOM2 observations from DAO FITS files. Based on
-code and configuration from wcaom2archive/dao2caom2.
-"""
-
 import logging
-import sys
-import traceback
 
-from caom2pipe import data_source_composable as dsc
-from caom2pipe import name_builder_composable as nbc
+from collections import defaultdict
+
+from caom2 import Observation
 from caom2pipe import manage_composable as mc
-from caom2pipe import run_composable as rc
-from dao2caom2 import APPLICATION, dao_name, preview_augmentation
-from dao2caom2 import cleanup_augmentation
-
-DAO_BOOKMARK = 'dao_timestamp'
 
 
-META_VISITORS = [cleanup_augmentation]
-DATA_VISITORS = [preview_augmentation]
+def visit(observation, **kwargs):
+    mc.check_param(observation, Observation)
 
+    count = 0
+    delete_list = defaultdict(list)
+    for plane in observation.planes.values():
+        for artifact in plane.artifacts.values():
+            if artifact.uri.endswith('.fits.gz'):
+                other_uri = artifact.uri.replace('.gz', '')
+                if other_uri in plane.artifacts.keys():
+                    delete_list[plane.product_id].append(other_uri)
 
-def _run():
-    """
-    Uses a todo file to identify the work to be done.
+    for product_id, uris in delete_list.items():
+        for uri in uris:
+            logging.info(f'Removing artifact {uri} from '
+                         f'{observation.observation_id}, plane {product_id}')
+            count += 1
+            observation.planes[product_id].artifacts.pop(uri)
 
-    :return 0 if successful, -1 if there's any sort of failure. Return status
-        is used by airflow for task instance management and reporting.
-    """
-    name_builder = nbc.FileNameBuilder(dao_name.DAOName)
-    return rc.run_by_todo(name_builder=name_builder, command_name=APPLICATION,
-                          meta_visitors=META_VISITORS,
-                          data_visitors=DATA_VISITORS)
-
-
-def run():
-    """Wraps _run in exception handling, with sys.exit calls."""
-    try:
-        result = _run()
-        sys.exit(result)
-    except Exception as e:
-        logging.error(e)
-        tb = traceback.format_exc()
-        logging.debug(tb)
-        sys.exit(-1)
-
-
-def _run_state():
-    """Uses a state file with a timestamp to control which entries will be
-    processed.
-    """
-    config = mc.Config()
-    config.get_executors()
-    source = dsc.QueryTimeBoxDataSource(config, preview_suffix='png')
-    name_builder = nbc.FileNameBuilder(dao_name.DAOName)
-    return rc.run_by_state(name_builder=name_builder,
-                           command_name=APPLICATION,
-                           bookmark_name=DAO_BOOKMARK,
-                           meta_visitors=META_VISITORS,
-                           data_visitors=DATA_VISITORS,
-                           source=source)
-
-
-def run_state():
-    """Wraps _run_state in exception handling."""
-    try:
-        _run_state()
-        sys.exit(0)
-    except Exception as e:
-        logging.error(e)
-        tb = traceback.format_exc()
-        logging.debug(tb)
-        sys.exit(-1)
+    logging.info(
+        f'Completed cleanup augmentation for {observation.observation_id}. '
+        f'Remove {count} artifacts from the observation.')
+    return {'artifacts': count}
