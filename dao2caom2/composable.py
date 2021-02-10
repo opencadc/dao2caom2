@@ -121,7 +121,7 @@ def _run_state():
     """
     config = mc.Config()
     config.get_executors()
-    source = dsc.QueryTimeBoxDataSource(config, preview_suffix='png')
+    source = dsc.QueryTimeBoxDataSourceTS(config, preview_suffix='png')
     name_builder = nbc.FileNameBuilder(dao_name.DAOName)
     return rc.run_by_state(name_builder=name_builder,
                            command_name=APPLICATION,
