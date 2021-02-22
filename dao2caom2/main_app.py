@@ -875,13 +875,6 @@ def update(observation, **kwargs):
                                 if (observation.type not in
                                         ['flat', 'comparison', 'dark']):
                                     cc.reset_energy(chunk)
-                            # DB 04-03-21
-                            #  If WAVELENG isn’t present (for unprocessed
-                            #  spectra) then all energy metadata should be
-                            #  ignored
-                            if (not dn.DAOName.is_processed(artifact.uri) and
-                                    headers[0].get('WAVELENG') is None):
-                                cc.reset_energy(chunk)
                         else:  # DataProductType.IMAGE
                             if dn.DAOName.override_provenance(artifact.uri):
                                 plane.provenance.producer = 'Spaceguard_C'
@@ -892,6 +885,14 @@ def update(observation, **kwargs):
                                     cc.reset_position(chunk)
                                 if observation.type not in ['flat', 'dark']:
                                     cc.reset_energy(chunk)
+
+                        if (chunk.energy is not None and
+                                not dn.DAOName.is_processed(artifact.uri) and
+                                headers[0].get('WAVELENG') is None):
+                            # DB 16-02-21
+                            #  If WAVELENG isn’t present then all energy
+                            #  metadata should be ignored (spectra and images)
+                            cc.reset_energy(chunk)
 
                         # WCS axis wisdom from Pat:
                         #
