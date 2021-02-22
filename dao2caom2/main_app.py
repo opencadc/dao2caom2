@@ -893,6 +893,14 @@ def update(observation, **kwargs):
                                 if observation.type not in ['flat', 'dark']:
                                     cc.reset_energy(chunk)
 
+                        if (chunk.energy is not None and
+                                not dn.DAOName.is_processed(artifact.uri) and
+                                headers[0].get('WAVELENG') is None):
+                            # DB 16-02-21
+                            #  If WAVELENG isn’t present then all energy
+                            #  metadata should be ignored (spectra and images)
+                            cc.reset_energy(chunk)
+
                         # WCS axis wisdom from Pat:
                         #
                         # In general, assigning axis indices above the value of
