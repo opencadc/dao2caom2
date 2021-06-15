@@ -74,11 +74,13 @@ import test_main_app
 
 
 def test_cleanup_augmentation():
-    test_observation = mc.read_obs_from_file(f'{test_main_app.TEST_DATA_DIR}/'
-                                             f'cleanup/double_uris.xml')
+    test_observation = mc.read_obs_from_file(
+        f'{test_main_app.TEST_DATA_DIR}/cleanup/double_uris.xml'
+    )
     test_product_id = 'dao_c122_2005_007071'
-    assert len(test_observation.planes[test_product_id].artifacts) == 4, \
-        'wrong artifact count precondition'
+    assert (
+        len(test_observation.planes[test_product_id].artifacts) == 4
+    ), 'wrong artifact count precondition'
 
     kwargs = {}
     test_result = cleanup_augmentation.visit(test_observation, **kwargs)
@@ -86,8 +88,10 @@ def test_cleanup_augmentation():
     assert test_result is not None, 'expect a result'
     assert test_result.get('artifacts') is not None, 'expect artifact count'
     assert test_result.get('artifacts') == 1, 'delete 1 artifact'
-    assert len(test_observation.planes[test_product_id].artifacts) == 3, \
-        'wrong artifact count'
-    assert 'ad:DAO/dao_c122_2005_007071.fits.gz' in \
-           test_observation.planes[test_product_id].artifacts.keys(), \
-        'removed wrong uri'
+    assert (
+        len(test_observation.planes[test_product_id].artifacts) == 3
+    ), 'wrong artifact count'
+    assert (
+        'ad:DAO/dao_c122_2005_007071.fits.gz' in
+        test_observation.planes[test_product_id].artifacts.keys()
+    ), 'removed wrong uri'

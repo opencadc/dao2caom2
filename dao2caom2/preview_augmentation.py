@@ -91,7 +91,8 @@ class DAOPreview(mc.PreviewVisitor):
 
     def __init__(self, **kwargs):
         super(DAOPreview, self).__init__(
-            dn.COLLECTION, ReleaseType.DATA, **kwargs)
+            dn.COLLECTION, ReleaseType.DATA, **kwargs
+        )
 
     def generate_plots(self, obs_id):
         count = 0
@@ -104,36 +105,66 @@ class DAOPreview(mc.PreviewVisitor):
         hdu_list = fits.open(science_fqn)
         header = hdu_list[0].header
 
-        if ('e' in storage_name.file_name or 'p' in storage_name.file_name or
-                'v' in storage_name.file_name):
+        if (
+            'e' in storage_name.file_name or
+            'p' in storage_name.file_name or
+            'v' in storage_name.file_name
+        ):
             count += self._do_cal_processed(
-                hdu_list, header, science_fqn, storage_name, preview_fqn,
-                thumb_fqn, obs_id)
+                hdu_list,
+                header,
+                science_fqn,
+                storage_name,
+                preview_fqn,
+                thumb_fqn,
+                obs_id,
+            )
         elif storage_name.file_name.startswith('a'):
             count += DAOPreview._do_skycam(science_fqn, preview_fqn, thumb_fqn)
         else:
-            count += self._do_sci(hdu_list, header, storage_name, science_fqn,
-                                  preview_fqn, thumb_fqn)
+            count += self._do_sci(
+                hdu_list,
+                header,
+                storage_name,
+                science_fqn,
+                preview_fqn,
+                thumb_fqn,
+            )
 
         hdu_list.close()
 
         if count == 2:
-            self.add_preview(storage_name.thumb_uri, storage_name.thumb,
-                             ProductType.THUMBNAIL)
-            self.add_preview(storage_name.prev_uri, storage_name.prev,
-                             ProductType.PREVIEW)
+            self.add_preview(
+                storage_name.thumb_uri,
+                storage_name.thumb,
+                ProductType.THUMBNAIL,
+            )
+            self.add_preview(
+                storage_name.prev_uri,
+                storage_name.prev,
+                ProductType.PREVIEW,
+            )
             self.add_to_delete(thumb_fqn)
             self.add_to_delete(preview_fqn)
         return count
 
-    def _do_cal_processed(self, hdu_list, header, science_fqn, storage_name,
-                          preview_fqn, thumb_fqn, obs_id):
+    def _do_cal_processed(
+        self,
+        hdu_list,
+        header,
+        science_fqn,
+        storage_name,
+        preview_fqn,
+        thumb_fqn,
+        obs_id,
+    ):
         logging.debug(f'Do calibration preview augmentation with {science_fqn}')
         count = 0
         object_type = header.get('OBJECT')
         if object_type is None:
-            self._logger.warning(f'Stopping preview generation. No object '
-                                 f'type for {obs_id}.')
+            self._logger.warning(
+                f'Stopping preview generation. No object type for {obs_id}.'
+            )
         else:
             crval1 = header.get('CRVAL1')
             crpix1 = header.get('CRPIX1')
@@ -153,20 +184,33 @@ class DAOPreview(mc.PreviewVisitor):
                 wl.append(crval1 + cd1_1 * (float(i) - crpix1 - 1.0))
 
             wln = np.array(wl)
-            self._write_files_to_disk(wln, flux, 'Wavelength ($\AA$)',
-                                      f'{storage_name.file_id}: {object_type}',
-                                      thumb_fqn, preview_fqn)
+            self._write_files_to_disk(
+                wln,
+                flux,
+                'Wavelength ($\AA$)',
+                f'{storage_name.file_id}: {object_type}',
+                thumb_fqn,
+                preview_fqn,
+            )
             count = 2
         return count
 
-    def _do_sci(self, hdu_list, header, storage_name, science_fqn, preview_fqn,
-                thumb_fqn):
+    def _do_sci(
+        self,
+        hdu_list,
+        header,
+        storage_name,
+        science_fqn,
+        preview_fqn,
+        thumb_fqn,
+    ):
         logging.debug(f'Do science preview augmentation with {science_fqn}')
         count = 0
         detector = header.get('DETECTOR')
         instrument = header.get('INSTRUME')
-        if detector in ['SITe-4', 'UBC-1', 'SITe-2', 'SITe-5', 'E2V-1',
-                        'E2V-4']:
+        if detector in [
+            'SITe-4', 'UBC-1', 'SITe-2', 'SITe-5', 'E2V-1', 'E2V-4'
+        ]:
             # unprocessed CCD data
             if detector == 'SITe-4':
                 axis = 'NAXIS2'
@@ -190,16 +234,23 @@ class DAOPreview(mc.PreviewVisitor):
                 resize2 = '256'
 
             if 'Imager' in instrument:
-                mc.exec_cmd(f'convert -resize 1024x1024 '
-                            f'-normalize -negate {science_fqn} {preview_fqn}')
-                mc.exec_cmd(f'convert -resize 256x256 -normalize -negate '
-                            f'{science_fqn} {thumb_fqn}')
+                mc.exec_cmd(
+                    f'convert -resize 1024x1024 -normalize -negate '
+                    f'{science_fqn} {preview_fqn}'
+                )
+                mc.exec_cmd(
+                    f'convert -resize 256x256 -normalize -negate '
+                    f'{science_fqn} {thumb_fqn}'
+                )
             else:
-                mc.exec_cmd(f'convert -resize {resize1} -rotate {rotate} '
-                            f'-normalize -negate {science_fqn} {preview_fqn}')
-                mc.exec_cmd(f'convert -crop {geometry} -resize {resize2} '
-                            f'-rotate {rotate} -normalize '
-                            f'-negate {science_fqn} {thumb_fqn}')
+                mc.exec_cmd(
+                    f'convert -resize {resize1} -rotate {rotate} '
+                    f'-normalize -negate {science_fqn} {preview_fqn}'
+                )
+                mc.exec_cmd(
+                    f'convert -crop {geometry} -resize {resize2} -rotate '
+                    f'{rotate} -normalize -negate {science_fqn} {thumb_fqn}'
+                )
             count = 2
         else:
             # unprocessed RETICON spectrum
@@ -216,9 +267,13 @@ class DAOPreview(mc.PreviewVisitor):
                     wl.append(i + 1)
                 wln = np.array(wl)
                 self._write_files_to_disk(
-                    wln, flux, 'Pixel',
-                    f'{storage_name.file_id}: {object_type}', thumb_fqn,
-                    preview_fqn)
+                    wln,
+                    flux,
+                    'Pixel',
+                    f'{storage_name.file_id}: {object_type}',
+                    thumb_fqn,
+                    preview_fqn,
+                )
                 count = 2
         return count
 
@@ -227,15 +282,22 @@ class DAOPreview(mc.PreviewVisitor):
         hdulist = fits.open(science_fqn)
         image_data = hdulist[0].data
         hdulist.close()
-        norm = ImageNormalize(image_data[330:950, 215:750],
-                              interval=ZScaleInterval(),
-                              stretch=SqrtStretch())
+        norm = ImageNormalize(
+            image_data[330:950, 215:750],
+            interval=ZScaleInterval(),
+            stretch=SqrtStretch(),
+        )
         plt.imshow(image_data, cmap='gray', norm=norm)
         plt.gca().invert_yaxis()
         plt.axis('off')
         with np.errstate(invalid='ignore'):
-            plt.savefig(preview_fqn, dpi=100, bbox_inches='tight',
-                        pad_inches=0, format='png')
+            plt.savefig(
+                preview_fqn,
+                dpi=100,
+                bbox_inches='tight',
+                pad_inches=0,
+                format='png',
+            )
         count = 1
         count += DAOPreview._gen_thumbnail(preview_fqn, thumb_fqn)
         return count
@@ -249,12 +311,14 @@ class DAOPreview(mc.PreviewVisitor):
             if thumb is not None:
                 count = 1
         else:
-            logging.warning(f'Could not find {preview_fqn} for thumbnail '
-                            f'generation.')
+            logging.warning(
+                f'Could not find {preview_fqn} for thumbnail generation.'
+            )
         return count
 
-    def _write_files_to_disk(self, wln, flux, x_label, title, thumb_fqn,
-                             preview_fqn):
+    def _write_files_to_disk(
+        self, wln, flux, x_label, title, thumb_fqn, preview_fqn
+    ):
         pylab.clf()
         pylab.grid(True)
         pylab.plot(wln, flux, color='k')

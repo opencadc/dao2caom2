@@ -83,9 +83,12 @@ PLUGIN = os.path.join(os.path.dirname(THIS_DIR), 'main_app.py')
 def pytest_generate_tests(metafunc):
     files = []
     if os.path.exists(TEST_DATA_DIR):
-        files = [os.path.join(TEST_DATA_DIR, name) for name in
-                 os.listdir(TEST_DATA_DIR) if (name.endswith('header') or
-                                               name.endswith('.fits'))]
+        files = [
+            os.path.join(TEST_DATA_DIR, name) for name in
+            os.listdir(TEST_DATA_DIR) if (
+                    name.endswith('header') or name.endswith('.fits')
+            )
+        ]
     metafunc.parametrize('test_name', files)
 
 
@@ -98,11 +101,12 @@ def test_main_app(data_client_mock, test_name):
     obs_path = f'{TEST_DATA_DIR}/{dao_name.obs_id}.expected.xml'
     output_file = f'{TEST_DATA_DIR}/{dao_name.obs_id}.actual.xml'
 
-    sys.argv = \
-        (f'{APPLICATION} --no_validate --local {test_name} '
-         f'--observation {COLLECTION} {dao_name.obs_id} -o {output_file} '
-         f'--plugin {PLUGIN} --module {PLUGIN} --lineage '
-         f'{dao_name.lineage}').split()
+    sys.argv = (
+        f'{APPLICATION} --no_validate --local {test_name} '
+        f'--observation {COLLECTION} {dao_name.obs_id} -o {output_file} '
+        f'--plugin {PLUGIN} --module {PLUGIN} --lineage '
+        f'{dao_name.lineage}'
+    ).split()
     print(sys.argv)
     try:
         main_app.to_caom2()

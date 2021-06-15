@@ -101,10 +101,14 @@ def pytest_generate_tests(metafunc):
 def test_multi_plane(data_client_mock, test_name):
     dao_name = DAOName(file_name=f'{LOOKUP[test_name][0]}.fits')
     lineage = _get_lineage(dao_name.obs_id)
-    expected_fqn = f'{test_main_app.TEST_DATA_DIR}/{DIR_NAME}/' \
-                   f'{dao_name.obs_id}.expected.xml'
-    actual_fqn = f'{test_main_app.TEST_DATA_DIR}/{DIR_NAME}/' \
-                 f'{dao_name.obs_id}.actual.xml'
+    expected_fqn = (
+        f'{test_main_app.TEST_DATA_DIR}/{DIR_NAME}/'
+        f'{dao_name.obs_id}.expected.xml'
+    )
+    actual_fqn = (
+        f'{test_main_app.TEST_DATA_DIR}/{DIR_NAME}/'
+        f'{dao_name.obs_id}.actual.xml'
+    )
 
     local = _get_local(test_name)
     plugin = test_main_app.PLUGIN
@@ -115,11 +119,12 @@ def test_multi_plane(data_client_mock, test_name):
     if os.path.exists(actual_fqn):
         os.remove(actual_fqn)
 
-    sys.argv = \
-        (f'{APPLICATION} --quiet --no_validate --local {local} '
-         f'--observation {COLLECTION} {dao_name.obs_id} '
-         f'--plugin {plugin} --module {plugin} --out {actual_fqn} '
-         f'--lineage {lineage}').split()
+    sys.argv = (
+        f'{APPLICATION} --quiet --no_validate --local {local} '
+        f'--observation {COLLECTION} {dao_name.obs_id} '
+        f'--plugin {plugin} --module {plugin} --out {actual_fqn} '
+        f'--lineage {lineage}'
+    ).split()
     print(sys.argv)
     try:
         main_app.to_caom2()
@@ -137,8 +142,9 @@ def test_multi_plane(data_client_mock, test_name):
 def _get_lineage(obs_id):
     result = ''
     for ii in LOOKUP[obs_id]:
-        fits = mc.get_lineage(COLLECTION, mc.StorageName.remove_extensions(ii),
-                              ii)
+        fits = mc.get_lineage(
+            COLLECTION, mc.StorageName.remove_extensions(ii), ii
+        )
         result = f'{result} {fits}'
     return result
 
@@ -146,6 +152,8 @@ def _get_lineage(obs_id):
 def _get_local(obs_id):
     result = ''
     for ii in LOOKUP[obs_id]:
-        result = f'{result} {test_main_app.TEST_DATA_DIR}/{DIR_NAME}/' \
-                 f'{mc.StorageName.remove_extensions(ii)}.fits.header'
+        result = (
+            f'{result} {test_main_app.TEST_DATA_DIR}/{DIR_NAME}/'
+            f'{mc.StorageName.remove_extensions(ii)}.fits.header'
+        )
     return result

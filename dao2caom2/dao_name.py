@@ -89,8 +89,14 @@ class DAOName(mc.StorageName):
 
     DAO_NAME_PATTERN = '*'
 
-    def __init__(self, obs_id=None, fname_on_disk=None, file_name=None,
-                 artifact_uri=None, entry=None):
+    def __init__(
+        self,
+        obs_id=None,
+        fname_on_disk=None,
+        file_name=None,
+        artifact_uri=None,
+        entry=None,
+    ):
         if artifact_uri is not None:
             scheme, archive, file_name = mc.decompose_uri(artifact_uri)
         if file_name is not None:
@@ -104,15 +110,24 @@ class DAOName(mc.StorageName):
         if fname_on_disk is None:
             fname_on_disk = file_name
         super(DAOName, self).__init__(
-            obs_id, COLLECTION, DAOName.DAO_NAME_PATTERN, fname_on_disk,
-            entry=entry)
+            obs_id,
+            COLLECTION,
+            DAOName.DAO_NAME_PATTERN,
+            fname_on_disk,
+            entry=entry,
+        )
         self._file_id = file_id
         self._logger = logging.getLogger(__name__)
         self._logger.debug(self)
 
     def __str__(self):
-        return f'obs id {self._obs_id} file name {self.file_name} ' \
-               f'file id {self._file_id} fname on disk {self.fname_on_disk}'
+        return (
+            f'\n'
+            f'  obs id {self._obs_id}\n'
+            f'  file name {self.file_name}\n'
+            f'  file id {self._file_id}\n'
+            f'  fname on disk {self.fname_on_disk}\n'
+        )
 
     @property
     def file_id(self):
@@ -179,8 +194,10 @@ class DAOName(mc.StorageName):
         # the entry is a uri
         file_id = mc.CaomName(entry).file_id
         result = False
-        if (re.match('dao_[cr]\\d{3}_\\d{4}_\\d{6}_[aevBF]', file_id) or
-                re.match('dao_[p]\\d{3}_\\d{6}(u|v|y|r|i|)', file_id)):
+        if (
+            re.match('dao_[cr]\\d{3}_\\d{4}_\\d{6}_[aevBF]', file_id) or
+            re.match('dao_[p]\\d{3}_\\d{6}(u|v|y|r|i|)', file_id)
+        ):
             result = True
         return result
 

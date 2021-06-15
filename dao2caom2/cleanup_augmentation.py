@@ -89,12 +89,15 @@ def visit(observation, **kwargs):
 
     for product_id, uris in delete_list.items():
         for uri in uris:
-            logging.info(f'Removing artifact {uri} from '
-                         f'{observation.observation_id}, plane {product_id}')
+            logging.info(
+                f'Removing artifact {uri} from {observation.observation_id}, '
+                f'plane {product_id}'
+            )
             count += 1
             observation.planes[product_id].artifacts.pop(uri)
 
     logging.info(
         f'Completed cleanup augmentation for {observation.observation_id}. '
-        f'Remove {count} artifacts from the observation.')
+        f'Remove {count} artifacts from the observation.'
+    )
     return {'artifacts': count}

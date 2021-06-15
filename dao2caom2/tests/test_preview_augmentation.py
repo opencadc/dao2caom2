@@ -104,7 +104,7 @@ def test_visit(ad_put_mock):
         'dao_c182_2017_019322.xml': ['dao_c182_2017_019322.fits.gz'],
         'dao_c182_2017_016292.xml': ['dao_c182_2017_016292.fits.gz'],
         'visit_obs_start_e.xml':
-            ['dao_c122_2007_000881.fits.gz', 'dao_c122_2007_000881_e.fits']
+            ['dao_c122_2007_000881.fits.gz', 'dao_c122_2007_000881_e.fits'],
     }
 
     test_checksums = {
@@ -145,20 +145,23 @@ def test_visit(ad_put_mock):
         'ad:DAO/dao_r182_1989_000369_1024.png':
             'md5:2e14aefda2a74b5575f6a4d8d1b1b3cb',
         'ad:DAO/dao_c122_2007_000882_v_1024.png':
-            'md5:37cfb96bce27da93ede75eadabad7b8f'
+            'md5:37cfb96bce27da93ede75eadabad7b8f',
     }
 
-    kwargs = {'working_directory': TEST_FILES_DIR,
-              'cadc_client': cadc_client_mock,
-              'stream': 'stream',
-              'observable': test_observable}
+    kwargs = {
+        'working_directory': TEST_FILES_DIR,
+        'cadc_client': cadc_client_mock,
+        'stream': 'stream',
+        'observable': test_observable,
+    }
 
     for entry in glob.glob(f'{TEST_FILES_DIR}/*.png'):
         os.unlink(entry)
 
     for key, value in test_files.items():
         obs = mc.read_obs_from_file(
-            f'{test_main_app.TEST_DATA_DIR}/previews/{key}')
+            f'{test_main_app.TEST_DATA_DIR}/previews/{key}'
+        )
         for f_name in value:
             kwargs['science_file'] = f_name
 

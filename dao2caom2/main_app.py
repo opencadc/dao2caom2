@@ -148,8 +148,7 @@ def get_energy_axis_function_naxis(parameters):
             elif dispaxis == 2:
                 naxis = _get_naxis2(header)
             else:
-                raise mc.CadcException(
-                    f'Could not find dispaxis for {uri}')
+                raise mc.CadcException(f'Could not find dispaxis for {uri}')
     return naxis
 
 
@@ -197,8 +196,9 @@ def get_energy_axis_function_refcoord_pix(parameters):
                 if crpix is None:
                     temp = header.get('DATASEC')
                     if temp is not None:
-                        datasec = re.sub(r'(\[)(\d+:\d+,\d+:\d+)(\])',
-                                         r'\g<2>', temp)
+                        datasec = re.sub(
+                            r'(\[)(\d+:\d+,\d+:\d+)(\])', r'\g<2>', temp
+                        )
                         (dx, dy) = datasec.split(',')
                         (xl, xh) = dx.split(':')
                         (yl, yh) = dy.split(':')
@@ -229,8 +229,9 @@ def get_energy_resolving_power(parameters):
     if numerator is not None and denominator is not None:
         if execution_path is ExecutionPath.IMAGING:
             resolving_power = numerator / denominator
-        elif execution_path in [ExecutionPath.SPECT_RAW,
-                                ExecutionPath.SPECT_CALIBRATED]:
+        elif execution_path in [
+            ExecutionPath.SPECT_RAW, ExecutionPath.SPECT_CALIBRATED
+        ]:
             resolving_power = numerator / (2.5 * denominator)
     return resolving_power
 
@@ -250,8 +251,10 @@ def _get_execution_path(parameters):
         result = ExecutionPath.IMAGING
     else:
         result = ExecutionPath.SPECT_RAW
-        if (dn.DAOName.is_processed(uri) and obs_type in ['object',
-                                                          'comparison']):
+        if (
+            dn.DAOName.is_processed(uri) and
+            obs_type in ['object', 'comparison']
+        ):
             result = ExecutionPath.SPECT_CALIBRATED
     return result
 
@@ -302,9 +305,14 @@ def get_position_function_coord1_pix(parameters):
                 result = 1.0
         return result
 
-    return _get_position_template(parameters, 'CRPIX1', science_spectrum,
-                                  _get_header_value,
-                                  science_image_raw, cal)
+    return _get_position_template(
+        parameters,
+        'CRPIX1',
+        science_spectrum,
+        _get_header_value,
+        science_image_raw,
+        cal,
+    )
 
 
 def get_position_function_coord2_pix(parameters):
@@ -324,9 +332,14 @@ def get_position_function_coord2_pix(parameters):
                 result = 1.0
         return result
 
-    return _get_position_template(parameters, 'CRPIX2', science_spectrum,
-                                  _get_header_value,
-                                  science_image_raw, cal)
+    return _get_position_template(
+        parameters,
+        'CRPIX2',
+        science_spectrum,
+        _get_header_value,
+        science_image_raw,
+        cal,
+    )
 
 
 def get_position_function_coord1_val(header):
@@ -355,27 +368,42 @@ def get_position_function_cd11(parameters):
                 result = -0.001388
         return result
 
-    return _get_position_template(parameters, 'CD1_1', science_spectrum,
-                                  _get_header_value,
-                                  _get_position_by_scale_size_bin, cal)
+    return _get_position_template(
+        parameters,
+        'CD1_1',
+        science_spectrum,
+        _get_header_value,
+        _get_position_by_scale_size_bin,
+        cal,
+    )
 
 
 def get_position_function_cd12(parameters):
     def science_spectrum(header, key):
         return 0.0
 
-    return _get_position_template(parameters, 'CD1_2', science_spectrum,
-                                  _get_header_value, science_spectrum,
-                                  _get_position_dark)
+    return _get_position_template(
+        parameters,
+        'CD1_2',
+        science_spectrum,
+        _get_header_value,
+        science_spectrum,
+        _get_position_dark,
+    )
 
 
 def get_position_function_cd21(parameters):
     def science_spectrum(header, key):
         return 0.0
 
-    return _get_position_template(parameters, 'CD2_1', science_spectrum,
-                                  _get_header_value, science_spectrum,
-                                  _get_position_dark)
+    return _get_position_template(
+        parameters,
+        'CD2_1',
+        science_spectrum,
+        _get_header_value,
+        science_spectrum,
+        _get_position_dark,
+    )
 
 
 def get_position_function_cd22(parameters):
@@ -394,14 +422,24 @@ def get_position_function_cd22(parameters):
                 result = 0.001388
         return result
 
-    return _get_position_template(parameters, 'CD2_2', science_spectrum,
-                                  _get_header_value,
-                                  _get_position_by_scale_size_bin, cal)
+    return _get_position_template(
+        parameters,
+        'CD2_2',
+        science_spectrum,
+        _get_header_value,
+        _get_position_by_scale_size_bin,
+        cal,
+    )
 
 
-def _get_position_template(parameters, key, science_spectrum,
-                           science_image_calib,
-                           science_image_raw, cal):
+def _get_position_template(
+    parameters,
+    key,
+    science_spectrum,
+    science_image_calib,
+    science_image_raw,
+    cal,
+):
     header = parameters.get('header')
     artifact_product_type = get_artifact_product_type(header)
     data_product_type = get_data_product_type(header)
@@ -428,9 +466,11 @@ def _get_position_by_scale_size_bin(header, key):
     platescale = mc.to_float(header.get('PLTSCALE'))
     pixsize = mc.to_float(header.get('PIXSIZE'))
     xbin = mc.to_float(header.get('XBIN'))
-    if (platescale is not None and
-            pixsize is not None and
-            xbin is not None):
+    if (
+        platescale is not None and
+        pixsize is not None and
+        xbin is not None
+    ):
         result = platescale * pixsize * xbin / 3600000.0
     return result
 
@@ -549,8 +589,10 @@ def _get_geo(header):
             # and -123.416502.  Not sure of the elevation.
             result = ac.get_location(48.519497, -123.416502, 210.0)
     if result is None:
-        raise mc.CadcException(f'Unexpected telescope value of {telescope} for '
-                               f'{header.get("DAOPRGID")}')
+        raise mc.CadcException(
+            f'Unexpected telescope value of {telescope} for '
+            f'{header.get("DAOPRGID")}'
+        )
     return result
 
 
@@ -638,7 +680,9 @@ def _get_position(header):
             dec = header.get('DEC', 0)
             equinox = f'J{header.get("EQUINOX")}'
             fk5 = FK5(equinox=equinox)
-            coord = SkyCoord(f'{ra} {dec}', unit=(u.hourangle, u.deg), frame=fk5)
+            coord = SkyCoord(
+                f'{ra} {dec}', unit=(u.hourangle, u.deg), frame=fk5
+            )
             j2000 = FK5(equinox='J2000')
             result = coord.transform_to(j2000)
             ra_deg = result.ra.degree
@@ -683,7 +727,8 @@ def accumulate_bp(bp, uri):
     bp.set('Chunk.time.axis.function.delta', 'get_time_axis_delta(header)')
     bp.set('Chunk.time.axis.function.refCoord.pix', '0.5')
     bp.set(
-        'Chunk.time.axis.function.refCoord.val', 'get_time_axis_val(params)')
+        'Chunk.time.axis.function.refCoord.val', 'get_time_axis_val(params)'
+    )
 
     bp.set('Chunk.observable.axis.axis.ctype', 'FLUX')
     bp.set('Chunk.observable.axis.axis.cunit', 'COUNTS')
@@ -741,8 +786,10 @@ def _accumulate_dao_bp(bp):
     bp.add_fits_attribute('Plane.provenance.name', 'PROCNAME')
     bp.set_default('Plane.provenance.name', 'DAO unprocessed data')
     bp.set('Plane.provenance.producer', 'NRC Herzberg')
-    bp.set('Plane.provenance.reference',
-           'https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/dao/')
+    bp.set(
+        'Plane.provenance.reference',
+        'https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/dao/',
+    )
     bp.clear('Plane.provenance.version')
     bp.add_fits_attribute('Plane.provenance.version', 'PROCVERS')
     bp.set_default('Plane.provenance.version', None)
@@ -755,16 +802,26 @@ def _accumulate_dao_bp(bp):
     bp.set('Chunk.observable.axis.axis.cunit', 'COUNTS')
     bp.set('Chunk.observable.axis.function.refCoord.pix', 1)
 
-    bp.set('Chunk.energy.axis.function.delta',
-           'get_energy_axis_function_delta(parameters)')
-    bp.set('Chunk.energy.axis.function.naxis',
-           'get_energy_axis_function_naxis(parameters)')
-    bp.set('Chunk.energy.axis.function.refCoord.pix',
-           'get_energy_axis_function_refcoord_pix(parameters)')
-    bp.set('Chunk.energy.axis.function.refCoord.val',
-           'get_energy_axis_function_refcoord_val(parameters)')
-    bp.set('Chunk.energy.resolvingPower',
-           'get_energy_resolving_power(parameters)')
+    bp.set(
+        'Chunk.energy.axis.function.delta',
+        'get_energy_axis_function_delta(parameters)',
+    )
+    bp.set(
+        'Chunk.energy.axis.function.naxis',
+        'get_energy_axis_function_naxis(parameters)',
+    )
+    bp.set(
+        'Chunk.energy.axis.function.refCoord.pix',
+        'get_energy_axis_function_refcoord_pix(parameters)',
+    )
+    bp.set(
+        'Chunk.energy.axis.function.refCoord.val',
+        'get_energy_axis_function_refcoord_val(parameters)',
+    )
+    bp.set(
+        'Chunk.energy.resolvingPower',
+        'get_energy_resolving_power(parameters)',
+    )
     bp.clear('Chunk.energy.bandpassName')
     bp.add_fits_attribute('Chunk.energy.bandpassName', 'FILTER')
 
@@ -772,26 +829,46 @@ def _accumulate_dao_bp(bp):
     bp.set('Chunk.position.axis.axis2.ctype', 'DEC--TAN')
     bp.set('Chunk.position.axis.axis1.cunit', 'deg')
     bp.set('Chunk.position.axis.axis2.cunit', 'deg')
-    bp.set('Chunk.position.axis.function.dimension.naxis1',
-           'get_position_function_dimension_naxis1(header)')
-    bp.set('Chunk.position.axis.function.dimension.naxis2',
-           'get_position_function_dimension_naxis2(header)')
-    bp.set('Chunk.position.axis.function.refCoord.coord1.pix',
-           'get_position_function_coord1_pix(parameters)')
-    bp.set('Chunk.position.axis.function.refCoord.coord1.val',
-           'get_position_function_coord1_val(header)')
-    bp.set('Chunk.position.axis.function.refCoord.coord2.pix',
-           'get_position_function_coord2_pix(parameters)')
-    bp.set('Chunk.position.axis.function.refCoord.coord2.val',
-           'get_position_function_coord2_val(header)')
-    bp.set('Chunk.position.axis.function.cd11',
-           'get_position_function_cd11(parameters)')
-    bp.set('Chunk.position.axis.function.cd22',
-           'get_position_function_cd22(parameters)')
-    bp.set('Chunk.position.axis.function.cd12',
-           'get_position_function_cd12(parameters)')
-    bp.set('Chunk.position.axis.function.cd21',
-           'get_position_function_cd21(parameters)')
+    bp.set(
+        'Chunk.position.axis.function.dimension.naxis1',
+        'get_position_function_dimension_naxis1(header)',
+    )
+    bp.set(
+        'Chunk.position.axis.function.dimension.naxis2',
+        'get_position_function_dimension_naxis2(header)',
+    )
+    bp.set(
+        'Chunk.position.axis.function.refCoord.coord1.pix',
+        'get_position_function_coord1_pix(parameters)',
+    )
+    bp.set(
+        'Chunk.position.axis.function.refCoord.coord1.val',
+        'get_position_function_coord1_val(header)',
+    )
+    bp.set(
+        'Chunk.position.axis.function.refCoord.coord2.pix',
+        'get_position_function_coord2_pix(parameters)',
+    )
+    bp.set(
+        'Chunk.position.axis.function.refCoord.coord2.val',
+        'get_position_function_coord2_val(header)',
+    )
+    bp.set(
+        'Chunk.position.axis.function.cd11',
+        'get_position_function_cd11(parameters)',
+    )
+    bp.set(
+        'Chunk.position.axis.function.cd22',
+        'get_position_function_cd22(parameters)',
+    )
+    bp.set(
+        'Chunk.position.axis.function.cd12',
+        'get_position_function_cd12(parameters)',
+    )
+    bp.set(
+        'Chunk.position.axis.function.cd21',
+        'get_position_function_cd21(parameters)',
+    )
 
 
 def _accumulate_skycam_bp(bp):
@@ -808,11 +885,15 @@ def _accumulate_skycam_bp(bp):
     bp.set('Plane.dataRelease', 'get_skycam_release_date(header)')
     bp.set('Plane.metaRelease', 'get_skycam_release_date(header)')
     bp.set('Plane.provenance.project', 'DAO Science Archive')
-    bp.set('Plane.provenance.producer',
-           'NRC Herzberg Astronomy and Astrophysics Research Centre')
+    bp.set(
+        'Plane.provenance.producer',
+        'NRC Herzberg Astronomy and Astrophysics Research Centre',
+    )
     bp.set('Plane.provenance.name', 'DAO Sky Camera image')
-    bp.set('Plane.provenance.reference',
-           'https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/dao/')
+    bp.set(
+        'Plane.provenance.reference',
+        'https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/dao/',
+    )
     bp.set('Artifact.productType', ProductType.CALIBRATION)
 
     bp.set('Chunk.energy.axis.function.delta', 3000.0)
@@ -845,13 +926,16 @@ def update(observation, **kwargs):
         dao_name = dn.DAOName(file_name=os.path.basename(fqn))
 
     if dao_name is None:
-        raise mc.CadcException(f'Need one of fqn or uri defined for '
-                               f'{observation.observation_id}')
+        raise mc.CadcException(
+            f'Need one of fqn or uri defined for {observation.observation_id}'
+        )
     # correct the *_axis values
     for plane in observation.planes.values():
         for artifact in plane.artifacts.values():
-            if (artifact.uri.replace('.gz', '') !=
-                    dao_name.file_uri.replace('.gz', '')):
+            if (
+                artifact.uri.replace('.gz', '') !=
+                dao_name.file_uri.replace('.gz', '')
+            ):
                 continue
 
             for part in artifact.parts.values():
@@ -861,9 +945,11 @@ def update(observation, **kwargs):
 
                     if dao_name.file_name.startswith('d'):
                         if plane.data_product_type == DataProductType.SPECTRUM:
-                            if (dn.DAOName.is_unprocessed_reticon(artifact.uri) or
+                            if (
+                                dn.DAOName.is_unprocessed_reticon(artifact.uri) or
                                 dn.DAOName.is_derived(artifact.uri) and
-                                    observation.type == 'flat'):
+                                    observation.type == 'flat'
+                            ):
                                 cc.reset_energy(chunk)
                             if not artifact.product_type == ProductType.SCIENCE:
                                 if observation.type == 'dark':
@@ -872,15 +958,19 @@ def update(observation, **kwargs):
                                 else:
                                     cc.reset_position(chunk)
                                 # no energy for calibration?
-                                if (observation.type not in
-                                        ['flat', 'comparison', 'dark']):
+                                if (
+                                    observation.type not in
+                                        ['flat', 'comparison', 'dark']
+                                ):
                                     cc.reset_energy(chunk)
                             # DB 04-03-21
                             #  If WAVELENG isn’t present (for unprocessed
                             #  spectra) then all energy metadata should be
                             #  ignored
-                            if (not dn.DAOName.is_processed(artifact.uri) and
-                                    headers[0].get('WAVELENG') is None):
+                            if (
+                                not dn.DAOName.is_processed(artifact.uri) and
+                                headers[0].get('WAVELENG') is None
+                            ):
                                 cc.reset_energy(chunk)
                         else:  # DataProductType.IMAGE
                             if dn.DAOName.override_provenance(artifact.uri):
@@ -893,9 +983,11 @@ def update(observation, **kwargs):
                                 if observation.type not in ['flat', 'dark']:
                                     cc.reset_energy(chunk)
 
-                        if (chunk.energy is not None and
-                                not dn.DAOName.is_processed(artifact.uri) and
-                                headers[0].get('WAVELENG') is None):
+                        if (
+                            chunk.energy is not None and
+                            not dn.DAOName.is_processed(artifact.uri) and
+                            headers[0].get('WAVELENG') is None
+                        ):
                             # DB 16-02-21
                             #  If WAVELENG isn’t present then all energy
                             #  metadata should be ignored (spectra and images)
@@ -924,15 +1016,22 @@ def update(observation, **kwargs):
                         chunk.position_axis_1 = None
                         chunk.position_axis_2 = None
                         if naxis is not None:
-                            if (naxis1 is not None and naxis2 is not None and
-                                    naxis == 2 and chunk.position is not None and
-                                    plane.data_product_type is
-                                    DataProductType.IMAGE):
+                            if (
+                                naxis1 is not None and
+                                naxis2 is not None and
+                                naxis == 2 and
+                                chunk.position is not None and
+                                plane.data_product_type is
+                                    DataProductType.IMAGE
+                            ):
                                 chunk.naxis = 2
                                 chunk.position_axis_1 = 1
                                 chunk.position_axis_2 = 2
-                            if (naxis1 is not None and naxis == 1 and
-                                    chunk.energy is not None):
+                            if (
+                                naxis1 is not None and
+                                naxis == 1 and
+                                chunk.energy is not None
+                            ):
                                 chunk.naxis = 1
                                 chunk.energy_axis = 1
                     else:
@@ -956,19 +1055,31 @@ def update(observation, **kwargs):
         # proper provenance provided).
 
         if observation.type == 'flat' and cc.is_composite(headers, 'FLAT_'):
-            cc.update_plane_provenance(plane, headers, 'FLAT_', dn.COLLECTION,
-                                       _repair_provenance_value,
-                                       observation.observation_id)
+            cc.update_plane_provenance(
+                plane,
+                headers,
+                'FLAT_',
+                dn.COLLECTION,
+                _repair_provenance_value,
+                observation.observation_id,
+            )
         elif observation.type == 'bias' and cc.is_composite(headers, 'ZERO_'):
-            cc.update_plane_provenance(plane, headers, 'ZERO_', dn.COLLECTION,
-                                       _repair_provenance_value,
-                                       observation.observation_id)
+            cc.update_plane_provenance(
+                plane,
+                headers,
+                'ZERO_',
+                dn.COLLECTION,
+                _repair_provenance_value,
+                observation.observation_id,
+            )
 
         if dn.DAOName.is_processed(dao_name.file_uri):
             _update_plane_provenance(observation, plane, headers)
 
-        if (cc.is_composite(headers, 'FLAT_') or
-                cc.is_composite(headers, 'ZERO_')):
+        if (
+            cc.is_composite(headers, 'FLAT_') or
+            cc.is_composite(headers, 'ZERO_')
+        ):
             _update_observation_members(observation)
 
     logging.debug('Done update.')
@@ -1024,20 +1135,25 @@ def _update_observation_members(observation):
     inputs = []
     members_inputs = TypedSet(ObservationURI,)
     for plane in observation.planes.values():
-        if (plane.provenance is not None and
-                plane.provenance.inputs is not None):
+        if (
+            plane.provenance is not None and
+            plane.provenance.inputs is not None
+        ):
             inputs = filter(filter_fun, plane.provenance.inputs)
 
     for entry in inputs:
         members_inputs.add(entry.get_observation_uri())
-        logging.debug('Adding Observation URI {}'.format(
-            entry.get_observation_uri()))
+        logging.debug(
+            f'Adding Observation URI {entry.get_observation_uri()}'
+        )
     mc.update_typed_set(observation.members, members_inputs)
 
 
 def _update_plane_provenance(observation, plane, headers):
-    logging.debug(f'Begin _update_plane_provenance for {plane.product_id} with'
-                  f'observation type: {observation.type}.')
+    logging.debug(
+        f'Begin _update_plane_provenance for {plane.product_id} with'
+        f'observation type: {observation.type}.'
+    )
     if observation.type in ['object', 'flat', 'comparison']:
         f_name = headers[0].get('BIAS')
         if f_name is not None:
@@ -1051,28 +1167,32 @@ def _update_plane_provenance(observation, plane, headers):
             plane_uri = _make_uris(flat_name.obs_id, flat_name.product_id)
             plane.provenance.inputs.add(plane_uri)
         # referral to raw plane
-        plane_uri = _make_uris(observation.observation_id,
-                               observation.observation_id)
+        plane_uri = _make_uris(
+            observation.observation_id, observation.observation_id
+        )
         plane.provenance.inputs.add(plane_uri)
     if observation.type == 'object':
         f_name = headers[0].get('DCLOG1')
         if f_name is not None:
             ref_spec1_name = dn.DAOName(file_name=f_name.split()[2])
-            plane_uri = _make_uris(ref_spec1_name.obs_id,
-                                   ref_spec1_name.product_id)
+            plane_uri = _make_uris(
+                ref_spec1_name.obs_id, ref_spec1_name.product_id
+            )
             plane.provenance.inputs.add(plane_uri)
         if headers[0].get('DCLOG2') is not None:
             ref_spec1_name = dn.DAOName(
                 file_name=headers[0].get('DCLOG2').split()[2])
-            plane_uri = _make_uris(ref_spec1_name.obs_id,
-                                   ref_spec1_name.product_id)
+            plane_uri = _make_uris(
+                ref_spec1_name.obs_id, ref_spec1_name.product_id
+            )
             plane.provenance.inputs.add(plane_uri)
     logging.debug(f'End _update_plane_provenance.')
 
 
 def _make_uris(obs_id, product_id):
     obs_member_uri = ObservationURI(mc.CaomName.make_obs_uri_from_obs_id(
-        dn.COLLECTION, obs_id))
+        dn.COLLECTION, obs_id)
+    )
     plane_uri = PlaneURI.get_plane_uri(obs_member_uri, product_id)
     return plane_uri
 
