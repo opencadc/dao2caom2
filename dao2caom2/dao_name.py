@@ -194,10 +194,9 @@ class DAOName(mc.StorageName):
         # the entry is a uri
         file_id = mc.CaomName(entry).file_id
         result = False
-        if (
-            re.match('dao_[cr]\\d{3}_\\d{4}_\\d{6}_[aevBF]', file_id) or
-            re.match('dao_[p]\\d{3}_\\d{6}(u|v|y|r|i|)', file_id)
-        ):
+        if re.match(
+            'dao_[cr]\\d{3}_\\d{4}_\\d{6}_[aevBF]', file_id
+        ) or re.match('dao_[p]\\d{3}_\\d{6}(u|v|y|r|i|)', file_id):
             result = True
         return result
 
@@ -217,4 +216,3 @@ class DAOName(mc.StorageName):
         if re.match('ad:DAO/dao_[c]\\d{3}_\\d{4}_\\d{6}_[aBF].\\w', entry):
             result = True
         return result
-

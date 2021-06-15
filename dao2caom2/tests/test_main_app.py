@@ -84,10 +84,9 @@ def pytest_generate_tests(metafunc):
     files = []
     if os.path.exists(TEST_DATA_DIR):
         files = [
-            os.path.join(TEST_DATA_DIR, name) for name in
-            os.listdir(TEST_DATA_DIR) if (
-                    name.endswith('header') or name.endswith('.fits')
-            )
+            os.path.join(TEST_DATA_DIR, name)
+            for name in os.listdir(TEST_DATA_DIR)
+            if (name.endswith('header') or name.endswith('.fits'))
         ]
     metafunc.parametrize('test_name', files)
 
@@ -113,6 +112,7 @@ def test_main_app(data_client_mock, test_name):
     except Exception as e:
         import logging
         import traceback
+
         logging.error(traceback.format_exc())
 
     compare_result = mc.compare_observations(output_file, obs_path)

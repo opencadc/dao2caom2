@@ -85,11 +85,17 @@ import test_main_app
 # structured by observation id, list of file ids that make up a multi-plane
 # observation
 DIR_NAME = 'processed'
-LOOKUP = {'dao_c122_2007_000882': ['dao_c122_2007_000882_v.fits.gz'],
-          'dao_c122_2007_000881': ['dao_c122_2007_000881.fits.gz',
-                                   'dao_c122_2007_000881_e.fits'],
-          'dao_c182_2016_004034': ['dao_c182_2016_004034.fits.gz',
-                                   'dao_c182_2016_004034_a.fits']}
+LOOKUP = {
+    'dao_c122_2007_000882': ['dao_c122_2007_000882_v.fits.gz'],
+    'dao_c122_2007_000881': [
+        'dao_c122_2007_000881.fits.gz',
+        'dao_c122_2007_000881_e.fits',
+    ],
+    'dao_c182_2016_004034': [
+        'dao_c182_2016_004034.fits.gz',
+        'dao_c182_2016_004034_a.fits',
+    ],
+}
 
 
 def pytest_generate_tests(metafunc):
@@ -113,8 +119,9 @@ def test_multi_plane(data_client_mock, test_name):
     local = _get_local(test_name)
     plugin = test_main_app.PLUGIN
 
-    data_client_mock.return_value.get_file_info.side_effect = \
+    data_client_mock.return_value.get_file_info.side_effect = (
         test_main_app._get_file_info
+    )
 
     if os.path.exists(actual_fqn):
         os.remove(actual_fqn)
@@ -131,6 +138,7 @@ def test_multi_plane(data_client_mock, test_name):
     except Exception as e:
         import logging
         import traceback
+
         logging.error(traceback.format_exc())
 
     compare_result = mc.compare_observations(actual_fqn, expected_fqn)

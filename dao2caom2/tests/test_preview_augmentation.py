@@ -92,60 +92,47 @@ def test_visit(ad_put_mock):
 
     test_files = {
         # processed spectrum
-        'visit_obs_start_v.xml':
-            ['dao_c122_2007_000882_v.fits', 'dao_c122_2007_000882.fits.gz'],
+        'visit_obs_start_v.xml': [
+            'dao_c122_2007_000882_v.fits',
+            'dao_c122_2007_000882.fits.gz',
+        ],
         # processed image
-        'visit_obs_start_a.xml':
-            ['dao_c182_2016_004034_a.fits', 'dao_c182_2016_004034.fits.gz'],
+        'visit_obs_start_a.xml': [
+            'dao_c182_2016_004034_a.fits',
+            'dao_c182_2016_004034.fits.gz',
+        ],
         'dao_r182_1989_000369.xml': ['dao_r182_1989_000369.fits.gz'],
         'dao_r122_1989_003111.xml': ['dao_r122_1989_003111.fits.gz'],
         'dao_c122_2017_011124.xml': ['dao_c122_2017_011124.fits.gz'],
         'dao_c182_2017_010870.xml': ['dao_c182_2017_010870.fits.gz'],
         'dao_c182_2017_019322.xml': ['dao_c182_2017_019322.fits.gz'],
         'dao_c182_2017_016292.xml': ['dao_c182_2017_016292.fits.gz'],
-        'visit_obs_start_e.xml':
-            ['dao_c122_2007_000881.fits.gz', 'dao_c122_2007_000881_e.fits'],
+        'visit_obs_start_e.xml': [
+            'dao_c122_2007_000881.fits.gz',
+            'dao_c122_2007_000881_e.fits',
+        ],
     }
 
     test_checksums = {
-        'ad:DAO/dao_c122_2007_000881_e_256.png':
-            'md5:e68a3c389bbdf53cde0cca073c7a37c1',
-        'ad:DAO/dao_c122_2007_000881_e_1024.png':
-            'md5:48065b2feb0fda3d7561c02b2890efaa',
-        'ad:DAO/dao_c122_2007_000882_256.png':
-            'md5:1268e5b79e463ca75580d7e538d88a2a',
-        'ad:DAO/dao_c122_2007_000882_1024.png':
-            'md5:5694ee03486899d3b14b404caab22505',
-        'ad:DAO/dao_c122_2017_011124_256.png':
-            'md5:9793efcdeec043be8f0c77c7bf875cca',
-        'ad:DAO/dao_c122_2017_011124_1024.png':
-            'md5:4d77005756fbed7fc3ae525591cc07db',
-        'ad:DAO/dao_c182_2016_004034_256.png':
-            'md5:5c6b6816f8c0a54a0ff041b29247bdd5',
-        'ad:DAO/dao_c182_2016_004034_1024.png':
-            'md5:455bddac53488acca46758fbc1d2b096',
-        'ad:DAO/dao_c182_2017_010870_256.png':
-            'md5:106a6e0837fd00e971a37462266c2f66',
-        'ad:DAO/dao_c182_2017_010870_1024.png':
-            'md5:bc92d495aa0e56eb4ea35f409932391e',
-        'ad:DAO/dao_c182_2017_016292_256.png':
-            'md5:ef6bcc6501db0f64dfc7741f5ab37870',
-        'ad:DAO/dao_c182_2017_016292_1024.png':
-            'md5:6c425b3606dd598be33b61dfef51d132',
-        'ad:DAO/dao_c182_2017_019322_256.png':
-            'md5:dfca85e675f29a33ecdbabc91ed274bf',
-        'ad:DAO/dao_c182_2017_019322_1024.png':
-            'md5:2818ddf6acb0f36655fbdfc9e19098e7',
-        'ad:DAO/dao_r122_1989_003111_256.png':
-            'md5:7cb2344a84d195228d7fb866a83d031a',
-        'ad:DAO/dao_r122_1989_003111_1024.png':
-            'md5:a864bc14955bc1f8524e8829c3ee2ee9',
-        'ad:DAO/dao_r182_1989_000369_256.png':
-            'md5:5ef8f53784376b31a12dccb8671aca5e',
-        'ad:DAO/dao_r182_1989_000369_1024.png':
-            'md5:2e14aefda2a74b5575f6a4d8d1b1b3cb',
-        'ad:DAO/dao_c122_2007_000882_v_1024.png':
-            'md5:37cfb96bce27da93ede75eadabad7b8f',
+        'ad:DAO/dao_c122_2007_000881_e_256.png': 'md5:e68a3c389bbdf53cde0cca073c7a37c1',
+        'ad:DAO/dao_c122_2007_000881_e_1024.png': 'md5:48065b2feb0fda3d7561c02b2890efaa',
+        'ad:DAO/dao_c122_2007_000882_256.png': 'md5:1268e5b79e463ca75580d7e538d88a2a',
+        'ad:DAO/dao_c122_2007_000882_1024.png': 'md5:5694ee03486899d3b14b404caab22505',
+        'ad:DAO/dao_c122_2017_011124_256.png': 'md5:9793efcdeec043be8f0c77c7bf875cca',
+        'ad:DAO/dao_c122_2017_011124_1024.png': 'md5:4d77005756fbed7fc3ae525591cc07db',
+        'ad:DAO/dao_c182_2016_004034_256.png': 'md5:5c6b6816f8c0a54a0ff041b29247bdd5',
+        'ad:DAO/dao_c182_2016_004034_1024.png': 'md5:455bddac53488acca46758fbc1d2b096',
+        'ad:DAO/dao_c182_2017_010870_256.png': 'md5:106a6e0837fd00e971a37462266c2f66',
+        'ad:DAO/dao_c182_2017_010870_1024.png': 'md5:bc92d495aa0e56eb4ea35f409932391e',
+        'ad:DAO/dao_c182_2017_016292_256.png': 'md5:ef6bcc6501db0f64dfc7741f5ab37870',
+        'ad:DAO/dao_c182_2017_016292_1024.png': 'md5:6c425b3606dd598be33b61dfef51d132',
+        'ad:DAO/dao_c182_2017_019322_256.png': 'md5:dfca85e675f29a33ecdbabc91ed274bf',
+        'ad:DAO/dao_c182_2017_019322_1024.png': 'md5:2818ddf6acb0f36655fbdfc9e19098e7',
+        'ad:DAO/dao_r122_1989_003111_256.png': 'md5:7cb2344a84d195228d7fb866a83d031a',
+        'ad:DAO/dao_r122_1989_003111_1024.png': 'md5:a864bc14955bc1f8524e8829c3ee2ee9',
+        'ad:DAO/dao_r182_1989_000369_256.png': 'md5:5ef8f53784376b31a12dccb8671aca5e',
+        'ad:DAO/dao_r182_1989_000369_1024.png': 'md5:2e14aefda2a74b5575f6a4d8d1b1b3cb',
+        'ad:DAO/dao_c122_2007_000882_v_1024.png': 'md5:37cfb96bce27da93ede75eadabad7b8f',
     }
 
     kwargs = {

@@ -88,7 +88,6 @@ from dao2caom2 import dao_name as dn
 
 
 class DAOPreview(mc.PreviewVisitor):
-
     def __init__(self, **kwargs):
         super(DAOPreview, self).__init__(
             dn.COLLECTION, ReleaseType.DATA, **kwargs
@@ -106,9 +105,9 @@ class DAOPreview(mc.PreviewVisitor):
         header = hdu_list[0].header
 
         if (
-            'e' in storage_name.file_name or
-            'p' in storage_name.file_name or
-            'v' in storage_name.file_name
+            'e' in storage_name.file_name
+            or 'p' in storage_name.file_name
+            or 'v' in storage_name.file_name
         ):
             count += self._do_cal_processed(
                 hdu_list,
@@ -158,7 +157,9 @@ class DAOPreview(mc.PreviewVisitor):
         thumb_fqn,
         obs_id,
     ):
-        logging.debug(f'Do calibration preview augmentation with {science_fqn}')
+        logging.debug(
+            f'Do calibration preview augmentation with {science_fqn}'
+        )
         count = 0
         object_type = header.get('OBJECT')
         if object_type is None:
@@ -209,15 +210,20 @@ class DAOPreview(mc.PreviewVisitor):
         detector = header.get('DETECTOR')
         instrument = header.get('INSTRUME')
         if detector in [
-            'SITe-4', 'UBC-1', 'SITe-2', 'SITe-5', 'E2V-1', 'E2V-4'
+            'SITe-4',
+            'UBC-1',
+            'SITe-2',
+            'SITe-5',
+            'E2V-1',
+            'E2V-4',
         ]:
             # unprocessed CCD data
             if detector == 'SITe-4':
                 axis = 'NAXIS2'
                 naxis1 = mc.to_int(header.get(axis))
-                xc = naxis1/2
+                xc = naxis1 / 2
                 xs = 512
-                xoffset = xc - xs/2
+                xoffset = xc - xs / 2
                 rotate = '90.0'
                 geometry = '256x' + str(xs) + '+1+' + str(xoffset)
                 resize1 = 'x1024'
@@ -225,9 +231,9 @@ class DAOPreview(mc.PreviewVisitor):
             else:
                 axis = 'NAXIS1'
                 naxis1 = mc.to_int(header.get(axis))
-                xc = naxis1/2
+                xc = naxis1 / 2
                 xs = 512
-                xoffset = xc - xs/2
+                xoffset = xc - xs / 2
                 rotate = '0.0'
                 geometry = str(xs) + 'x256+' + str(xoffset) + '+1'
                 resize1 = '1024x1024'

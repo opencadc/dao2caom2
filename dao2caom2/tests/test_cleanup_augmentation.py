@@ -92,6 +92,6 @@ def test_cleanup_augmentation():
         len(test_observation.planes[test_product_id].artifacts) == 3
     ), 'wrong artifact count'
     assert (
-        'ad:DAO/dao_c122_2005_007071.fits.gz' in
-        test_observation.planes[test_product_id].artifacts.keys()
+        'ad:DAO/dao_c122_2005_007071.fits.gz'
+        in test_observation.planes[test_product_id].artifacts.keys()
     ), 'removed wrong uri'

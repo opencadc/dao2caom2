@@ -89,6 +89,4 @@ def test_ctor():
     assert (
         test_subject.product_id == 'dao_c122_2020_004100_v'
     ), 'wrong product id'
-    assert (
-        test_subject.file_id == 'dao_c122_2020_004100_v'
-    ), 'wrong file id'
+    assert test_subject.file_id == 'dao_c122_2020_004100_v', 'wrong file id'
