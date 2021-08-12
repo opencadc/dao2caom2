@@ -84,7 +84,7 @@ from caom2pipe import name_builder_composable as nbc
 from caom2pipe import manage_composable as mc
 from caom2pipe import run_composable as rc
 from dao2caom2 import APPLICATION, dao_name, preview_augmentation
-from dao2caom2 import cleanup_augmentation, data_source
+from dao2caom2 import cleanup_augmentation, data_source, transfer
 
 DAO_BOOKMARK = 'dao_timestamp'
 
@@ -136,6 +136,7 @@ def _run_vo():
     source = data_source.DAOVaultDataSource(
         config, vos_client, clients.data_client, recursive=False
     )
+    store_transferrer = transfer.VoFitsCleanupTransfer(vos_client, config)
     return rc.run_by_todo(
         name_builder=name_builder,
         command_name=APPLICATION,
@@ -143,6 +144,7 @@ def _run_vo():
         data_visitors=DATA_VISITORS,
         source=source,
         clients=clients,
+        store_transfer=store_transferrer,
     )
 
 

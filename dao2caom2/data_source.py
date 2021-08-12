@@ -71,7 +71,6 @@ import logging
 import traceback
 
 from os.path import basename, join
-from caom2pipe import astro_composable as ac
 from caom2pipe import client_composable as clc
 from caom2pipe import data_source_composable as dsc
 from caom2pipe import manage_composable as mc
@@ -89,6 +88,7 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
         self._collection = config.collection
         self._recursive = recursive
         self._cadc_client = cadc_client
+        self._vos_client = vos_client
         self._work = []
         self._logger = logging.getLogger(self.__class__.__name__)
 
@@ -96,27 +96,20 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
         for fqn in self._work:
             self._move_action(fqn, self._cleanup_success_directory)
 
-    def default_filter(self, entry):
+    def default_filter(self, entry, entry_fqn):
         copy_file = True
         for extension in self._data_source_extensions:
             if entry.endswith(extension):
                 if entry.startswith('.'):
                     # skip dot files
                     copy_file = False
-                elif ac.check_fits(entry):
-                    # only transfer files that pass the FITS verification
-                    if self._store_modified_files_only:
-                        # only transfer files with a different MD5 checksum
-                        copy_file = self._check_md5sum(entry)
-                        if not copy_file and self._cleanup_when_storing:
-                            self._move_action(
-                                entry, self._cleanup_success_directory
-                            )
-                else:
-                    self._move_action(
-                        entry, self._cleanup_failure_directory
-                    )
-                    copy_file = False
+                elif self._store_modified_files_only:
+                    # only transfer files with a different MD5 checksum
+                    copy_file = self._check_md5sum(entry)
+                    if not copy_file and self._cleanup_when_storing:
+                        self._move_action(
+                            entry_fqn, self._cleanup_success_directory
+                        )
                 break
         else:
             copy_file = False
@@ -153,13 +146,12 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
             if self._client.isdir(dir_entry_fqn) and self._recursive:
                 self._find_work(dir_entry_fqn)
             else:
-                if self.default_filter(dir_entry_fqn):
+                if self.default_filter(dir_entry, dir_entry_fqn):
                     self._logger.info(f'Adding {dir_entry_fqn} to work list.')
                     self._work.append(dir_entry_fqn)
 
     def _move_action(self, fqn, destination):
         """
-
         :param fqn: VOS URI, includes a file name
         :param destination: VOS URI, points to a directory
         :return:
@@ -172,7 +164,7 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
                 f_name = basename(fqn)
                 dest_fqn = join(destination, f_name)
                 self._logger.warning(f'Moving {fqn} to {dest_fqn}')
-                self._client.move(fqn, dest_fqn)
+                self._vos_client.move(fqn, dest_fqn)
             except Exception as e:
                 self._logger.debug(traceback.format_exc())
                 self._logger.error(

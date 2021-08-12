@@ -67,84 +67,44 @@
 # ***********************************************************************
 #
 
-from mock import Mock, patch
+import logging
+import traceback
+from os import unlink
+from os.path import basename, exists, join
 
-from cadcdata import FileInfo
 from caom2pipe import manage_composable as mc
-from dao2caom2 import data_source
+from caom2pipe import transfer_composable as tc
 
 
-@patch('caom2pipe.client_composable.vault_info', autospec=True)
-def test_dao_transfer_check_fits_verify(vault_info_mock):
-    test_match_file_info = FileInfo(
-        id='vos:abc/def.fits',
-        md5sum='ghi',
-    )
-    test_different_file_info = FileInfo(
-        id='vos:abc/def.fits',
-        md5sum='ghi',
-    )
-    test_file_info = [test_match_file_info, test_different_file_info]
+__all__ = ['VoFitsCleanupTransfer']
 
-    test_data_client = Mock(autospec=True)
-    test_vos_client = Mock(autospec=True)
 
-    test_config = mc.Config()
-    test_config.data_source_extensions = ['.fits.gz']
-    test_config.data_sources = ['vos:DAO/Archive/Incoming']
-    test_config.cleanup_failure_destination = 'vos:DAO/failure'
-    test_config.cleanup_success_destination = 'vos:DAO/success'
+class VoFitsCleanupTransfer(tc.VoFitsTransfer):
 
-    def _mock_listdir(entry):
-        if entry.endswith('Incoming'):
-            return [
-                'dao123.fits.gz', 'dao456.fits', 'Yesterday', '.dot.fits.gz'
-            ]
-        else:
-            return []
+    def __init__(self, vos_client, config):
+        self._vos_client = vos_client
+        self._cleanup_when_storing = config.cleanup_files_when_storing
+        self._cleanup_failure_directory = config.cleanup_failure_destination
+        self._logger = logging.getLogger(self.__class__.__name__)
 
-    test_vos_client.listdir.side_effect = _mock_listdir
-    test_vos_client.isdir.side_effect = [
-        False, False, True, False, False, False, True, False
-    ]
-    vault_info_mock.return_value = test_file_info
-    test_data_client.info.return_value = test_file_info
-
-    for case in [True, False]:
-        test_config.cleanup_files_when_storing = case
-
-        test_subject = data_source.DAOVaultDataSource(
-            test_config, test_vos_client, test_data_client
-        )
-        assert test_subject is not None, 'expect ctor to work'
-        test_result = test_subject.get_work()
-
-        assert test_result is not None, 'expect a work list'
-        assert len(test_result) == 1, 'wrong work list entries'
-        assert (
-            test_result[0] == 'vos:DAO/Archive/Incoming/dao123.fits.gz'
-        ), 'wrong work entry'
-
-        assert test_vos_client.isdir.call_count == 4, 'wrong is_dir count'
-        test_vos_client.isdir.reset_mock()
-
-    # test the case when the md5sums are the same, so the transfer does
-    # not occur, but the file ends up in the success location
-    test_vos_client.isdir.side_effect = [False, False, True, False]
-    test_config.cleanup_files_when_storing = True
-    test_config.store_modified_files_only = True
-    vault_info_mock.return_value = test_match_file_info
-    test_data_client.info.return_value = test_different_file_info
-
-    second_test_subject = data_source.DAOVaultDataSource(
-        test_config, test_vos_client, test_data_client
-    )
-    assert second_test_subject is not None, 'second ctor fails'
-    second_test_result = second_test_subject.get_work()
-    assert second_test_result is not None, 'expect a second result'
-    assert len(second_test_result) == 0, 'should be no successes'
-    assert test_vos_client.move.called, 'expect a success move call'
-    test_vos_client.move.assert_called_with(
-        'vos:DAO/Archive/Incoming/dao123.fits.gz',
-        'vos:DAO/success/dao123.fits.gz',
-    ), 'wrong success move args'
+    def failure_action(self, original_fqn, destination_fqn, message):
+        self._logger.warning(message)
+        if self._cleanup_when_storing:
+            f_name = basename(destination_fqn)
+            fail_fqn = join(self._cleanup_failure_directory, f_name)
+            try:
+                self._logger.warning(f'Moving {original_fqn} to {fail_fqn}')
+                self._vos_client.move(original_fqn, fail_fqn)
+            except Exception as e:
+                self._logger.debug(traceback.format_exc())
+                self._logger.error(
+                    f'Failed to move {original_fqn} to {fail_fqn}'
+                )
+                raise mc.CadcException(e)
+        try:
+            if exists(destination_fqn):
+                unlink(destination_fqn)
+        except Exception as e:
+            self._logger.debug(traceback.format_exc())
+            self._logger.error(f'Failed to clean up {destination_fqn}')
+            raise mc.CadcException(e)
