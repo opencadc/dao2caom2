@@ -105,7 +105,7 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
                     copy_file = False
                 elif self._store_modified_files_only:
                     # only transfer files with a different MD5 checksum
-                    copy_file = self._check_md5sum(entry)
+                    copy_file = self._check_md5sum(entry_fqn)
                     if not copy_file and self._cleanup_when_storing:
                         self._move_action(
                             entry_fqn, self._cleanup_success_directory
@@ -123,18 +123,18 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
         self._logger.debug('End get_work')
         return self._work
 
-    def _check_md5sum(self, entry_path):
+    def _check_md5sum(self, entry_fqn):
         # get the metadata from VOS
         result = True
-        vos_meta = clc.vault_info(self._client, entry_path)
+        vos_meta = clc.vault_info(self._client, entry_fqn)
         # get the metadata at CADC
-        f_name = basename(entry_path)
+        f_name = basename(entry_fqn)
         scheme = 'cadc' if self._supports_latest_client else 'ad'
-        destination_name = mc.build_uri(self._collection, f_name, scheme)
-        cadc_meta = self._cadc_client.info(destination_name)
-        if vos_meta.md5sum == cadc_meta.md5sum:
+        cadc_name = mc.build_uri(self._collection, f_name, scheme)
+        cadc_meta = self._cadc_client.info(cadc_name)
+        if cadc_meta is not None and vos_meta.md5sum == cadc_meta.md5sum:
             self._logger.warning(
-                f'{entry_path} has the same md5sum at CADC. Not transferring.'
+                f'{entry_fqn} has the same md5sum at CADC. Not transferring.'
             )
             result = False
         return result
