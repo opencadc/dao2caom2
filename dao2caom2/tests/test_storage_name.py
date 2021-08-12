@@ -90,3 +90,9 @@ def test_ctor():
         test_subject.product_id == 'dao_c122_2020_004100_v'
     ), 'wrong product id'
     assert test_subject.file_id == 'dao_c122_2020_004100_v', 'wrong file id'
+    assert (
+        test_subject.source_names == ['dao_c122_2020_004100_v.fits']
+    ), 'wrong source names'
+    assert (
+        test_subject.destination_uris == ['ad:DAO/dao_c122_2020_004100_v.fits']
+    ), 'wrong destination uris'

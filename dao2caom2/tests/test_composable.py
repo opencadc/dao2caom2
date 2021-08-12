@@ -124,7 +124,7 @@ def test_run_vo(run_mock, vo_client_mock):
     getcwd_orig = os.getcwd
     os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
     vo_client_mock.return_value.listdir.return_value = [
-        'vos:DAO/sky_cam_image.fits.gz',
+        'sky_cam_image.fits.gz',
     ]
     vo_client_mock.return_value.isdir.return_value = False
 
@@ -147,6 +147,14 @@ def test_run_vo(run_mock, vo_client_mock):
                 test_storage.lineage ==
                 f'sky_camera_image/ad:{COLLECTION}/{test_f_name}'
         ), 'wrong lineage'
+        assert (
+                test_storage.source_names ==
+                ['vos:goliaths/DAOTest/sky_cam_image.fits.gz']
+        ), 'wrong source names'
+        assert (
+                test_storage.destination_uris ==
+                ['ad:DAO/sky_cam_image.fits.gz']
+        ), 'wrong destination uris'
     finally:
         os.getcwd = getcwd_orig
         # clean up the summary report text file

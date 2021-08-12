@@ -117,16 +117,22 @@ class DAOName(mc.StorageName):
             entry=entry,
         )
         self._file_id = file_id
+        if entry is None:
+            self._source_names = [self._file_name]
+        else:
+            self._source_names = [entry]
+        self._destination_uris = [self.file_uri]
         self._logger = logging.getLogger(__name__)
         self._logger.debug(self)
 
     def __str__(self):
         return (
             f'\n'
-            f'  obs id {self._obs_id}\n'
-            f'  file name {self.file_name}\n'
-            f'  file id {self._file_id}\n'
-            f'  fname on disk {self.fname_on_disk}\n'
+            f'          obs id: {self._obs_id}\n'
+            f'       file name: {self.file_name}\n'
+            f'         file id: {self._file_id}\n'
+            f'    source names: {self.source_names}\n'
+            f'destination uris: {self.destination_uris}\n'
         )
 
     @property
