@@ -98,11 +98,7 @@ def test_dao_transfer_check_fits_verify(vault_info_mock, check_fits_mock):
 
     def _mock_listdir(entry):
         if entry.endswith('Incoming'):
-            return [
-                'vos:DAO/Archive/Incoming/dao123.fits.gz',
-                'vos:DAO/Archive/Incoming/dao456.fits',
-                'vos:DAO/Archive/Incoming/Yesterday',
-            ]
+            return ['dao123.fits.gz', 'dao456.fits', 'Yesterday']
         else:
             return []
 

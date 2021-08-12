@@ -105,9 +105,7 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
                     copy_file = False
                 elif ac.check_fits(entry):
                     # only transfer files that pass the FITS verification
-                    logging.error(f'get here?')
                     if self._store_modified_files_only:
-                        logging.error('store_modified_files_only')
                         # only transfer files with a different MD5 checksum
                         copy_file = self._check_md5sum(entry)
                         if not copy_file and self._cleanup_when_storing:
@@ -125,9 +123,9 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
         return copy_file
 
     def get_work(self):
-        self._logger.error(f'Begin get_work.')
+        self._logger.debug(f'Begin get_work.')
         for source in self._source_directories:
-            self._logger.error(f'Look in {source} for work.')
+            self._logger.info(f'Look in {source} for work.')
             self._find_work(source)
         self._logger.debug('End get_work')
         return self._work
@@ -136,7 +134,6 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
         # get the metadata from VOS
         result = True
         vos_meta = clc.vault_info(self._client, entry_path)
-        logging.error(vos_meta)
         # get the metadata at CADC
         f_name = basename(entry_path)
         scheme = 'cadc' if self._supports_latest_client else 'ad'
@@ -151,17 +148,14 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
 
     def _find_work(self, entry):
         dir_listing = self._client.listdir(entry)
-        logging.error(f'dir listing {len(dir_listing)}')
         for dir_entry in dir_listing:
-            logging.error(f'{dir_entry}')
-            if self._client.isdir(dir_entry) and self._recursive:
-                logging.error('is_dir is true')
-                self._find_work(dir_entry)
+            dir_entry_fqn = f'{entry}/{dir_entry}'
+            if self._client.isdir(dir_entry_fqn) and self._recursive:
+                self._find_work(dir_entry_fqn)
             else:
-                if self.default_filter(dir_entry):
-                    logging.error('default filter passes')
-                    self._logger.info(f'Adding {dir_entry} to work list.')
-                    self._work.append(dir_entry)
+                if self.default_filter(dir_entry_fqn):
+                    self._logger.info(f'Adding {dir_entry_fqn} to work list.')
+                    self._work.append(dir_entry_fqn)
 
     def _move_action(self, fqn, destination):
         """
@@ -171,9 +165,7 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
         :return:
         """
         # if move when storing is enabled, move to an after-action location
-        logging.error('entering move')
         if self._cleanup_when_storing:
-            logging.error('cleanup when storing is True')
             try:
                 # if the destination is a fully-qualified name, an
                 # over-write will succeed
