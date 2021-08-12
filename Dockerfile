@@ -1,6 +1,6 @@
-FROM opencadc/matplotlib:3.8-slim
+FROM opencadc/matplotlib:3.9-slim
 
-RUN apt-get update -y && apt-get dist-upgrade -y && \
+RUN apt-get update --no-install-recommends && apt-get dist-upgrade -y && \
     apt-get install -y build-essential \
                        git \
                        imagemagick && \
@@ -11,7 +11,6 @@ RUN pip install cadcdata \
     caom2 \
     caom2repo \
     caom2utils \
-    ftputil \
     importlib-metadata \
     python-dateutil \
     PyYAML \

@@ -1,0 +1,8 @@
+working_directory: /usr/src/app/dao2caom2/dao2caom2/tests/data
+proxy_file_name: /usr/src/app/dao2caom2/dao2caom2/tests/data/test_proxy.pem
+logging_level: INFO
+data_sources:
+  - vos:goliaths/DAOTest
+data_source_extensions:
+  - .fits.gz
+

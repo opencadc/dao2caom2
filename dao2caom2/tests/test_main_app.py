@@ -67,6 +67,7 @@
 # ***********************************************************************
 #
 
+from cadcdata import FileInfo
 from dao2caom2 import main_app, APPLICATION, COLLECTION, DAOName
 from caom2pipe import manage_composable as mc
 
@@ -91,9 +92,9 @@ def pytest_generate_tests(metafunc):
     metafunc.parametrize('test_name', files)
 
 
-@patch('caom2utils.fits2caom2.CadcDataClient')
+@patch('caom2utils.cadc_client_wrapper.StorageClientWrapper')
 def test_main_app(data_client_mock, test_name):
-    data_client_mock.return_value.get_file_info.side_effect = _get_file_info
+    data_client_mock.return_value.info.side_effect = _get_file_info
     basename = os.path.basename(test_name)
     dao_name = DAOName(file_name=basename.replace('.header', '.gz'))
 
@@ -121,5 +122,6 @@ def test_main_app(data_client_mock, test_name):
     # assert False  # cause I want to see logging messages
 
 
-def _get_file_info(archive, file_id):
-    return {'type': 'application/fits'}
+def _get_file_info(file_id):
+    return FileInfo(id=file_id, file_type='application/fits')
+

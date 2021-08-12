@@ -3,7 +3,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2018.                            (c) 2018.
+#  (c) 2021.                            (c) 2021.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -62,127 +62,111 @@
 #  <http://www.gnu.org/licenses/>.      pas le cas, consultez :
 #                                       <http://www.gnu.org/licenses/>.
 #
-#  $Revision: 4 $
+#  : 4 $
 #
 # ***********************************************************************
 #
 
-"""
-Application to create CAOM2 observations from DAO FITS files. Based on
-code and configuration from wcaom2archive/dao2caom2.
-"""
+from mock import Mock, patch
 
-import logging
-import sys
-import traceback
-
-from vos import Client
-
-from caom2pipe import client_composable as clc
-from caom2pipe import data_source_composable as dsc
-from caom2pipe import name_builder_composable as nbc
+from cadcdata import FileInfo
 from caom2pipe import manage_composable as mc
-from caom2pipe import run_composable as rc
-from dao2caom2 import APPLICATION, dao_name, preview_augmentation
-from dao2caom2 import cleanup_augmentation, data_source
-
-DAO_BOOKMARK = 'dao_timestamp'
+from dao2caom2 import data_source
 
 
-META_VISITORS = [cleanup_augmentation]
-DATA_VISITORS = [preview_augmentation]
-
-
-def _run():
-    """
-    Uses a todo file to identify the work to be done.
-
-    :return 0 if successful, -1 if there's any sort of failure. Return status
-        is used by airflow for task instance management and reporting.
-    """
-    name_builder = nbc.FileNameBuilder(dao_name.DAOName)
-    return rc.run_by_todo(
-        name_builder=name_builder,
-        command_name=APPLICATION,
-        meta_visitors=META_VISITORS,
-        data_visitors=DATA_VISITORS,
+@patch('caom2pipe.astro_composable.check_fits', autospec=True)
+@patch('caom2pipe.client_composable.vault_info', autospec=True)
+def test_dao_transfer_check_fits_verify(vault_info_mock, check_fits_mock):
+    test_match_file_info = FileInfo(
+        id='vos:abc/def.fits',
+        md5sum='ghi',
     )
-
-
-def run():
-    """Wraps _run in exception handling, with sys.exit calls."""
-    try:
-        result = _run()
-        sys.exit(result)
-    except Exception as e:
-        logging.error(e)
-        tb = traceback.format_exc()
-        logging.debug(tb)
-        sys.exit(-1)
-
-
-def _run_vo():
-    """
-    Uses a VOS listdir to identify the work to be done.
-
-    :return 0 if successful, -1 if there's any sort of failure. Return status
-        is used by airflow for task instance management and reporting.
-    """
-    config = mc.Config()
-    config.get_executors()
-    clients = clc.ClientCollection(config)
-    vos_client = Client(vospace_certfile=config.proxy_file_name)
-    name_builder = nbc.URIBuilder(dao_name.DAOName)
-    source = data_source.DAOVaultDataSource(
-        config, vos_client, clients.data_client
+    test_different_file_info = FileInfo(
+        id='vos:abc/def.fits',
+        md5sum='ghi',
     )
-    return rc.run_by_todo(
-        name_builder=name_builder,
-        command_name=APPLICATION,
-        meta_visitors=META_VISITORS,
-        data_visitors=DATA_VISITORS,
-        source=source,
-        clients=clients,
+    test_file_info = [test_match_file_info, test_different_file_info]
+
+    test_data_client = Mock(autospec=True)
+    test_vos_client = Mock(autospec=True)
+
+    test_config = mc.Config()
+    test_config.data_source_extensions = ['.fits.gz']
+    test_config.data_sources = ['vos:DAO/Archive/Incoming']
+    test_config.cleanup_failure_destination = 'vos:DAO/failure'
+    test_config.cleanup_success_destination = 'vos:DAO/success'
+
+    def _mock_listdir(entry):
+        if entry.endswith('Incoming'):
+            return [
+                'vos:DAO/Archive/Incoming/dao123.fits.gz',
+                'vos:DAO/Archive/Incoming/dao456.fits',
+                'vos:DAO/Archive/Incoming/Yesterday',
+            ]
+        else:
+            return []
+
+    test_vos_client.listdir.side_effect = _mock_listdir
+    test_vos_client.is_dir.side_effect = [
+        False, False, True, False, False, True
+    ]
+
+    test_result_1 = False
+    test_result_2 = False
+
+    vault_info_mock.return_value = test_file_info
+    test_data_client.info.return_value = test_file_info
+
+    for case in [True, False]:
+        check_fits_mock.return_value = not case
+        test_config.cleanup_files_when_storing = case
+
+        test_subject = data_source.DAOVaultDataSource(
+            test_config, test_vos_client, test_data_client
+        )
+        assert test_subject is not None, 'expect ctor to work'
+        test_result = test_subject.get_work()
+
+        assert test_result is not None, 'expect a work list'
+        if not case:
+            assert len(test_result) == 1, 'wrong work list entries'
+            assert (
+                test_result[0] == 'vos:DAO/Archive/Incoming/dao123.fits.gz'
+            ), 'wrong work entry'
+            test_result_1 = True
+        else:
+            assert len(test_result) == 0, 'check fits should fail'
+            assert test_vos_client.move.called, 'move to failure'
+            test_vos_client.move.assert_called_with(
+                'vos:DAO/Archive/Incoming/dao123.fits.gz',
+                'vos:DAO/failure/dao123.fits.gz',
+            ), 'wrong move args'
+            test_result_2 = True
+
+        assert test_vos_client.is_dir.call_count == 3, 'wrong is_dir count'
+        test_vos_client.is_dir.reset_mock()
+
+    assert test_result_1, 'followed one result path at least once'
+    assert test_result_2, 'followed no result path at least once'
+
+    # test the case when the md5sums are the same, so the transfer does
+    # not occur, but the file ends up in the success location
+    test_vos_client.is_dir.side_effect = [False, False, True]
+    test_config.cleanup_files_when_storing = True
+    test_config.store_modified_files_only = True
+    check_fits_mock.return_value = True
+    vault_info_mock.return_value = test_match_file_info
+    test_data_client.info.return_value = test_different_file_info
+
+    second_test_subject = data_source.DAOVaultDataSource(
+        test_config, test_vos_client, test_data_client
     )
-
-
-def run_vo():
-    """Wraps _run_vo in exception handling, with sys.exit calls."""
-    try:
-        result = _run_vo()
-        sys.exit(result)
-    except Exception as e:
-        logging.error(e)
-        tb = traceback.format_exc()
-        logging.debug(tb)
-        sys.exit(-1)
-
-
-def _run_state():
-    """Uses a state file with a timestamp to control which entries will be
-    processed.
-    """
-    config = mc.Config()
-    config.get_executors()
-    source = dsc.QueryTimeBoxDataSourceTS(config, preview_suffix='png')
-    name_builder = nbc.FileNameBuilder(dao_name.DAOName)
-    return rc.run_by_state(
-        name_builder=name_builder,
-        command_name=APPLICATION,
-        bookmark_name=DAO_BOOKMARK,
-        meta_visitors=META_VISITORS,
-        data_visitors=DATA_VISITORS,
-        source=source,
-    )
-
-
-def run_state():
-    """Wraps _run_state in exception handling."""
-    try:
-        _run_state()
-        sys.exit(0)
-    except Exception as e:
-        logging.error(e)
-        tb = traceback.format_exc()
-        logging.debug(tb)
-        sys.exit(-1)
+    assert second_test_subject is not None, 'second ctor fails'
+    second_test_result = second_test_subject.get_work()
+    assert second_test_result is not None, 'expect a second result'
+    assert len(second_test_result) == 0, 'should be no successes'
+    assert test_vos_client.move.called, 'expect a success move call'
+    test_vos_client.move.assert_called_with(
+        'vos:DAO/Archive/Incoming/dao123.fits.gz',
+        'vos:DAO/success/dao123.fits.gz',
+    ), 'wrong success move args'

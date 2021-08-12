@@ -3,7 +3,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2019.                            (c) 2019.
+#  (c) 2021.                            (c) 2021.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -62,106 +62,104 @@
 #  <http://www.gnu.org/licenses/>.      pas le cas, consultez :
 #                                       <http://www.gnu.org/licenses/>.
 #
-#  $Revision: 4 $
+#  : 4 $
 #
 # ***********************************************************************
 #
-import logging
-import pytest
-
-from dao2caom2 import main_app, APPLICATION, COLLECTION, DAOName
-from caom2pipe import manage_composable as mc
 
 import os
-import sys
-
-from mock import patch
 import test_main_app
 
-# THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-# TEST_DATA_DIR = os.path.join(THIS_DIR, 'data')
-# PLUGIN = os.path.join(os.path.dirname(THIS_DIR), 'main_app.py')
-
-# structured by observation id, list of file ids that make up a multi-plane
-# observation
-DIR_NAME = 'processed'
-LOOKUP = {
-    'dao_c122_2007_000882': ['dao_c122_2007_000882_v.fits.gz'],
-    'dao_c122_2007_000881': [
-        'dao_c122_2007_000881.fits.gz',
-        'dao_c122_2007_000881_e.fits',
-    ],
-    'dao_c182_2016_004034': [
-        'dao_c182_2016_004034.fits.gz',
-        'dao_c182_2016_004034_a.fits',
-    ],
-}
+from mock import Mock, patch
+from dao2caom2 import composable, dao_name, COLLECTION
 
 
-def pytest_generate_tests(metafunc):
-    obs_id_list = LOOKUP.keys()
-    metafunc.parametrize('test_name', obs_id_list)
-
-
-@patch('caom2utils.cadc_client_wrapper.StorageClientWrapper')
-def test_multi_plane(data_client_mock, test_name):
-    dao_name = DAOName(file_name=f'{LOOKUP[test_name][0]}.fits')
-    lineage = _get_lineage(dao_name.obs_id)
-    expected_fqn = (
-        f'{test_main_app.TEST_DATA_DIR}/{DIR_NAME}/'
-        f'{dao_name.obs_id}.expected.xml'
-    )
-    actual_fqn = (
-        f'{test_main_app.TEST_DATA_DIR}/{DIR_NAME}/'
-        f'{dao_name.obs_id}.actual.xml'
-    )
-
-    local = _get_local(test_name)
-    plugin = test_main_app.PLUGIN
-
-    data_client_mock.return_value.info.side_effect = (
-        test_main_app._get_file_info
-    )
-
-    if os.path.exists(actual_fqn):
-        os.remove(actual_fqn)
-
-    sys.argv = (
-        f'{APPLICATION} --quiet --no_validate --local {local} '
-        f'--observation {COLLECTION} {dao_name.obs_id} '
-        f'--plugin {plugin} --module {plugin} --out {actual_fqn} '
-        f'--lineage {lineage}'
-    ).split()
-    print(sys.argv)
+@patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
+def test_run(run_mock):
+    test_f_id = 'test_file_id'
+    test_obs_id = test_f_id
+    test_f_name = f'{test_f_id}.fits'
+    getcwd_orig = os.getcwd
+    os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
     try:
-        main_app.to_caom2()
-    except Exception as e:
-        import logging
-        import traceback
+        # execution
+        composable._run()
+        assert run_mock.called, 'should have been called'
+        args, kwargs = run_mock.call_args
+        test_storage = args[0]
+        assert isinstance(
+            test_storage, dao_name.DAOName
+        ), type(test_storage)
+        assert test_storage.obs_id == test_obs_id, 'wrong obs id'
+        assert test_storage.file_name == test_f_name, 'wrong file name'
+        assert (
+                test_storage.fname_on_disk == test_f_name
+        ), 'wrong fname on disk'
+        assert test_storage.url is None, 'wrong url'
+        assert (
+                test_storage.lineage ==
+                f'sky_camera_image/ad:{COLLECTION}/{test_f_name}'
+        ), 'wrong lineage'
+    finally:
+        os.getcwd = getcwd_orig
+        # clean up the summary report text file
+        # clean up the files created as a by-product of a run
+        for f_name in [
+            'data_report.txt',
+            'failure_log.txt',
+            'rejected.yml',
+            'retries.txt',
+            'success_log.txt',
+        ]:
+            fqn = os.path.join(test_main_app.TEST_DATA_DIR, f_name)
+            if os.path.exists(fqn):
+                os.unlink(fqn)
 
-        logging.error(traceback.format_exc())
 
-    compare_result = mc.compare_observations(actual_fqn, expected_fqn)
-    if compare_result is not None:
-        raise AssertionError(compare_result)
-    # assert False  # cause I want to see logging messages
+@patch('caom2pipe.astro_composable.check_fits', autospec=True)
+@patch('dao2caom2.composable.Client')
+@patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
+def test_run_vo(run_mock, vo_client_mock, check_fits_mock):
+    test_obs_id = 'sky_cam_image'
+    test_f_name = f'{test_obs_id}.fits.gz'
+    getcwd_orig = os.getcwd
+    os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
+    vo_client_mock.return_value.listdir.return_value = [
+        'vos:DAO/sky_cam_image.fits.gz',
+    ]
+    vo_client_mock.return_value.is_dir.return_value = False
+    check_fits_mock.return_value = True
 
-
-def _get_lineage(obs_id):
-    result = ''
-    for ii in LOOKUP[obs_id]:
-        fits = mc.get_lineage(
-            COLLECTION, mc.StorageName.remove_extensions(ii), ii
-        )
-        result = f'{result} {fits}'
-    return result
-
-
-def _get_local(obs_id):
-    result = ''
-    for ii in LOOKUP[obs_id]:
-        result = (
-            f'{result} {test_main_app.TEST_DATA_DIR}/{DIR_NAME}/'
-            f'{mc.StorageName.remove_extensions(ii)}.fits.header'
-        )
-    return result
+    try:
+        # execution
+        composable._run_vo()
+        assert run_mock.called, 'should have been called'
+        args, kwargs = run_mock.call_args
+        test_storage = args[0]
+        assert isinstance(
+            test_storage, dao_name.DAOName
+        ), type(test_storage)
+        assert test_storage.obs_id == test_obs_id, 'wrong obs id'
+        assert test_storage.file_name == test_f_name, 'wrong file name'
+        assert (
+                test_storage.fname_on_disk == test_f_name
+        ), 'wrong fname on disk'
+        assert test_storage.url is None, 'wrong url'
+        assert (
+                test_storage.lineage ==
+                f'sky_camera_image/ad:{COLLECTION}/{test_f_name}'
+        ), 'wrong lineage'
+    finally:
+        os.getcwd = getcwd_orig
+        # clean up the summary report text file
+        # clean up the files created as a by-product of a run
+        for f_name in [
+            'data_report.txt',
+            'failure_log.txt',
+            'rejected.yml',
+            'retries.txt',
+            'success_log.txt',
+        ]:
+            fqn = os.path.join(test_main_app.TEST_DATA_DIR, f_name)
+            if os.path.exists(fqn):
+                os.unlink(fqn)
