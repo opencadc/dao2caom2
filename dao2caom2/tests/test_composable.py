@@ -117,7 +117,7 @@ def test_run(run_mock):
 
 
 @patch('caom2pipe.astro_composable.check_fits', autospec=True)
-@patch('dao2caom2.composable.Client')
+@patch('dao2caom2.composable.Client', autospec=True)
 @patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
 def test_run_vo(run_mock, vo_client_mock, check_fits_mock):
     test_obs_id = 'sky_cam_image'
@@ -127,7 +127,7 @@ def test_run_vo(run_mock, vo_client_mock, check_fits_mock):
     vo_client_mock.return_value.listdir.return_value = [
         'vos:DAO/sky_cam_image.fits.gz',
     ]
-    vo_client_mock.return_value.is_dir.return_value = False
+    vo_client_mock.return_value.isdir.return_value = False
     check_fits_mock.return_value = True
 
     try:

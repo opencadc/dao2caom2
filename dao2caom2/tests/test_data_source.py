@@ -107,7 +107,7 @@ def test_dao_transfer_check_fits_verify(vault_info_mock, check_fits_mock):
             return []
 
     test_vos_client.listdir.side_effect = _mock_listdir
-    test_vos_client.is_dir.side_effect = [
+    test_vos_client.isdir.side_effect = [
         False, False, True, False, False, True
     ]
 
@@ -143,15 +143,15 @@ def test_dao_transfer_check_fits_verify(vault_info_mock, check_fits_mock):
             ), 'wrong move args'
             test_result_2 = True
 
-        assert test_vos_client.is_dir.call_count == 3, 'wrong is_dir count'
-        test_vos_client.is_dir.reset_mock()
+        assert test_vos_client.isdir.call_count == 3, 'wrong is_dir count'
+        test_vos_client.isdir.reset_mock()
 
     assert test_result_1, 'followed one result path at least once'
     assert test_result_2, 'followed no result path at least once'
 
     # test the case when the md5sums are the same, so the transfer does
     # not occur, but the file ends up in the success location
-    test_vos_client.is_dir.side_effect = [False, False, True]
+    test_vos_client.isdir.side_effect = [False, False, True]
     test_config.cleanup_files_when_storing = True
     test_config.store_modified_files_only = True
     check_fits_mock.return_value = True

@@ -154,7 +154,7 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
         logging.error(f'dir listing {len(dir_listing)}')
         for dir_entry in dir_listing:
             logging.error(f'{dir_entry}')
-            if self._client.is_dir(dir_entry) and self._recursive:
+            if self._client.isdir(dir_entry) and self._recursive:
                 logging.error('is_dir is true')
                 self._find_work(dir_entry)
             else:
