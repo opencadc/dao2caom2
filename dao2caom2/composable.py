@@ -134,7 +134,7 @@ def _run_vo():
     vos_client = Client(vospace_certfile=config.proxy_file_name)
     name_builder = nbc.URIBuilder(dao_name.DAOName)
     source = data_source.DAOVaultDataSource(
-        config, vos_client, clients.data_client
+        config, vos_client, clients.data_client, recursive=False
     )
     return rc.run_by_todo(
         name_builder=name_builder,
