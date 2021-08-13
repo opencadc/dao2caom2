@@ -93,8 +93,13 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
         self._logger = logging.getLogger(self.__class__.__name__)
 
     def clean_up(self):
-        for fqn in self._work:
-            self._move_action(fqn, self._cleanup_success_directory)
+        if self._cleanup_when_storing:
+            for fqn in self._work:
+                if self._check_md5sum(fqn):
+                    # the transfer itself failed, so track as a failure
+                    self._move_action(fqn, self._cleanup_failure_directory)
+                else:
+                    self._move_action(fqn, self._cleanup_success_directory)
 
     def default_filter(self, entry, entry_fqn):
         copy_file = False
