@@ -97,7 +97,7 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
             self._move_action(fqn, self._cleanup_success_directory)
 
     def default_filter(self, entry, entry_fqn):
-        copy_file = True
+        copy_file = False
         for extension in self._data_source_extensions:
             if entry.endswith(extension):
                 if entry.startswith('.'):
@@ -110,9 +110,9 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
                         self._move_action(
                             entry_fqn, self._cleanup_success_directory
                         )
+                else:
+                    copy_file = True
                 break
-        else:
-            copy_file = False
         return copy_file
 
     def get_work(self):
