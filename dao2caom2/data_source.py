@@ -96,7 +96,7 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
         if self._cleanup_when_storing:
             for fqn in self._work:
                 check_result, vos_meta = self._check_md5sum(fqn)
-                if self.check_result:
+                if check_result:
                     # if vos_meta is None, it's already been cleaned up,
                     # due to astropy fits verify failure cleanup
                     if vos_meta is not None:
