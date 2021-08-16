@@ -101,6 +101,7 @@ interval: 600
 # - modify - create a footprint and previews for an existing CAOM model record
 # - pull - put a file retrieved from a URL
 task_types: 
+  - store
   - ingest
   - modify
 features:
