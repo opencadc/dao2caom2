@@ -100,7 +100,7 @@ def _run():
     :return 0 if successful, -1 if there's any sort of failure. Return status
         is used by airflow for task instance management and reporting.
     """
-    name_builder = nbc.FileNameBuilder(dao_name.DAOName)
+    name_builder = nbc.GuessingBuilder(dao_name.DAOName)
     return rc.run_by_todo(
         name_builder=name_builder,
         command_name=APPLICATION,
@@ -132,7 +132,7 @@ def _run_vo():
     config.get_executors()
     clients = clc.ClientCollection(config)
     vos_client = Client(vospace_certfile=config.proxy_file_name)
-    name_builder = nbc.URIBuilder(dao_name.DAOName)
+    name_builder = nbc.GuessingBuilder(dao_name.DAOName)
     source = data_source.DAOVaultDataSource(
         config, vos_client, clients.data_client, recursive=False
     )
@@ -167,7 +167,7 @@ def _run_state():
     config = mc.Config()
     config.get_executors()
     source = dsc.QueryTimeBoxDataSourceTS(config, preview_suffix='png')
-    name_builder = nbc.FileNameBuilder(dao_name.DAOName)
+    name_builder = nbc.GuessingBuilder(dao_name.DAOName)
     return rc.run_by_state(
         name_builder=name_builder,
         command_name=APPLICATION,

@@ -78,12 +78,6 @@ def test_ctor():
     assert test_subject is not None, 'expect a value'
     assert test_subject.obs_id == 'dao_c122_2020_004100', 'wrong obs id'
     assert (
-        test_subject.fname_on_disk == 'dao_c122_2020_004100_v.fits'
-    ), 'wrong fname on disk'
-    assert (
-        test_subject.fname_in_ad == 'dao_c122_2020_004100_v.fits'
-    ), 'wrong fname in ad'
-    assert (
         test_subject.file_name == 'dao_c122_2020_004100_v.fits'
     ), 'wrong file name'
     assert (

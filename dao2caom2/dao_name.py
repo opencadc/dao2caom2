@@ -70,6 +70,9 @@
 import logging
 import re
 
+from os.path import basename
+from urllib.parse import urlparse
+
 from caom2pipe import manage_composable as mc
 
 __all__ = ['COLLECTION', 'DAOName']
@@ -91,29 +94,26 @@ class DAOName(mc.StorageName):
 
     def __init__(
         self,
-        obs_id=None,
-        fname_on_disk=None,
+        url=None,
         file_name=None,
         artifact_uri=None,
         entry=None,
     ):
         if artifact_uri is not None:
             scheme, archive, file_name = mc.decompose_uri(artifact_uri)
-        if file_name is not None:
-            self.fname_in_ad = file_name
+            self._file_name = file_name
+        elif file_name is not None:
             self._file_name = file_name.replace('.header', '')
-        if obs_id is None:
-            obs_id = DAOName.get_obs_id(file_name)
-            file_id = mc.StorageName.remove_extensions(file_name)
-        else:
-            file_id = obs_id
-        if fname_on_disk is None:
-            fname_on_disk = file_name
+        elif url is not None:
+            temp = urlparse(url)
+            self._file_name = basename(temp.path)
+        obs_id = DAOName.get_obs_id(self._file_name)
+        file_id = mc.StorageName.remove_extensions(self._file_name)
         super(DAOName, self).__init__(
             obs_id,
             COLLECTION,
             DAOName.DAO_NAME_PATTERN,
-            fname_on_disk,
+            self._file_name,
             entry=entry,
         )
         self._file_id = file_id
