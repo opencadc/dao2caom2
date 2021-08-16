@@ -95,9 +95,15 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
     def clean_up(self):
         if self._cleanup_when_storing:
             for fqn in self._work:
-                if self._check_md5sum(fqn):
-                    # the transfer itself failed, so track as a failure
-                    self._move_action(fqn, self._cleanup_failure_directory)
+                check_result, vos_meta = self._check_md5sum(fqn)
+                if self.check_result:
+                    # if vos_meta is None, it's already been cleaned up,
+                    # due to astropy fits verify failure cleanup
+                    if vos_meta is not None:
+                        # the transfer itself failed, so track as a failure
+                        self._move_action(
+                            fqn, self._cleanup_failure_directory
+                        )
                 else:
                     self._move_action(fqn, self._cleanup_success_directory)
 
@@ -110,7 +116,7 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
                     copy_file = False
                 elif self._store_modified_files_only:
                     # only transfer files with a different MD5 checksum
-                    copy_file = self._check_md5sum(entry_fqn)
+                    copy_file, ignore_meta = self._check_md5sum(entry_fqn)
                     if not copy_file and self._cleanup_when_storing:
                         self._move_action(
                             entry_fqn, self._cleanup_success_directory
@@ -142,7 +148,7 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
                 f'{entry_fqn} has the same md5sum at CADC. Not transferring.'
             )
             result = False
-        return result
+        return result, vos_meta
 
     def _find_work(self, entry):
         dir_listing = self._client.listdir(entry)
