@@ -106,3 +106,14 @@ def test_builder():
         test_result.destination_uris == ['ad:DAO/dao_c182_2018_015013.fits']
     ), 'wrong destination uris'
 
+    test_result_2 = test_subject.build(
+        '/usr/src/app/dao_c182_2018_015013/dao_c182_2018_015013.fits.gz'
+    )
+    assert (
+        test_result_2.source_names ==
+        ['/usr/src/app/dao_c182_2018_015013/dao_c182_2018_015013.fits.gz']
+    )
+    assert (
+        test_result_2.destination_uris ==
+        ['ad:DAO/dao_c182_2018_015013.fits.gz']
+    ), 'wrong destination uris'

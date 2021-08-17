@@ -115,6 +115,7 @@ class DAOName(mc.StorageName):
             DAOName.DAO_NAME_PATTERN,
             self._file_name,
             entry=entry,
+            compression='',
         )
         self._file_id = file_id
         if entry is None:
@@ -145,7 +146,7 @@ class DAOName(mc.StorageName):
 
     @property
     def file_uri(self):
-        return f'{self.scheme}:{self.archive}/{self.file_name}'
+        return f'{self.scheme}:{self.collection}/{self.file_name}'
 
     def is_valid(self):
         return True
