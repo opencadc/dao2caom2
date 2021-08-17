@@ -67,6 +67,7 @@
 # ***********************************************************************
 #
 
+from cadcdata import FileInfo
 from dao2caom2 import main_app, APPLICATION, COLLECTION, DAOName
 from caom2pipe import manage_composable as mc
 
@@ -83,32 +84,36 @@ PLUGIN = os.path.join(os.path.dirname(THIS_DIR), 'main_app.py')
 def pytest_generate_tests(metafunc):
     files = []
     if os.path.exists(TEST_DATA_DIR):
-        files = [os.path.join(TEST_DATA_DIR, name) for name in
-                 os.listdir(TEST_DATA_DIR) if (name.endswith('header') or
-                                               name.endswith('.fits'))]
+        files = [
+            os.path.join(TEST_DATA_DIR, name)
+            for name in os.listdir(TEST_DATA_DIR)
+            if (name.endswith('header') or name.endswith('.fits'))
+        ]
     metafunc.parametrize('test_name', files)
 
 
-@patch('caom2utils.fits2caom2.CadcDataClient')
+@patch('caom2utils.cadc_client_wrapper.StorageClientWrapper')
 def test_main_app(data_client_mock, test_name):
-    data_client_mock.return_value.get_file_info.side_effect = _get_file_info
+    data_client_mock.return_value.info.side_effect = _get_file_info
     basename = os.path.basename(test_name)
     dao_name = DAOName(file_name=basename.replace('.header', '.gz'))
 
     obs_path = f'{TEST_DATA_DIR}/{dao_name.obs_id}.expected.xml'
     output_file = f'{TEST_DATA_DIR}/{dao_name.obs_id}.actual.xml'
 
-    sys.argv = \
-        (f'{APPLICATION} --no_validate --local {test_name} '
-         f'--observation {COLLECTION} {dao_name.obs_id} -o {output_file} '
-         f'--plugin {PLUGIN} --module {PLUGIN} --lineage '
-         f'{dao_name.lineage}').split()
+    sys.argv = (
+        f'{APPLICATION} --no_validate --local {test_name} '
+        f'--observation {COLLECTION} {dao_name.obs_id} -o {output_file} '
+        f'--plugin {PLUGIN} --module {PLUGIN} --lineage '
+        f'{dao_name.lineage}'
+    ).split()
     print(sys.argv)
     try:
         main_app.to_caom2()
     except Exception as e:
         import logging
         import traceback
+
         logging.error(traceback.format_exc())
 
     compare_result = mc.compare_observations(output_file, obs_path)
@@ -117,5 +122,6 @@ def test_main_app(data_client_mock, test_name):
     # assert False  # cause I want to see logging messages
 
 
-def _get_file_info(archive, file_id):
-    return {'type': 'application/fits'}
+def _get_file_info(file_id):
+    return FileInfo(id=file_id, file_type='application/fits')
+

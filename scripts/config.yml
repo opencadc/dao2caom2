@@ -5,6 +5,18 @@ working_directory: /usr/src/app
 # to the container. It must be a fully-qualified name. 
 # One of netrc_filename or proxy_filename must have a value.
 proxy_file_name: /usr/src/app/cadcproxy.pem
+# if the 'store' task type is listed, ensure the file being stored
+# has a different md5 checksum than the file at CADC before 
+# transferring the file.
+store_modified_files_only: True 
+# If cleanup_files_when_storing is True, and the STORE task_type is
+# specified, move files that are successfully transferred to CADC
+# to the cleanup_success_destination when the transfer is done, and
+# to the cleanup_failure_destination when the transfer fails, or the
+# file fails FITS verification.
+cleanup_files_when_storing: True
+cleanup_success_destination: vos:DAO/Archive/Incoming/success
+cleanup_failure_destination: vos:DAO/Archive/Incoming/failure
 # - modifies entries on sc2.canfar.net
 # operational value is ivo://cadc.nrc.ca/ams
 resource_id: ivo://cadc.nrc.ca/ams
@@ -18,6 +30,16 @@ todo_file_name: todo.txt
 # .fits, .gz, .json endings as defining the work to be 
 # done.
 use_local_files: False
+# Specify locations in which
+# to search for files. This is a YAML list. It may be a list of
+# length 1. If use local_files is set to True, it may be set to 
+# the same value as the working_directory.
+data_sources:
+  - vos:DAO/Archive/Incoming
+# specify a list of the file extensions to be recognized for
+# processing by the pipeline. e.g. '.fits', '.fits.fz', '.hdf5'
+data_source_extensions:
+  - .fits.gz
 # values DEBUG INFO WARNING ERROR
 logging_level: INFO
 # values True False
@@ -79,10 +101,9 @@ interval: 600
 # - modify - create a footprint and previews for an existing CAOM model record
 # - pull - put a file retrieved from a URL
 task_types: 
+  - store
   - ingest
   - modify
 features:
-  supports_composite: False
+  supports_latest_client: False
   supports_multiple_files: False
-  use_file_names: True
-  use_urls: False

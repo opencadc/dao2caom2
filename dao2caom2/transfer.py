@@ -68,36 +68,43 @@
 #
 
 import logging
+import traceback
+from os import unlink
+from os.path import basename, exists, join
 
-from collections import defaultdict
-
-from caom2 import Observation
 from caom2pipe import manage_composable as mc
+from caom2pipe import transfer_composable as tc
 
 
-def visit(observation, **kwargs):
-    mc.check_param(observation, Observation)
+__all__ = ['VoFitsCleanupTransfer']
 
-    count = 0
-    delete_list = defaultdict(list)
-    for plane in observation.planes.values():
-        for artifact in plane.artifacts.values():
-            if artifact.uri.endswith('.fits.gz'):
-                other_uri = artifact.uri.replace('.gz', '')
-                if other_uri in plane.artifacts.keys():
-                    delete_list[plane.product_id].append(other_uri)
 
-    for product_id, uris in delete_list.items():
-        for uri in uris:
-            logging.info(
-                f'Removing artifact {uri} from {observation.observation_id}, '
-                f'plane {product_id}'
-            )
-            count += 1
-            observation.planes[product_id].artifacts.pop(uri)
+class VoFitsCleanupTransfer(tc.VoFitsTransfer):
 
-    logging.info(
-        f'Completed cleanup augmentation for {observation.observation_id}. '
-        f'Remove {count} artifacts from the observation.'
-    )
-    return {'artifacts': count}
+    def __init__(self, vos_client, config):
+        self._vos_client = vos_client
+        self._cleanup_when_storing = config.cleanup_files_when_storing
+        self._cleanup_failure_directory = config.cleanup_failure_destination
+        self._logger = logging.getLogger(self.__class__.__name__)
+
+    def failure_action(self, original_fqn, destination_fqn, message):
+        self._logger.warning(message)
+        if self._cleanup_when_storing:
+            f_name = basename(destination_fqn)
+            fail_fqn = join(self._cleanup_failure_directory, f_name)
+            try:
+                self._logger.warning(f'Moving {original_fqn} to {fail_fqn}')
+                self._vos_client.move(original_fqn, fail_fqn)
+            except Exception as e:
+                self._logger.debug(traceback.format_exc())
+                self._logger.error(
+                    f'Failed to move {original_fqn} to {fail_fqn}'
+                )
+                raise mc.CadcException(e)
+        try:
+            if exists(destination_fqn):
+                unlink(destination_fqn)
+        except Exception as e:
+            self._logger.debug(traceback.format_exc())
+            self._logger.error(f'Failed to clean up {destination_fqn}')
+            raise mc.CadcException(e)

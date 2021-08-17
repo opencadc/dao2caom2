@@ -67,37 +67,42 @@
 # ***********************************************************************
 #
 
-import logging
+from shutil import copyfile
+from mock import Mock
 
-from collections import defaultdict
-
-from caom2 import Observation
 from caom2pipe import manage_composable as mc
+from dao2caom2 import transfer
 
 
-def visit(observation, **kwargs):
-    mc.check_param(observation, Observation)
+def test_transfer_fails_fits_check():
+    # test case - when the fits check fails, the file is cleaned up, if
+    # the configuration says it should be
 
-    count = 0
-    delete_list = defaultdict(list)
-    for plane in observation.planes.values():
-        for artifact in plane.artifacts.values():
-            if artifact.uri.endswith('.fits.gz'):
-                other_uri = artifact.uri.replace('.gz', '')
-                if other_uri in plane.artifacts.keys():
-                    delete_list[plane.product_id].append(other_uri)
+    vos_client_mock = Mock(autospec=True)
 
-    for product_id, uris in delete_list.items():
-        for uri in uris:
-            logging.info(
-                f'Removing artifact {uri} from {observation.observation_id}, '
-                f'plane {product_id}'
-            )
-            count += 1
-            observation.planes[product_id].artifacts.pop(uri)
+    def mock_copy(ignore_src, ignore_dst, send_md5=True):
+        copyfile('/test_files/broken.fits', '/tmp/broken.fits')
+    vos_client_mock.copy.side_effect = mock_copy
 
-    logging.info(
-        f'Completed cleanup augmentation for {observation.observation_id}. '
-        f'Remove {count} artifacts from the observation.'
+    test_config = mc.Config()
+    test_config.cleanup_files_when_storing = True
+    test_config.cleanup_failure_destination = 'vos:goliaths/dao_test/failure'
+
+    test_subject = transfer.VoFitsCleanupTransfer(
+        vos_client_mock, test_config
     )
-    return {'artifacts': count}
+    assert test_subject is not None, 'expect ctor to work'
+    test_subject.observable = Mock(autospec=True)
+
+    test_source = 'vos:goliaths/dao_test/broken.fits'
+    test_destination = '/tmp/broken.fits'
+    test_subject.get(test_source, test_destination)
+
+    assert vos_client_mock.copy.called, 'expect copy call'
+    vos_client_mock.copy.assert_called_with(
+        test_source, test_destination, send_md5=True
+    ), 'wrong copy args'
+    assert vos_client_mock.move.called, 'expect move call'
+    vos_client_mock.move.assert_called_with(
+        test_source, 'vos:goliaths/dao_test/failure/broken.fits'
+    ), 'wrong move args'

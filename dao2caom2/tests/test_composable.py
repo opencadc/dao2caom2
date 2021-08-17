@@ -67,37 +67,105 @@
 # ***********************************************************************
 #
 
-import logging
+import os
+import test_main_app
 
-from collections import defaultdict
-
-from caom2 import Observation
-from caom2pipe import manage_composable as mc
+from mock import Mock, patch
+from dao2caom2 import composable, dao_name, COLLECTION
 
 
-def visit(observation, **kwargs):
-    mc.check_param(observation, Observation)
+@patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
+def test_run(run_mock):
+    test_f_id = 'test_file_id'
+    test_obs_id = test_f_id
+    test_f_name = f'{test_f_id}.fits'
+    getcwd_orig = os.getcwd
+    os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
+    try:
+        # execution
+        composable._run()
+        assert run_mock.called, 'should have been called'
+        args, kwargs = run_mock.call_args
+        test_storage = args[0]
+        assert isinstance(
+            test_storage, dao_name.DAOName
+        ), type(test_storage)
+        assert test_storage.obs_id == test_obs_id, 'wrong obs id'
+        assert test_storage.file_name == test_f_name, 'wrong file name'
+        assert (
+                test_storage.fname_on_disk == test_f_name
+        ), 'wrong fname on disk'
+        assert test_storage.url is None, 'wrong url'
+        assert (
+                test_storage.lineage ==
+                f'sky_camera_image/ad:{COLLECTION}/{test_f_name}'
+        ), 'wrong lineage'
+    finally:
+        os.getcwd = getcwd_orig
+        # clean up the summary report text file
+        # clean up the files created as a by-product of a run
+        for f_name in [
+            'data_report.txt',
+            'failure_log.txt',
+            'rejected.yml',
+            'retries.txt',
+            'success_log.txt',
+        ]:
+            fqn = os.path.join(test_main_app.TEST_DATA_DIR, f_name)
+            if os.path.exists(fqn):
+                os.unlink(fqn)
 
-    count = 0
-    delete_list = defaultdict(list)
-    for plane in observation.planes.values():
-        for artifact in plane.artifacts.values():
-            if artifact.uri.endswith('.fits.gz'):
-                other_uri = artifact.uri.replace('.gz', '')
-                if other_uri in plane.artifacts.keys():
-                    delete_list[plane.product_id].append(other_uri)
 
-    for product_id, uris in delete_list.items():
-        for uri in uris:
-            logging.info(
-                f'Removing artifact {uri} from {observation.observation_id}, '
-                f'plane {product_id}'
-            )
-            count += 1
-            observation.planes[product_id].artifacts.pop(uri)
+@patch('dao2caom2.composable.Client', autospec=True)
+@patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
+def test_run_vo(run_mock, vo_client_mock):
+    test_obs_id = 'sky_cam_image'
+    test_f_name = f'{test_obs_id}.fits.gz'
+    getcwd_orig = os.getcwd
+    os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
+    vo_client_mock.return_value.listdir.return_value = [
+        'sky_cam_image.fits.gz',
+    ]
+    vo_client_mock.return_value.isdir.return_value = False
 
-    logging.info(
-        f'Completed cleanup augmentation for {observation.observation_id}. '
-        f'Remove {count} artifacts from the observation.'
-    )
-    return {'artifacts': count}
+    try:
+        # execution
+        composable._run_vo()
+        assert run_mock.called, 'should have been called'
+        args, kwargs = run_mock.call_args
+        test_storage = args[0]
+        assert isinstance(
+            test_storage, dao_name.DAOName
+        ), type(test_storage)
+        assert test_storage.obs_id == test_obs_id, 'wrong obs id'
+        assert test_storage.file_name == test_f_name, 'wrong file name'
+        assert (
+                test_storage.fname_on_disk == test_f_name
+        ), 'wrong fname on disk'
+        assert test_storage.url is None, 'wrong url'
+        assert (
+                test_storage.lineage ==
+                f'sky_camera_image/ad:{COLLECTION}/{test_f_name}'
+        ), 'wrong lineage'
+        assert (
+                test_storage.source_names ==
+                ['vos:goliaths/DAOTest/sky_cam_image.fits.gz']
+        ), 'wrong source names'
+        assert (
+                test_storage.destination_uris ==
+                ['ad:DAO/sky_cam_image.fits.gz']
+        ), 'wrong destination uris'
+    finally:
+        os.getcwd = getcwd_orig
+        # clean up the summary report text file
+        # clean up the files created as a by-product of a run
+        for f_name in [
+            'data_report.txt',
+            'failure_log.txt',
+            'rejected.yml',
+            'retries.txt',
+            'success_log.txt',
+        ]:
+            fqn = os.path.join(test_main_app.TEST_DATA_DIR, f_name)
+            if os.path.exists(fqn):
+                os.unlink(fqn)
