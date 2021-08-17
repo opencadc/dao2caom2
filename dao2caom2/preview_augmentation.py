@@ -81,10 +81,10 @@ import numpy as np
 from astropy.io import fits
 from astropy.visualization import ZScaleInterval, SqrtStretch, ImageNormalize
 from matplotlib import pylab
+from urllib.parse import urlparse
 
 from caom2 import ReleaseType, ProductType
 from caom2pipe import manage_composable as mc
-from caom2pipe import name_builder_composable as nbc
 from dao2caom2 import dao_name as dn
 
 
@@ -93,40 +93,47 @@ class DAOPreview(mc.PreviewVisitor):
         super(DAOPreview, self).__init__(
             dn.COLLECTION, ReleaseType.DATA, **kwargs
         )
-        self.builder = nbc.GuessingBuilder(dn.DAOName)
+        self._logger = logging.getLogger(self.__class__.__name__)
 
     def generate_plots(self, obs_id):
         count = 0
-        storage_name = self.builder.build(self._science_file)
-        science_fqn = os.path.join(self._working_dir, storage_name.file_name)
-        preview = storage_name.prev
+        temp = urlparse(self._storage_name.source_names[0])
+        if ((temp.scheme is None or temp.scheme == '') and
+                os.path.dirname(self._storage_name.source_names[0]) != ''):
+            science_fqn = self._storage_name.source_names[0]
+        else:
+            science_fqn = os.path.join(
+                self._working_dir, self._storage_name.file_name
+            )
+        self._logger.info(
+            f'Building preview and thumbnail with {science_fqn}'
+        )
+        preview = self._storage_name.prev
         preview_fqn = os.path.join(self._working_dir, preview)
-        thumb = storage_name.thumb
+        thumb = self._storage_name.thumb
         thumb_fqn = os.path.join(self._working_dir, thumb)
         hdu_list = fits.open(science_fqn)
         header = hdu_list[0].header
 
         if (
-            'e' in storage_name.file_name
-            or 'p' in storage_name.file_name
-            or 'v' in storage_name.file_name
+            'e' in self._storage_name.file_name
+            or 'p' in self._storage_name.file_name
+            or 'v' in self._storage_name.file_name
         ):
             count += self._do_cal_processed(
                 hdu_list,
                 header,
                 science_fqn,
-                storage_name,
                 preview_fqn,
                 thumb_fqn,
                 obs_id,
             )
-        elif storage_name.file_name.startswith('a'):
+        elif self._storage_name.file_name.startswith('a'):
             count += DAOPreview._do_skycam(science_fqn, preview_fqn, thumb_fqn)
         else:
             count += self._do_sci(
                 hdu_list,
                 header,
-                storage_name,
                 science_fqn,
                 preview_fqn,
                 thumb_fqn,
@@ -136,13 +143,13 @@ class DAOPreview(mc.PreviewVisitor):
 
         if count == 2:
             self.add_preview(
-                storage_name.thumb_uri,
-                storage_name.thumb,
+                self._storage_name.thumb_uri,
+                self._storage_name.thumb,
                 ProductType.THUMBNAIL,
             )
             self.add_preview(
-                storage_name.prev_uri,
-                storage_name.prev,
+                self._storage_name.prev_uri,
+                self._storage_name.prev,
                 ProductType.PREVIEW,
             )
             self.add_to_delete(thumb_fqn)
@@ -154,7 +161,6 @@ class DAOPreview(mc.PreviewVisitor):
         hdu_list,
         header,
         science_fqn,
-        storage_name,
         preview_fqn,
         thumb_fqn,
         obs_id,
@@ -191,7 +197,7 @@ class DAOPreview(mc.PreviewVisitor):
                 wln,
                 flux,
                 'Wavelength ($\AA$)',
-                f'{storage_name.file_id}: {object_type}',
+                f'{self._storage_name.file_id}: {object_type}',
                 thumb_fqn,
                 preview_fqn,
             )
@@ -202,7 +208,6 @@ class DAOPreview(mc.PreviewVisitor):
         self,
         hdu_list,
         header,
-        storage_name,
         science_fqn,
         preview_fqn,
         thumb_fqn,
@@ -278,7 +283,7 @@ class DAOPreview(mc.PreviewVisitor):
                     wln,
                     flux,
                     'Pixel',
-                    f'{storage_name.file_id}: {object_type}',
+                    f'{self._storage_name.file_id}: {object_type}',
                     thumb_fqn,
                     preview_fqn,
                 )
@@ -344,5 +349,4 @@ class DAOPreview(mc.PreviewVisitor):
 
 def visit(observation, **kwargs):
     previewer = DAOPreview(mime_type='image/png', **kwargs)
-    dao_name = previewer.builder.build(previewer.science_file)
-    return previewer.visit(observation, dao_name)
+    return previewer.visit(observation)
