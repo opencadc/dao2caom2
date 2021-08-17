@@ -84,6 +84,7 @@ from matplotlib import pylab
 
 from caom2 import ReleaseType, ProductType
 from caom2pipe import manage_composable as mc
+from caom2pipe import name_builder_composable as nbc
 from dao2caom2 import dao_name as dn
 
 
@@ -92,10 +93,11 @@ class DAOPreview(mc.PreviewVisitor):
         super(DAOPreview, self).__init__(
             dn.COLLECTION, ReleaseType.DATA, **kwargs
         )
+        self.builder = nbc.GuessingBuilder(dn.DAOName)
 
     def generate_plots(self, obs_id):
         count = 0
-        storage_name = dn.DAOName(file_name=self._science_file)
+        storage_name = self.builder.build(self._science_file)
         science_fqn = os.path.join(self._working_dir, storage_name.file_name)
         preview = storage_name.prev
         preview_fqn = os.path.join(self._working_dir, preview)
@@ -342,5 +344,5 @@ class DAOPreview(mc.PreviewVisitor):
 
 def visit(observation, **kwargs):
     previewer = DAOPreview(mime_type='image/png', **kwargs)
-    dao_name = dn.DAOName(file_name=previewer.science_file)
+    dao_name = previewer.builder.build(previewer.science_file)
     return previewer.visit(observation, dao_name)

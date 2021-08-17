@@ -66,6 +66,8 @@
 #
 # ***********************************************************************
 #
+
+from caom2pipe import name_builder_composable as nbc
 from dao2caom2 import DAOName
 
 
@@ -90,3 +92,17 @@ def test_ctor():
     assert (
         test_subject.destination_uris == ['ad:DAO/dao_c122_2020_004100_v.fits']
     ), 'wrong destination uris'
+
+
+def test_builder():
+    test_subject = nbc.GuessingBuilder(DAOName)
+    test_result = test_subject.build('ad:DAO/dao_c182_2018_015013.fits')
+    assert test_result is not None, 'expect a result'
+    assert test_result.obs_id == 'dao_c182_2018_015013'
+    assert test_result.file_name == 'dao_c182_2018_015013.fits'
+    assert test_result.file_id == 'dao_c182_2018_015013'
+    assert test_result.source_names == ['ad:DAO/dao_c182_2018_015013.fits']
+    assert (
+        test_result.destination_uris == ['ad:DAO/dao_c182_2018_015013.fits']
+    ), 'wrong destination uris'
+
