@@ -81,8 +81,8 @@ __all__ = ['VoFitsCleanupTransfer']
 
 class VoFitsCleanupTransfer(tc.VoFitsTransfer):
 
-    def __init__(self, vos_client, config):
-        self._vos_client = vos_client
+    def __init__(self, vo_client, config):
+        super(VoFitsCleanupTransfer, self).__init__(vo_client)
         self._cleanup_when_storing = config.cleanup_files_when_storing
         self._cleanup_failure_directory = config.cleanup_failure_destination
         self._logger = logging.getLogger(self.__class__.__name__)
@@ -94,7 +94,7 @@ class VoFitsCleanupTransfer(tc.VoFitsTransfer):
             fail_fqn = join(self._cleanup_failure_directory, f_name)
             try:
                 self._logger.warning(f'Moving {original_fqn} to {fail_fqn}')
-                self._vos_client.move(original_fqn, fail_fqn)
+                self._vo_client.move(original_fqn, fail_fqn)
             except Exception as e:
                 self._logger.debug(traceback.format_exc())
                 self._logger.error(

@@ -74,8 +74,10 @@ from mock import Mock, patch
 from dao2caom2 import composable, dao_name, COLLECTION
 
 
+@patch('cadcutils.net.ws.WsCapabilities.get_access_url')
 @patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
-def test_run(run_mock):
+def test_run(run_mock, access_mock):
+    access_mock.return_value = 'https://localhost'
     test_f_id = 'test_file_id'
     test_obs_id = test_f_id
     test_f_name = f'{test_f_id}.fits'
@@ -116,9 +118,11 @@ def test_run(run_mock):
                 os.unlink(fqn)
 
 
+@patch('cadcutils.net.ws.WsCapabilities.get_access_url')
 @patch('dao2caom2.composable.Client', autospec=True)
 @patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
-def test_run_vo(run_mock, vo_client_mock):
+def test_run_vo(run_mock, vo_client_mock, access_mock):
+    access_mock.return_value = 'https://localhost'
     test_obs_id = 'sky_cam_image'
     test_f_name = f'{test_obs_id}.fits.gz'
     getcwd_orig = os.getcwd

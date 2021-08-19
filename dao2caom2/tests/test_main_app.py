@@ -92,7 +92,7 @@ def pytest_generate_tests(metafunc):
     metafunc.parametrize('test_name', files)
 
 
-@patch('caom2utils.cadc_client_wrapper.StorageClientWrapper')
+@patch('caom2utils.data_util.StorageClientWrapper')
 def test_main_app(data_client_mock, test_name):
     data_client_mock.return_value.info.side_effect = _get_file_info
     basename = os.path.basename(test_name)
