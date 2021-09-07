@@ -69,6 +69,7 @@
 
 from mock import Mock, patch
 
+from cadcutils import exceptions
 from cadcdata import FileInfo
 from caom2pipe import manage_composable as mc
 from dao2caom2 import data_source
@@ -135,6 +136,7 @@ def test_dao_transfer_check_fits_verify(vault_info_mock):
     test_config.store_modified_files_only = True
     vault_info_mock.return_value = test_match_file_info
     test_data_client.info.return_value = test_different_file_info
+    test_vos_client.status.raises = exceptions.NotFoundException
 
     second_test_subject = data_source.DAOVaultDataSource(
         test_config, test_vos_client, test_data_client
@@ -148,6 +150,7 @@ def test_dao_transfer_check_fits_verify(vault_info_mock):
         'vos:DAO/Archive/Incoming/dao123.fits.gz',
         'vos:DAO/success/dao123.fits.gz',
     ), 'wrong success move args'
+    assert test_vos_client.status.called, 'expect a status call'
 
 
 def test_data_source_exists():

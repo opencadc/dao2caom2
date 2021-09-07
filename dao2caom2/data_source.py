@@ -70,6 +70,7 @@
 import logging
 import traceback
 
+from cadcutils import exceptions
 from os.path import basename, join
 from caom2pipe import client_composable as clc
 from caom2pipe import data_source_composable as dsc
@@ -169,15 +170,18 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
         # if move when storing is enabled, move to an after-action location
         if self._cleanup_when_storing:
             try:
-                # if the destination is a fully-qualified name, an
-                # over-write will succeed
                 f_name = basename(fqn)
                 dest_fqn = join(destination, f_name)
-                if self._vo_client.status(dest_fqn):
-                    self._logger.warning(
-                        f'Removing {dest_fqn} prior to over-write.'
-                    )
-                    self._vo_client.delete(dest_fqn)
+                try:
+                    if self._vo_client.status(dest_fqn):
+                        # vos: doesn't support over-write
+                        self._logger.warning(
+                            f'Removing {dest_fqn} prior to over-write.'
+                        )
+                        self._vo_client.delete(dest_fqn)
+                except exceptions.NotFoundException as not_found_e:
+                    # do thing, since the node doesn't exist
+                    pass
                 self._logger.warning(f'Moving {fqn} to {dest_fqn}')
                 self._vo_client.move(fqn, dest_fqn)
             except Exception as e:
