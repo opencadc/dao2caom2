@@ -173,6 +173,11 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
                 # over-write will succeed
                 f_name = basename(fqn)
                 dest_fqn = join(destination, f_name)
+                if self._vo_client.status(dest_fqn):
+                    self._logger.warning(
+                        f'Removing {dest_fqn} prior to over-write.'
+                    )
+                    self._vo_client.delete(dest_fqn)
                 self._logger.warning(f'Moving {fqn} to {dest_fqn}')
                 self._vo_client.move(fqn, dest_fqn)
             except Exception as e:
