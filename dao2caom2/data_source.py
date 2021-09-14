@@ -70,6 +70,7 @@
 import logging
 import traceback
 
+from cadcutils import exceptions
 from os.path import basename, join
 from caom2pipe import client_composable as clc
 from caom2pipe import data_source_composable as dsc
@@ -77,8 +78,8 @@ from caom2pipe import manage_composable as mc
 
 
 class DAOVaultDataSource(dsc.VaultListDirDataSource):
-    def __init__(self, config, vos_client, cadc_client, recursive=True):
-        super(DAOVaultDataSource, self).__init__(vos_client, config)
+    def __init__(self, config, vo_client, cadc_client, recursive=True):
+        super(DAOVaultDataSource, self).__init__(vo_client, config)
         self._cleanup_when_storing = config.cleanup_files_when_storing
         self._cleanup_failure_directory = config.cleanup_failure_destination
         self._cleanup_success_directory = config.cleanup_success_destination
@@ -88,7 +89,6 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
         self._collection = config.collection
         self._recursive = recursive
         self._cadc_client = cadc_client
-        self._vos_client = vos_client
         self._work = []
         self._logger = logging.getLogger(self.__class__.__name__)
 
@@ -137,7 +137,7 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
     def _check_md5sum(self, entry_fqn):
         # get the metadata from VOS
         result = True
-        vos_meta = clc.vault_info(self._client, entry_fqn)
+        vos_meta = clc.vault_info(self._vo_client, entry_fqn)
         # get the metadata at CADC
         f_name = basename(entry_fqn)
         scheme = 'cadc' if self._supports_latest_client else 'ad'
@@ -151,10 +151,10 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
         return result, vos_meta
 
     def _find_work(self, entry):
-        dir_listing = self._client.listdir(entry)
+        dir_listing = self._vo_client.listdir(entry)
         for dir_entry in dir_listing:
             dir_entry_fqn = f'{entry}/{dir_entry}'
-            if self._client.isdir(dir_entry_fqn) and self._recursive:
+            if self._vo_client.isdir(dir_entry_fqn) and self._recursive:
                 self._find_work(dir_entry_fqn)
             else:
                 if self.default_filter(dir_entry, dir_entry_fqn):
@@ -170,12 +170,20 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
         # if move when storing is enabled, move to an after-action location
         if self._cleanup_when_storing:
             try:
-                # if the destination is a fully-qualified name, an
-                # over-write will succeed
                 f_name = basename(fqn)
                 dest_fqn = join(destination, f_name)
+                try:
+                    if self._vo_client.status(dest_fqn):
+                        # vos: doesn't support over-write
+                        self._logger.warning(
+                            f'Removing {dest_fqn} prior to over-write.'
+                        )
+                        self._vo_client.delete(dest_fqn)
+                except exceptions.NotFoundException as not_found_e:
+                    # do thing, since the node doesn't exist
+                    pass
                 self._logger.warning(f'Moving {fqn} to {dest_fqn}')
-                self._vos_client.move(fqn, dest_fqn)
+                self._vo_client.move(fqn, dest_fqn)
             except Exception as e:
                 self._logger.debug(traceback.format_exc())
                 self._logger.error(

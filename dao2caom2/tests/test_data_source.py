@@ -69,6 +69,7 @@
 
 from mock import Mock, patch
 
+from cadcutils import exceptions
 from cadcdata import FileInfo
 from caom2pipe import manage_composable as mc
 from dao2caom2 import data_source
@@ -135,6 +136,7 @@ def test_dao_transfer_check_fits_verify(vault_info_mock):
     test_config.store_modified_files_only = True
     vault_info_mock.return_value = test_match_file_info
     test_data_client.info.return_value = test_different_file_info
+    test_vos_client.status.raises = exceptions.NotFoundException
 
     second_test_subject = data_source.DAOVaultDataSource(
         test_config, test_vos_client, test_data_client
@@ -148,3 +150,59 @@ def test_dao_transfer_check_fits_verify(vault_info_mock):
         'vos:DAO/Archive/Incoming/dao123.fits.gz',
         'vos:DAO/success/dao123.fits.gz',
     ), 'wrong success move args'
+    assert test_vos_client.status.called, 'expect a status call'
+
+
+def test_data_source_exists():
+    # test the case where the destination file already exists, so the
+    # move cleanup has to remove it first
+    test_config = mc.Config()
+    test_config.cleanup_failure_destination = 'vos:test/failure'
+    test_config.cleanup_success_destination = 'vos:test/success'
+    test_config.data_sources = 'vos:test'
+    test_config.data_source_extensions = ['.fits']
+    test_config.cleanup_files_when_storing = True
+    test_config.collection = 'TEST'
+    test_vos_client = Mock(autospec=True)
+    test_data_client = Mock(autospec=True)
+    test_subject = data_source.DAOVaultDataSource(
+        test_config, test_vos_client, test_data_client
+    )
+    assert test_subject is not None, 'ctor failure'
+    test_subject._work = ['vos:test/dest_fqn.fits']
+
+    def _get_node(uri, limit=None, force=None):
+        assert uri == 'vos:test/dest_fqn.fits', f'wrong vo check {uri}'
+        node = type('', (), {})()
+        node.props = {'length': 42, 'MD5': 'ghi', 'lastmod': 'Sept 10 2021'}
+        return node
+    test_vos_client.get_node.side_effect = _get_node
+
+    # mock that the same file already exists as CADC
+    def _get_info(uri):
+        assert uri == 'ad:TEST/dest_fqn.fits', f'wrong storage check {uri}'
+        return FileInfo(
+            id=uri,
+            md5sum='ghi',
+        )
+    test_data_client.info.side_effect = _get_info
+
+    # destination file exists at CADC
+    def _status(uri):
+        assert (
+                uri == 'vos:test/success/dest_fqn.fits'
+        ), f'wrong status check {uri}'
+        return True
+    test_vos_client.status.side_effect = _status
+
+    # test execution
+    test_subject.clean_up()
+    assert test_vos_client.status.called, 'expect status call'
+    assert test_vos_client.delete.called, 'expect delete call'
+    test_vos_client.delete.assert_called_with(
+        'vos:test/success/dest_fqn.fits'
+    ), 'wrong delete args'
+    assert test_vos_client.move.called, 'expect move call'
+    test_vos_client.move.assert_called_with(
+        'vos:test/dest_fqn.fits', 'vos:test/success/dest_fqn.fits'
+    ), 'wrong move args'

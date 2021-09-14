@@ -69,8 +69,6 @@
 import glob
 import os
 
-from mock import patch, Mock
-
 from caom2pipe import manage_composable as mc
 from dao2caom2 import preview_augmentation, dao_name
 import test_main_app
@@ -79,8 +77,7 @@ TEST_FILES_DIR = '/test_files'
 REJECTED_FILE = os.path.join(test_main_app.TEST_DATA_DIR, 'rejected.yml')
 
 
-@patch('caom2pipe.manage_composable.data_put')
-def test_visit(ad_put_mock):
+def test_visit():
 
     # this should result in three new artifacts being added to every plane:
     # one for a thumbnail and two for previews (one zoom)
@@ -88,7 +85,6 @@ def test_visit(ad_put_mock):
     test_rejected = mc.Rejected(REJECTED_FILE)
     test_config = mc.Config()
     test_observable = mc.Observable(test_rejected, mc.Metrics(test_config))
-    cadc_client_mock = Mock()
 
     test_files = {
         # processed spectrum
@@ -137,7 +133,7 @@ def test_visit(ad_put_mock):
 
     kwargs = {
         'working_directory': TEST_FILES_DIR,
-        'cadc_client': cadc_client_mock,
+        'cadc_client': None,
         'stream': 'stream',
         'observable': test_observable,
     }
@@ -150,14 +146,14 @@ def test_visit(ad_put_mock):
             f'{test_main_app.TEST_DATA_DIR}/previews/{key}'
         )
         for f_name in value:
-            kwargs['science_file'] = f_name
+            test_name = dao_name.DAOName(file_name=f_name)
+            kwargs['storage_name'] = test_name
 
             try:
                 ignore = preview_augmentation.visit(obs, **kwargs)
             except Exception as e:
                 assert False, f'{str(e)}'
 
-            test_name = dao_name.DAOName(file_name=f_name)
             f_name_list = [test_name.prev_uri, test_name.thumb_uri]
             for p in f_name_list:
                 artifact = obs.planes[test_name.product_id].artifacts[p]

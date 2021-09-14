@@ -103,7 +103,7 @@ def pytest_generate_tests(metafunc):
     metafunc.parametrize('test_name', obs_id_list)
 
 
-@patch('caom2utils.cadc_client_wrapper.StorageClientWrapper')
+@patch('caom2utils.data_util.StorageClientWrapper')
 def test_multi_plane(data_client_mock, test_name):
     dao_name = DAOName(file_name=f'{LOOKUP[test_name][0]}.fits')
     lineage = _get_lineage(dao_name.obs_id)

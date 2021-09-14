@@ -98,6 +98,7 @@ from caom2utils import ObsBlueprint, get_gen_proc_arg_parser, gen_proc
 from caom2pipe import astro_composable as ac
 from caom2pipe import caom_composable as cc
 from caom2pipe import manage_composable as mc
+from caom2pipe import name_builder_composable as nbc
 from dao2caom2 import dao_name as dn
 
 
@@ -1226,13 +1227,10 @@ def _get_uris(args):
             ignore, uri = mc.decompose_lineage(ii)
             result.append(uri)
     elif args.local:
+        builder = nbc.GuessingBuilder(dn.DAOName)
         for ii in args.local:
-            obs_id = mc.StorageName.remove_extensions(os.path.basename(ii))
-            uri = dn.DAOName(obs_id=obs_id).file_uri
-            result.append(uri)
-    elif args.observation:
-        uri = dn.DAOName(obs_id=args.observation[1]).file_uri
-        result.append(uri)
+            dao_name = builder.build(ii)
+            result.append(dao_name.file_uri)
     else:
         raise mc.CadcException(f'Could not define uri from these args {args}')
     return result
