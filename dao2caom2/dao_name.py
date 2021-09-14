@@ -96,11 +96,11 @@ class DAOName(mc.StorageName):
         self,
         url=None,
         file_name=None,
-        artifact_uri=None,
+        uri=None,
         entry=None,
     ):
-        if artifact_uri is not None:
-            scheme, archive, file_name = mc.decompose_uri(artifact_uri)
+        if uri is not None:
+            scheme, archive, file_name = mc.decompose_uri(uri)
             self._file_name = file_name
         elif file_name is not None:
             self._file_name = file_name.replace('.header', '')

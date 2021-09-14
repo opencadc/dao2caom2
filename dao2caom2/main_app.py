@@ -919,7 +919,7 @@ def update(observation, **kwargs):
     uri = kwargs.get('uri')
     dao_name = None
     if uri is not None:
-        dao_name = dn.DAOName(artifact_uri=uri)
+        dao_name = dn.DAOName(uri=uri)
     if fqn is not None:
         dao_name = dn.DAOName(file_name=os.path.basename(fqn))
 
