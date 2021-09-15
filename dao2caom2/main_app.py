@@ -83,7 +83,6 @@ spectropolarimetry for historical reasons).
 import importlib
 import logging
 import os
-import re
 import sys
 import traceback
 
@@ -100,6 +99,7 @@ from caom2pipe import caom_composable as cc
 from caom2pipe import manage_composable as mc
 from caom2pipe import name_builder_composable as nbc
 from dao2caom2 import dao_name as dn
+from dao2caom2 import telescopes
 
 
 __all__ = ['dao_main_app', 'update', 'APPLICATION', 'to_caom2']
@@ -117,40 +117,18 @@ def get_artifact_product_type(header):
     return product_type
 
 
-def get_calibration_level(parameters):
-    uri = parameters.get('uri')
-    result = CalibrationLevel.RAW_STANDARD
-    if dn.DAOName.is_processed(uri):
-        result = CalibrationLevel.CALIBRATED
-    return result
+def get_calibration_level(uri):
+    return telescopes.get_current(uri).get_calibration_level()
 
 
-def get_data_product_type(header):
-    obs_mode = _get_obs_mode(header)
-    if obs_mode == 'Imaging':
-        data_product_type = DataProductType.IMAGE
-    else:
-        data_product_type = DataProductType.SPECTRUM
-    return data_product_type
+def get_data_product_type(uri):
+    return telescopes.get_current(uri).get_data_product_type()
 
 
 def get_energy_axis_function_naxis(parameters):
     uri = parameters.get('uri')
     header = parameters.get('header')
-    naxis = 1
-    data_product_type = get_data_product_type(header)
-    if data_product_type == DataProductType.SPECTRUM:
-        if dn.DAOName.is_processed(uri):
-            naxis = _get_naxis1(header)
-        else:
-            dispaxis = _get_dispaxis(header)
-            if dispaxis == 1:
-                naxis = _get_naxis1(header)
-            elif dispaxis == 2:
-                naxis = _get_naxis2(header)
-            else:
-                raise mc.CadcException(f'Could not find dispaxis for {uri}')
-    return naxis
+    return telescopes.get_current(uri).get_energy_axis_function_naxis(header)
 
 
 def get_energy_axis_function_delta(parameters):
@@ -160,54 +138,22 @@ def get_energy_axis_function_delta(parameters):
     if execution_path is ExecutionPath.SPECT_CALIBRATED:
         cdelt = header.get('CDELT1')
     else:
-        data_product_type = get_data_product_type(header)
-        if data_product_type == DataProductType.SPECTRUM:
-            wavelength = _get_wavelength(header)
-            cdelt = header.get('DELTA_WL')
-            if wavelength is None:
-                cdelt = None
-            else:
-                if cdelt is None:
-                    dispersion = header.get('DISPERSI')
-                    dispaxis = _get_dispaxis(header)
-                    if dispaxis == 1:
-                        xbin = mc.to_float(header.get('XBIN'))
-                    else:
-                        xbin = mc.to_float(header.get('YBIN'))
-                    cdelt = dispersion * 15.0 * xbin / 1000.0
-        else:
-            cdelt = header.get('BANDPASS')
+        cdelt = telescopes.get_current(uri).get_energy_axis_function_delta(
+            header
+        )
     return cdelt
 
 
 def get_energy_axis_function_refcoord_pix(parameters):
+    uri = parameters.get('uri')
     header = parameters.get('header')
-    crpix = 1.0
     execution_path = _get_execution_path(parameters)
     if execution_path is ExecutionPath.SPECT_CALIBRATED:
         crpix = header.get('CRPIX1')
     else:
-        data_product_type = get_data_product_type(header)
-        if data_product_type == DataProductType.SPECTRUM:
-            wavelength = _get_wavelength(header)
-            if wavelength is None:
-                crpix = None
-            else:
-                crpix = header.get('REFPIXEL')
-                if crpix is None:
-                    temp = header.get('DATASEC')
-                    if temp is not None:
-                        datasec = re.sub(
-                            r'(\[)(\d+:\d+,\d+:\d+)(\])', r'\g<2>', temp
-                        )
-                        (dx, dy) = datasec.split(',')
-                        (xl, xh) = dx.split(':')
-                        (yl, yh) = dy.split(':')
-                        dispaxis = _get_dispaxis(header)
-                        if dispaxis == 1:
-                            crpix = (int(xh) - int(xl)) / 2.0 + int(xl)
-                        else:
-                            crpix = (int(yh) - int(yl)) / 2.0 + int(yl)
+        crpix = telescopes.get_current(
+            uri
+        ).get_energy_axis_function_refcoord_pix(header)
     return crpix
 
 
@@ -261,18 +207,18 @@ def _get_execution_path(parameters):
     return result
 
 
-def get_geo_x(header):
-    x, ignore_y, ignore_z = _get_geo(header)
+def get_geo_x(uri):
+    x, ignore_y, ignore_z = _get_geo(uri)
     return x
 
 
-def get_geo_y(header):
-    ignore_x, y, ignore_z = _get_geo(header)
+def get_geo_y(uri):
+    ignore_x, y, ignore_z = _get_geo(uri)
     return y
 
 
-def get_geo_z(header):
-    ignore_x, ignore_y, z = _get_geo(header)
+def get_geo_z(uri):
+    ignore_x, ignore_y, z = _get_geo(uri)
     return z
 
 
@@ -442,10 +388,11 @@ def _get_position_template(
     science_image_raw,
     cal,
 ):
+    uri = parameters.get('uri')
     header = parameters.get('header')
     artifact_product_type = get_artifact_product_type(header)
-    data_product_type = get_data_product_type(header)
-    calibration_level = get_calibration_level(parameters)
+    data_product_type = telescopes.get_current(uri).get_data_product_type()
+    calibration_level = get_calibration_level(uri)
     if artifact_product_type is ProductType.SCIENCE:
         if data_product_type == DataProductType.SPECTRUM:
             result = science_spectrum(header, key)
@@ -481,45 +428,32 @@ def _get_position_dark(header, key, data_product_type):
     return result
 
 
-def get_position_function_dimension_naxis1(header):
-    data_product_type = get_data_product_type(header)
-    if data_product_type == DataProductType.SPECTRUM:
-        result = 1
-    else:
-        result = _get_naxis1(header)
-    return result
+def get_position_function_dimension_naxis1(params):
+    header = params.get('header')
+    uri = params.get('uri')
+    return telescopes.get_current(uri).get_position_function_dimension_naxis1(
+        header
+    )
 
 
-def get_position_function_dimension_naxis2(header):
-    data_product_type = get_data_product_type(header)
-    if data_product_type == DataProductType.SPECTRUM:
-        result = 1
-    else:
-        result = _get_naxis2(header)
-    return result
+def get_position_function_dimension_naxis2(params):
+    header = params.get('header')
+    uri = params.get('uri')
+    return telescopes.get_current(uri).get_position_function_dimension_naxis2(
+        header
+    )
 
 
 def get_skycam_release_date(header):
     return ac.get_datetime(header.get('CLOCKVAL'))
 
 
-def get_target_type(header):
-    target_type = TargetType.FIELD
-    data_product_type = get_data_product_type(header)
-    if data_product_type == DataProductType.SPECTRUM:
-        target_type = TargetType.OBJECT
-    return target_type
+def get_target_type(uri):
+    return telescopes.get_current(uri).get_target_type()
 
 
-def get_telescope_name(header):
-    telescope = _get_telescope(header)
-    observatory = header.get('OBSERVAT')
-    result = f'{observatory} {telescope}'
-    if telescope is None or observatory is None:
-        result = None
-    if telescope is None and observatory == 'DAO':
-        result = 'DAO Skycam'
-    return result
+def get_telescope_name(uri):
+    return telescopes.get_current(uri).get_telescope_name()
 
 
 def get_time_axis_delta(header):
@@ -530,11 +464,7 @@ def get_time_axis_delta(header):
 def get_time_axis_val(params):
     header = params.get('header')
     uri = params.get('uri')
-    ignore_scheme, ignore_path, f_name = mc.decompose_uri(uri)
-    keyword = 'DATE-OBS'
-    if f_name.startswith('a'):
-        keyword = 'CLOCKVAL'
-    return ac.get_datetime(header.get(keyword))
+    return telescopes.get_current(uri).get_time_axis_val(header)
 
 
 def get_time_exposure(header):
@@ -557,41 +487,8 @@ def get_time_resolution(header):
     return exptime / ncombine
 
 
-def _get_dispaxis(header):
-    dispaxis = None
-    if get_data_product_type(header) == DataProductType.SPECTRUM:
-        dispaxis = header.get('DISPAXIS')
-        if dispaxis is None:
-            telescope = get_telescope_name(header)
-            if telescope == 'DAO 1.2-m':
-                dispaxis = 2
-            else:
-                dispaxis = 1
-    if dispaxis is None:
-        raise mc.CadcException('Could not determine dispaxis for TODO.')
-    return dispaxis
-
-
-def _get_geo(header):
-    telescope = _get_telescope(header)
-    result = None
-    if telescope == '1.2-m':
-        result = ac.get_location(48.52092, -123.42006, 225.0)
-    elif telescope == '1.8-m':
-        result = ac.get_location(48.51967, -123.41833, 232.0)
-    elif telescope is None:
-        observatory = header.get('OBSERVAT')
-        if observatory == 'DAO':
-            # DB 10-09-20
-            # Google Maps to give you latitude/longitude if desired. 48.519497
-            # and -123.416502.  Not sure of the elevation.
-            result = ac.get_location(48.519497, -123.416502, 210.0)
-    if result is None:
-        raise mc.CadcException(
-            f'Unexpected telescope value of {telescope} for '
-            f'{header.get("DAOPRGID")}'
-        )
-    return result
+def _get_geo(uri):
+    return telescopes.get_current(uri).get_geo()
 
 
 def _get_naxis1(header):
@@ -688,18 +585,11 @@ def _get_position(header):
     return ra_deg, dec_deg
 
 
-def _get_telescope(header):
-    return header.get('TELESCOP')
-
-
-def _get_wavelength(header):
-    return mc.to_float(header.get('WAVELENG'))
-
-
 def accumulate_bp(bp, uri):
     """Configure the telescope-specific ObsBlueprint at the CAOM model
     Observation level."""
     logging.debug('Begin accumulate_bp.')
+    telescopes.factory(uri)
     scheme, collection, f_name = mc.decompose_uri(uri)
     if f_name.startswith('d'):
         _accumulate_dao_bp(bp)
@@ -714,10 +604,10 @@ def accumulate_bp(bp, uri):
 
     bp.clear('Observation.algorithm.name')
 
-    bp.set('Observation.telescope.name', 'get_telescope_name(header)')
-    bp.set('Observation.telescope.geoLocationX', 'get_geo_x(header)')
-    bp.set('Observation.telescope.geoLocationY', 'get_geo_y(header)')
-    bp.set('Observation.telescope.geoLocationZ', 'get_geo_z(header)')
+    bp.set('Observation.telescope.name', 'get_telescope_name(uri)')
+    bp.set('Observation.telescope.geoLocationX', 'get_geo_x(uri)')
+    bp.set('Observation.telescope.geoLocationY', 'get_geo_y(uri)')
+    bp.set('Observation.telescope.geoLocationZ', 'get_geo_z(uri)')
 
     bp.set('Chunk.time.axis.axis.ctype', 'TIME')
     bp.set('Chunk.time.axis.axis.cunit', 'd')
@@ -755,7 +645,7 @@ def _accumulate_dao_bp(bp):
     # from dao2caom2.config
     bp.add_fits_attribute('Observation.metaRelease', 'DATE-OBS')
 
-    bp.set('Observation.target.type', 'get_target_type(header)')
+    bp.set('Observation.target.type', 'get_target_type(uri)')
     bp.clear('Observation.target.moving')
     bp.set_default('Observation.target.moving', 'false')
     bp.clear('Observation.target.standard')
@@ -771,8 +661,8 @@ def _accumulate_dao_bp(bp):
     bp.clear('Observation.environment.photometric')
     bp.set_default('Observation.environment.photometric', 'false')
 
-    bp.set('Plane.dataProductType', 'get_data_product_type(header)')
-    bp.set('Plane.calibrationLevel', 'get_calibration_level(parameters)')
+    bp.set('Plane.dataProductType', 'get_data_product_type(uri)')
+    bp.set('Plane.calibrationLevel', 'get_calibration_level(uri)')
     bp.clear('Plane.metaRelease')
     # from dao2caom2.config
     bp.add_fits_attribute('Plane.metaRelease', 'DATE-OBS')
@@ -829,11 +719,11 @@ def _accumulate_dao_bp(bp):
     bp.set('Chunk.position.axis.axis2.cunit', 'deg')
     bp.set(
         'Chunk.position.axis.function.dimension.naxis1',
-        'get_position_function_dimension_naxis1(header)',
+        'get_position_function_dimension_naxis1(params)',
     )
     bp.set(
         'Chunk.position.axis.function.dimension.naxis2',
-        'get_position_function_dimension_naxis2(header)',
+        'get_position_function_dimension_naxis2(params)',
     )
     bp.set(
         'Chunk.position.axis.function.refCoord.coord1.pix',

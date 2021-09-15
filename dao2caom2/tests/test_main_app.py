@@ -69,9 +69,10 @@
 
 from cadcdata import FileInfo
 from dao2caom2 import main_app, APPLICATION, COLLECTION, DAOName
+from dao2caom2 import metadata, telescopes
 from caom2pipe import manage_composable as mc
 
-from mock import patch
+from mock import patch, Mock
 
 import os
 import sys
@@ -94,6 +95,13 @@ def pytest_generate_tests(metafunc):
 
 @patch('caom2utils.data_util.StorageClientWrapper')
 def test_main_app(data_client_mock, test_name):
+    config = mc.Config()
+    config.use_local_files = True
+    config.data_sources = [TEST_DATA_DIR]
+    config.task_types = [mc.TaskType.SCRAPE]
+    dmf = metadata.DefiningMetadataFinder(Mock(), config)
+    telescopes.defining_metadata_finder = dmf
+
     data_client_mock.return_value.info.side_effect = _get_file_info
     basename = os.path.basename(test_name)
     dao_name = DAOName(file_name=basename.replace('.header', '.gz'))

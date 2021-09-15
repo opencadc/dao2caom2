@@ -85,12 +85,24 @@ from caom2pipe import manage_composable as mc
 from caom2pipe import run_composable as rc
 from dao2caom2 import APPLICATION, dao_name, preview_augmentation
 from dao2caom2 import cleanup_augmentation, data_source, transfer
+from dao2caom2 import metadata, telescopes
 
 DAO_BOOKMARK = 'dao_timestamp'
 
 
 META_VISITORS = [cleanup_augmentation]
 DATA_VISITORS = [preview_augmentation]
+
+
+def _common():
+    config = mc.Config()
+    config.get_executors()
+    clients = clc.ClientCollection(config)
+    defining_metadata_finder = metadata.DefiningMetadataFinder(
+        config, clients
+    )
+    telescopes.defining_metadata_finder = defining_metadata_finder
+    return config, clients
 
 
 def _run():
@@ -100,12 +112,15 @@ def _run():
     :return 0 if successful, -1 if there's any sort of failure. Return status
         is used by airflow for task instance management and reporting.
     """
+    config, clients = _common()
     name_builder = nbc.GuessingBuilder(dao_name.DAOName)
     return rc.run_by_todo(
         name_builder=name_builder,
         command_name=APPLICATION,
         meta_visitors=META_VISITORS,
         data_visitors=DATA_VISITORS,
+        clients=clients,
+        config=config,
     )
 
 
@@ -128,9 +143,7 @@ def _run_vo():
     :return 0 if successful, -1 if there's any sort of failure. Return status
         is used by airflow for task instance management and reporting.
     """
-    config = mc.Config()
-    config.get_executors()
-    clients = clc.ClientCollection(config)
+    config, clients = _common()
     vos_client = Client(vospace_certfile=config.proxy_file_name)
     name_builder = nbc.GuessingBuilder(dao_name.DAOName)
     source = data_source.DAOVaultDataSource(
@@ -164,8 +177,7 @@ def _run_state():
     """Uses a state file with a timestamp to control which entries will be
     processed.
     """
-    config = mc.Config()
-    config.get_executors()
+    config, clients = _common()
     source = dsc.QueryTimeBoxDataSourceTS(config, preview_suffix='png')
     name_builder = nbc.GuessingBuilder(dao_name.DAOName)
     return rc.run_by_state(
@@ -175,6 +187,7 @@ def _run_state():
         meta_visitors=META_VISITORS,
         data_visitors=DATA_VISITORS,
         source=source,
+        clients=clients,
     )
 
 
