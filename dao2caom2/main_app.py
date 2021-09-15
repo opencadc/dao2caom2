@@ -237,56 +237,18 @@ def get_obs_intent(header):
 
 
 def get_position_function_coord1_pix(parameters):
-    def science_spectrum(header, key):
-        return 1.0
-
-    def science_image_raw(header, key):
-        return _get_naxis1(header) / 2.0
-
-    def cal(header, key, data_product_type):
-        result = None
-        if data_product_type == DataProductType.IMAGE:
-            result = science_image_raw(header, key)
-        else:
-            obs_type = header.get('OBSTYPE')
-            if obs_type == 'dark':
-                result = 1.0
-        return result
-
-    return _get_position_template(
-        parameters,
-        'CRPIX1',
-        science_spectrum,
-        _get_header_value,
-        science_image_raw,
-        cal,
+    uri = parameters.get('uri')
+    header = parameters.get('header')
+    return telescopes.get_current(uri).get_position_function_coord1_pix(
+        header
     )
 
 
 def get_position_function_coord2_pix(parameters):
-    def science_spectrum(header, key):
-        return 1.0
-
-    def science_image_raw(header, key):
-        return _get_naxis2(header) / 2.0
-
-    def cal(header, key, data_product_type):
-        result = None
-        if data_product_type == DataProductType.IMAGE:
-            result = science_image_raw(header, key)
-        else:
-            obs_type = header.get('OBSTYPE')
-            if obs_type == 'dark':
-                result = 1.0
-        return result
-
-    return _get_position_template(
-        parameters,
-        'CRPIX2',
-        science_spectrum,
-        _get_header_value,
-        science_image_raw,
-        cal,
+    uri = parameters.get('uri')
+    header = parameters.get('header')
+    return telescopes.get_current(uri).get_position_function_coord2_pix(
+        header
     )
 
 
@@ -301,131 +263,27 @@ def get_position_function_coord2_val(header):
 
 
 def get_position_function_cd11(parameters):
-    def science_spectrum(header, key):
-        # DB - set entrance aperture to a fixed 5" by 5" because of lack
-        # of detailed information
-        return -0.001388
-
-    def cal(header, key, data_product_type):
-        result = None
-        obs_type = header.get('OBSTYPE')
-        if data_product_type == DataProductType.IMAGE and obs_type == 'dark':
-            result = _get_position_by_scale_size_bin(header, key)
-        else:
-            if obs_type == 'dark':
-                result = -0.001388
-        return result
-
-    return _get_position_template(
-        parameters,
-        'CD1_1',
-        science_spectrum,
-        _get_header_value,
-        _get_position_by_scale_size_bin,
-        cal,
-    )
+    uri = parameters.get('uri')
+    header = parameters.get('header')
+    return telescopes.get_current(uri).get_position_function_cd11(header)
 
 
 def get_position_function_cd12(parameters):
-    def science_spectrum(header, key):
-        return 0.0
-
-    return _get_position_template(
-        parameters,
-        'CD1_2',
-        science_spectrum,
-        _get_header_value,
-        science_spectrum,
-        _get_position_dark,
-    )
+    uri = parameters.get('uri')
+    header = parameters.get('header')
+    return telescopes.get_current(uri).get_position_function_cd12(header)
 
 
 def get_position_function_cd21(parameters):
-    def science_spectrum(header, key):
-        return 0.0
-
-    return _get_position_template(
-        parameters,
-        'CD2_1',
-        science_spectrum,
-        _get_header_value,
-        science_spectrum,
-        _get_position_dark,
-    )
+    uri = parameters.get('uri')
+    header = parameters.get('header')
+    return telescopes.get_current(uri).get_position_function_cd21(header)
 
 
 def get_position_function_cd22(parameters):
-    def science_spectrum(header, key):
-        # DB - set entrance aperture to a fixed 5" by 5" because of lack
-        # of detailed information
-        return 0.001388
-
-    def cal(header, key, data_product_type):
-        result = None
-        obs_type = header.get('OBSTYPE')
-        if data_product_type == DataProductType.IMAGE and obs_type == 'dark':
-            result = _get_position_by_scale_size_bin(header, key)
-        else:
-            if obs_type == 'dark':
-                result = 0.001388
-        return result
-
-    return _get_position_template(
-        parameters,
-        'CD2_2',
-        science_spectrum,
-        _get_header_value,
-        _get_position_by_scale_size_bin,
-        cal,
-    )
-
-
-def _get_position_template(
-    parameters,
-    key,
-    science_spectrum,
-    science_image_calib,
-    science_image_raw,
-    cal,
-):
     uri = parameters.get('uri')
     header = parameters.get('header')
-    artifact_product_type = get_artifact_product_type(header)
-    data_product_type = telescopes.get_current(uri).get_data_product_type()
-    calibration_level = get_calibration_level(uri)
-    if artifact_product_type is ProductType.SCIENCE:
-        if data_product_type == DataProductType.SPECTRUM:
-            result = science_spectrum(header, key)
-        else:
-            if calibration_level is CalibrationLevel.CALIBRATED:
-                result = science_image_calib(header, key)
-            else:
-                result = science_image_raw(header, key)
-    else:
-        result = cal(header, key, data_product_type)
-    return result
-
-
-def _get_header_value(header, key):
-    return header.get(key)
-
-
-def _get_position_by_scale_size_bin(header, key):
-    result = None
-    platescale = mc.to_float(header.get('PLTSCALE'))
-    pixsize = mc.to_float(header.get('PIXSIZE'))
-    xbin = mc.to_float(header.get('XBIN'))
-    if platescale is not None and pixsize is not None and xbin is not None:
-        result = platescale * pixsize * xbin / 3600000.0
-    return result
-
-
-def _get_position_dark(header, key, data_product_type):
-    result = None
-    obs_type = header.get('OBSTYPE')
-    if obs_type == 'dark':
-        result = 0.0
-    return result
+    return telescopes.get_current(uri).get_position_function_cd22(header)
 
 
 def get_position_function_dimension_naxis1(params):

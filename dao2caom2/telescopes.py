@@ -70,7 +70,7 @@
 import logging
 import re
 
-from caom2 import CalibrationLevel, DataProductType, TargetType
+from caom2 import CalibrationLevel, DataProductType, TargetType, ProductType
 from caom2pipe import astro_composable as ac
 from caom2pipe import manage_composable as mc
 from dao2caom2.dao_name import  DAOName
@@ -80,12 +80,23 @@ __all__ = ['factory', 'get_current']
 
 
 class Telescope:
+    """
+    This class is the Spectrum implementation.
+    """
     def __init__(self):
         self._uri = None
         self._logger = logging.getLogger(self.__class__.__name__)
 
     def _get_wavelength(self, header):
         return mc.to_float(header.get('WAVELENG'))
+
+    def get_artifact_product_type(self, header):
+        obs_type = header.get('OBSTYPE')
+        if obs_type == 'object':
+            product_type = ProductType.SCIENCE
+        else:
+            product_type = ProductType.CALIBRATION
+        return product_type
 
     def get_calibration_level(self):
         return CalibrationLevel.RAW_STANDARD
@@ -140,10 +151,37 @@ class Telescope:
         # and -123.416502.  Not sure of the elevation.
         return ac.get_location(48.519497, -123.416502, 210.0)
 
-    def get_position_function_cd22(self, ignore_header):
-        # # DB - set entrance aperture to a fixed 5" by 5" because of lack
-        # # of detailed information
-        # return 0.001388
+    def get_position_function_cd11(self, header):
+        return (-1) * self.get_position_function_cd22(header)
+
+    def get_position_function_cd12(self, header):
+        return self.get_position_function_cd21(header)
+
+    def get_position_function_cd21(self, header):
+        obs_type = header.get('OBSTYPE')
+        result = None
+        if obs_type in ['dark', 'object']:
+            result = 0.0
+        return result
+
+    def get_position_function_cd22(self, header):
+        obs_type = header.get('OBSTYPE')
+        result = None
+        if obs_type in ['dark', 'object']:
+            # DB - set entrance aperture to a fixed 5" by 5" because of lack
+            # of detailed information
+            result = 0.001388
+        return result
+
+    def get_position_function_coord1_pix(self, header):
+        return self.get_position_function_coord2_pix(header)
+
+    def get_position_function_coord2_pix(self, header):
+        obs_type = header.get('OBSTYPE')
+        result = None
+        if obs_type in ['dark', 'object']:
+            result = 1.0
+        return result
 
     def get_position_function_dimension_naxis1(self, ignore_header):
         return 1
@@ -210,6 +248,15 @@ class Imaging(Telescope):
     def __init__(self):
         super().__init__()
 
+    def _get_position_by_scale_size_bin(self, header):
+        result = None
+        platescale = mc.to_float(header.get('PLTSCALE'))
+        pixsize = mc.to_float(header.get('PIXSIZE'))
+        xbin = mc.to_float(header.get('XBIN'))
+        if platescale is not None and pixsize is not None and xbin is not None:
+            result = platescale * pixsize * xbin / 3600000.0
+        return result
+
     def get_data_product_type(self):
         return DataProductType.IMAGE
 
@@ -218,6 +265,18 @@ class Imaging(Telescope):
 
     def get_energy_axis_function_refcoord_pix(self, ignore_header):
         return 1.0
+
+    def get_position_function_cd11(self, header):
+        return self._get_position_by_scale_size_bin(header)
+
+    def get_position_function_cd22(self, header):
+        return self._get_position_by_scale_size_bin(header)
+
+    def get_position_function_coord1_pix(self, header):
+        return header.get('NAXIS1') / 2.0
+
+    def get_position_function_coord2_pix(self, header):
+        return header.get('NAXIS2') / 2.0
 
     def get_position_function_dimension_naxis1(self, header):
         return header.get('NAXIS1')
@@ -248,6 +307,24 @@ class Dao12MetreProcessedImage(Dao12MetreImage, Processed):
 
     def __init__(self):
         super().__init__()
+
+    def get_position_function_cd11(self, header):
+        return header.get('CD1_1')
+
+    def get_position_function_cd12(self, header):
+        return header.get('CD1_2')
+
+    def get_position_function_cd21(self, header):
+        return header.get('CD2_1')
+
+    def get_position_function_cd22(self, header):
+        return header.get('CD2_2')
+
+    def get_position_function_coord1_pix(self, header):
+        return header.get('CRPIX1')
+
+    def get_position_function_coord2_pix(self, header):
+        return header.get('CRPIX2')
 
 
 class Dao12MetreProcessedSpectrum(Dao12Metre, Processed):
@@ -282,6 +359,24 @@ class Dao18MetreProcessedImage(Dao18MetreImage, Processed):
 
     def __init__(self):
         super().__init__()
+
+    def get_position_function_cd11(self, header):
+        return header.get('CD1_1')
+
+    def get_position_function_cd12(self, header):
+        return header.get('CD1_2')
+
+    def get_position_function_cd21(self, header):
+        return header.get('CD2_1')
+
+    def get_position_function_cd22(self, header):
+        return header.get('CD2_2')
+
+    def get_position_function_coord1_pix(self, header):
+        return header.get('CRPIX1')
+
+    def get_position_function_coord2_pix(self, header):
+        return header.get('CRPIX2')
 
 
 class Dao18MetreProcessedSpectrum(Dao18Metre, Processed):

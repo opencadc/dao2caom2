@@ -99,7 +99,7 @@ def _common():
     config.get_executors()
     clients = clc.ClientCollection(config)
     defining_metadata_finder = metadata.DefiningMetadataFinder(
-        config, clients
+        clients, config
     )
     telescopes.defining_metadata_finder = defining_metadata_finder
     return config, clients
