@@ -71,6 +71,7 @@ import logging
 import re
 
 from caom2 import CalibrationLevel, DataProductType, TargetType, ProductType
+from caom2 import ObservationIntentType
 from caom2pipe import astro_composable as ac
 from caom2pipe import manage_composable as mc
 from dao2caom2.dao_name import  DAOName
@@ -137,6 +138,126 @@ class Telescope:
     def _get_wavelength(self, header):
         return mc.to_float(header.get('WAVELENG'))
 
+    def configure_axes(self, bp):
+        bp.configure_position_axes((1, 2))
+        bp.configure_time_axis(3)
+        bp.configure_energy_axis(4)
+        bp.configure_observable_axis(5)
+
+    def accumulate_bp(self, bp):
+        bp.set(
+            'Chunk.energy.axis.function.delta',
+            'get_energy_axis_function_delta(parameters)',
+        )
+        bp.set(
+            'Chunk.energy.axis.function.naxis',
+            'get_energy_axis_function_naxis(parameters)',
+        )
+        bp.set(
+            'Chunk.energy.axis.function.refCoord.pix',
+            'get_energy_axis_function_refcoord_pix(parameters)',
+        )
+        bp.set(
+            'Chunk.energy.axis.function.refCoord.val',
+            'get_energy_axis_function_refcoord_val(parameters)',
+        )
+
+        bp.set('Chunk.position.axis.function.dimension.naxis1', 1)
+        bp.set('Chunk.position.axis.function.dimension.naxis2', 1)
+        bp.set(
+            'Chunk.position.axis.function.cd11',
+            'get_position_function_cd11(parameters)',
+        )
+        bp.set(
+            'Chunk.position.axis.function.cd22',
+            'get_position_function_cd22(parameters)',
+        )
+        bp.set(
+            'Chunk.position.axis.function.cd12',
+            'get_position_function_cd12(parameters)',
+        )
+        bp.set(
+            'Chunk.position.axis.function.cd21',
+            'get_position_function_cd21(parameters)',
+        )
+        bp.set('Observation.intent', 'get_obs_intent(header)')
+        bp.clear('Observation.metaRelease')
+        # from dao2caom2.config
+        bp.add_fits_attribute('Observation.metaRelease', 'DATE-OBS')
+
+        bp.set('Observation.target.type', TargetType.OBJECT)
+        bp.clear('Observation.target.moving')
+        bp.set_default('Observation.target.moving', 'false')
+        bp.clear('Observation.target.standard')
+        bp.set_default('Observation.target.standard', 'false')
+
+        bp.clear('Observation.proposal.id')
+        bp.add_fits_attribute('Observation.proposal.id', 'DAOPRGID')
+        bp.clear('Observation.proposal.pi')
+        bp.add_fits_attribute('Observation.proposal.pi', 'PINAME')
+
+        bp.clear('Observation.environment.humidity')
+        bp.add_fits_attribute('Observation.environment.humidity', 'REL_HUMI')
+        bp.clear('Observation.environment.photometric')
+        bp.set_default('Observation.environment.photometric', 'false')
+
+        bp.set('Plane.dataProductType', DataProductType.SPECTRUM)
+        bp.set('Plane.calibrationLevel', CalibrationLevel.RAW_STANDARD)
+        bp.clear('Plane.metaRelease')
+        # from dao2caom2.config
+        bp.add_fits_attribute('Plane.metaRelease', 'DATE-OBS')
+
+        bp.clear('Plane.provenance.lastExecuted')
+        bp.add_fits_attribute('Plane.provenance.lastExecuted', 'IRAF-TLM')
+        bp.set('Plane.provenance.project', 'DAO Science Archive')
+        bp.clear('Plane.provenance.name')
+        bp.add_fits_attribute('Plane.provenance.name', 'PROCNAME')
+        bp.set_default('Plane.provenance.name', 'DAO unprocessed data')
+        bp.set('Plane.provenance.producer', 'NRC Herzberg')
+        bp.set(
+            'Plane.provenance.reference',
+            'https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/dao/',
+        )
+        bp.clear('Plane.provenance.version')
+        bp.add_fits_attribute('Plane.provenance.version', 'PROCVERS')
+        bp.set_default('Plane.provenance.version', None)
+
+        bp.set('Artifact.productType', 'get_artifact_product_type(header)')
+        bp.set('Chunk.time.exposure', 'get_time_exposure(header)')
+        bp.set('Chunk.time.resolution', 'get_time_resolution(header)')
+
+        bp.set('Chunk.observable.axis.axis.ctype', 'FLUX')
+        bp.set('Chunk.observable.axis.axis.cunit', 'COUNTS')
+        bp.set('Chunk.observable.axis.function.refCoord.pix', 1)
+
+        bp.set(
+            'Chunk.energy.resolvingPower',
+            'get_energy_resolving_power(parameters)',
+        )
+        bp.clear('Chunk.energy.bandpassName')
+        bp.add_fits_attribute('Chunk.energy.bandpassName', 'FILTER')
+
+        bp.set('Chunk.position.axis.axis1.ctype', 'RA---TAN')
+        bp.set('Chunk.position.axis.axis2.ctype', 'DEC--TAN')
+        bp.set('Chunk.position.axis.axis1.cunit', 'deg')
+        bp.set('Chunk.position.axis.axis2.cunit', 'deg')
+        bp.set(
+            'Chunk.position.axis.function.refCoord.coord1.pix',
+            'get_position_function_coord1_pix(parameters)',
+        )
+        bp.set(
+            'Chunk.position.axis.function.refCoord.coord1.val',
+            'get_position_function_coord1_val(header)',
+        )
+        bp.set(
+            'Chunk.position.axis.function.refCoord.coord2.pix',
+            'get_position_function_coord2_pix(parameters)',
+        )
+        bp.set(
+            'Chunk.position.axis.function.refCoord.coord2.val',
+            'get_position_function_coord2_val(header)',
+        )
+
     def get_artifact_product_type(self, header):
         obs_type = header.get('OBSTYPE')
         if obs_type == 'object':
@@ -144,12 +265,6 @@ class Telescope:
         else:
             product_type = ProductType.CALIBRATION
         return product_type
-
-    def get_calibration_level(self):
-        return CalibrationLevel.RAW_STANDARD
-
-    def get_data_product_type(self):
-        return DataProductType.SPECTRUM
 
     def get_energy_axis_function_delta(self, header):
         wavelength = self._get_wavelength(header)
@@ -238,17 +353,8 @@ class Telescope:
             result = 1.0
         return result
 
-    def get_position_function_dimension_naxis1(self, ignore_header):
-        return 1
-
-    def get_position_function_dimension_naxis2(self, ignore_header):
-        return 1
-
     def get_telescope_name(self):
         return None
-
-    def get_target_type(self):
-        return TargetType.OBJECT
 
     def get_time_axis_val(self, header):
         return ac.get_datetime(header.get('DATE-OBS'))
@@ -291,6 +397,42 @@ class SkyCam(Telescope):
     def __init__(self):
         super().__init__()
 
+    def configure_axes(self, bp):
+        # DB - 10-07-20
+        # https://github.com/opencadc-metadata-curation/dao2caom2/issues/10
+        bp.configure_time_axis(1)
+        bp.configure_observable_axis(2)
+        bp.configure_energy_axis(3)
+
+    def accumulate_bp(self, bp):
+        bp.set('Observation.metaRelease', 'get_skycam_release_date(header)')
+        bp.set('Observation.intent', ObservationIntentType.CALIBRATION)
+        bp.set('Observation.instrument.name', 'Sky Camera')
+        bp.set('Plane.calibrationLevel', 1)
+        bp.set('Plane.dataProductType', DataProductType.IMAGE)
+        bp.set('Plane.dataRelease', 'get_skycam_release_date(header)')
+        bp.set('Plane.metaRelease', 'get_skycam_release_date(header)')
+        bp.set('Plane.provenance.project', 'DAO Science Archive')
+        bp.set(
+            'Plane.provenance.producer',
+            'NRC Herzberg Astronomy and Astrophysics Research Centre',
+        )
+        bp.set('Plane.provenance.name', 'DAO Sky Camera image')
+        bp.set(
+            'Plane.provenance.reference',
+            'https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/dao/',
+        )
+        bp.set('Artifact.productType', ProductType.CALIBRATION)
+
+        bp.set('Chunk.energy.axis.function.delta', 3000.0)
+        bp.set('Chunk.energy.axis.function.naxis', 1)
+        bp.set('Chunk.energy.axis.function.refCoord.pix', 0.5)
+        bp.set('Chunk.energy.axis.function.refCoord.val', 4000.0)
+        bp.set('Chunk.energy.resolvingPower', 5500.0 / 3000.0)
+
+        bp.add_fits_attribute('Chunk.time.exposure', 'EXPTIME')
+        bp.add_fits_attribute('Chunk.time.resolution', 'EXPTIME')
+
     def get_telescope_name(self):
         return 'DAO Skycam'
 
@@ -303,6 +445,21 @@ class Imaging(Telescope):
     def __init__(self):
         super().__init__()
 
+    def accumulate_bp(self, bp):
+        super().accumulate_bp(bp)
+        bp.set('Observation.target.type', TargetType.FIELD)
+        bp.set('Plane.dataProductType', DataProductType.IMAGE)
+        bp.clear('Chunk.energy.axis.function.delta')
+        bp.add_fits_attribute('Chunk.energy.axis.function.delta', 'BANDPASS')
+        bp.clear('Chunk.position.axis.function.dimension.naxis1')
+        bp.add_fits_attribute(
+            'Chunk.position.axis.function.dimension.naxis1', 'NAXIS1'
+        )
+        bp.clear('Chunk.position.axis.function.dimension.naxis2')
+        bp.add_fits_attribute(
+            'Chunk.position.axis.function.dimension.naxis2', 'NAXI2'
+        )
+
     def _get_position_by_scale_size_bin(self, header):
         result = None
         platescale = mc.to_float(header.get('PLTSCALE'))
@@ -311,12 +468,6 @@ class Imaging(Telescope):
         if platescale is not None and pixsize is not None and xbin is not None:
             result = platescale * pixsize * xbin / 3600000.0
         return result
-
-    def get_data_product_type(self):
-        return DataProductType.IMAGE
-
-    def get_energy_axis_function_delta(self, header):
-        return header.get('BANDPASS')
 
     def get_energy_axis_function_refcoord_pix(self, ignore_header):
         return 1.0
@@ -338,23 +489,67 @@ class Imaging(Telescope):
     def get_position_function_coord2_pix(self, header):
         return header.get('NAXIS2') / 2.0
 
-    def get_position_function_dimension_naxis1(self, header):
-        return header.get('NAXIS1')
-
-    def get_position_function_dimension_naxis2(self, header):
-        return header.get('NAXIS2')
-
-    def get_target_type(self):
-        return TargetType.FIELD
-
 
 class Processed(Telescope):
 
     def __init__(self):
         super().__init__()
 
-    def get_calibration_level(self):
-        return CalibrationLevel.CALIBRATED
+
+class ProcessedImage(Imaging):
+
+    def __init__(self):
+        super().__init__()
+
+    def accumulate_bp(self, bp):
+        super().accumulate_bp(bp)
+        bp.set('Plane.calibrationLevel', CalibrationLevel.CALIBRATED)
+        bp.clear('Chunk.position.axis.function.cd11')
+        bp.add_fits_attribute('Chunk.position.axis.function.cd11', 'CD1_1')
+        bp.clear('Chunk.position.axis.function.cd22')
+        bp.add_fits_attribute('Chunk.position.axis.function.cd22', 'CD2_2')
+        bp.clear('Chunk.position.axis.function.cd12')
+        bp.add_fits_attribute('Chunk.position.axis.function.cd12', 'CD1_2')
+        bp.clear('Chunk.position.axis.function.cd21')
+        bp.add_fits_attribute('Chunk.position.axis.function.cd21', 'CD2_1')
+        bp.clear('Chunk.position.axis.function.refCoord.coord1.pix')
+        bp.add_fits_attribute(
+            'Chunk.position.axis.function.refCoord.coord1.pix', 'CRPIX1'
+        )
+        bp.clear('Chunk.position.axis.function.refCoord.coord2.pix')
+        bp.add_fits_attribute(
+            'Chunk.position.axis.function.refCoord.coord2.pix', 'CRPIX2'
+        )
+
+
+class ProcessedSpectrum(Processed):
+
+    def __init__(self):
+        super().__init__()
+
+    def configure_axes(self, bp):
+        bp.configure_position_axes((2, 3))
+        bp.configure_time_axis(4)
+        bp.configure_energy_axis(1)
+        bp.configure_observable_axis(5)
+
+    def accumulate_bp(self, bp):
+        super().accumulate_bp(bp)
+        bp.set('Plane.calibrationLevel', CalibrationLevel.CALIBRATED)
+        bp.clear('Chunk.energy.axis.function.delta')
+        bp.add_fits_attribute('Chunk.energy.axis.function.delta', 'CDELT1')
+        bp.clear('Chunk.energy.axis.function.naxis')
+        bp.add_fits_attribute('Chunk.energy.axis.function.naxis', 'NAXIS1')
+        bp.clear('Chunk.energy.axis.function.refCoord.pix')
+        bp.add_fits_attribute(
+            'Chunk.energy.axis.function.refCoord.pix', 'CRPIX1'
+        )
+        bp.clear('Chunk.energy.axis.function.refCoord.val')
+        bp.add_fits_attribute(
+            'Chunk.energy.axis.function.refCoord.val', 'CRVAL1'
+        )
+        bp.set('Chunk.position.axis.function.dimension.naxis1', 1)
+        bp.set('Chunk.position.axis.function.dimension.naxis2', 1)
 
 
 class Dao12MetreImage(Dao12Metre, Imaging):
@@ -363,28 +558,10 @@ class Dao12MetreImage(Dao12Metre, Imaging):
         super().__init__()
 
 
-class Dao12MetreProcessedImage(Dao12MetreImage, Processed):
+class Dao12MetreProcessedImage(Dao12MetreImage, ProcessedImage):
 
     def __init__(self):
         super().__init__()
-
-    def get_position_function_cd11(self, header):
-        return header.get('CD1_1')
-
-    def get_position_function_cd12(self, header):
-        return header.get('CD1_2')
-
-    def get_position_function_cd21(self, header):
-        return header.get('CD2_1')
-
-    def get_position_function_cd22(self, header):
-        return header.get('CD2_2')
-
-    def get_position_function_coord1_pix(self, header):
-        return header.get('CRPIX1')
-
-    def get_position_function_coord2_pix(self, header):
-        return header.get('CRPIX2')
 
 
 class Dao12MetreSpectrum(Dao12Metre):
@@ -400,28 +577,16 @@ class Dao12MetreSpectrum(Dao12Metre):
         return header.get(f'NAXIS{dispaxis}')
 
 
-class Dao12MetreProcessedSpectrum(Dao12MetreSpectrum, Processed):
+class Dao12MetreProcessedSpectrum(Dao12MetreSpectrum, ProcessedSpectrum):
 
     def __init__(self):
         super().__init__()
-
-    def get_energy_axis_function_delta(self, header):
-        return header.get('CDELT1')
-
-    def get_energy_axis_function_naxis(self, header):
-        return header.get('NAXIS1')
-
-    def get_energy_axis_function_refcoord_pix(self, header):
-        return header.get('CRPIX1')
-
-    def get_energy_axis_function_refcoord_val(self, header):
-        return header.get('CRVAL1')
 
     def get_energy_resolving_power(self, header):
         obs_type = header.get('OBSTYPE')
         self._logger.error(obs_type)
         if obs_type in ['comparison', 'object']:
-            numerator = self.get_energy_axis_function_refcoord_val(header)
+            numerator = header.get('CRVAL1')
             denominator = header.get('CDELT1')
         else:
             numerator = header.get('WAVELENG')
@@ -435,28 +600,10 @@ class Dao18MetreImage(Dao18Metre, Imaging):
         super().__init__()
 
 
-class Dao18MetreProcessedImage(Dao18MetreImage, Processed):
+class Dao18MetreProcessedImage(Dao18MetreImage, ProcessedImage):
 
     def __init__(self):
         super().__init__()
-
-    def get_position_function_cd11(self, header):
-        return header.get('CD1_1')
-
-    def get_position_function_cd12(self, header):
-        return header.get('CD1_2')
-
-    def get_position_function_cd21(self, header):
-        return header.get('CD2_1')
-
-    def get_position_function_cd22(self, header):
-        return header.get('CD2_2')
-
-    def get_position_function_coord1_pix(self, header):
-        return header.get('CRPIX1')
-
-    def get_position_function_coord2_pix(self, header):
-        return header.get('CRPIX2')
 
 
 class Dao18MetreSpectrum(Dao18Metre):
@@ -472,27 +619,15 @@ class Dao18MetreSpectrum(Dao18Metre):
         return header.get(f'NAXIS{dispaxis}')
 
 
-class Dao18MetreProcessedSpectrum(Dao18MetreSpectrum, Processed):
+class Dao18MetreProcessedSpectrum(Dao18MetreSpectrum, ProcessedSpectrum):
 
     def __init__(self):
         super().__init__()
 
-    def get_energy_axis_function_naxis(self, header):
-        return header.get('NAXIS1')
-
-    def get_energy_axis_function_naxis(self, header):
-        return header.get('NAXIS1')
-
-    def get_energy_axis_function_refcoord_pix(self, header):
-        return header.get('CRPIX1')
-
-    def get_energy_axis_function_refcoord_val(self, header):
-        return header.get('CRVAL1')
-
     def get_energy_resolving_power(self, header):
         obs_type = header.get('OBS_TYPE')
         if obs_type in ['comparison', 'object']:
-            numerator = self.get_energy_axis_function_refcoord_val(header)
+            numerator = header.get('CRVAL1')
             denominator = header.get('CDELT1')
         else:
             numerator = header.get('WAVELENG')

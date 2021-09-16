@@ -117,14 +117,6 @@ def get_artifact_product_type(header):
     return product_type
 
 
-def get_calibration_level(uri):
-    return telescopes.get_current(uri).get_calibration_level()
-
-
-def get_data_product_type(uri):
-    return telescopes.get_current(uri).get_data_product_type()
-
-
 def get_energy_axis_function_naxis(parameters):
     uri = parameters.get('uri')
     header = parameters.get('header')
@@ -240,28 +232,8 @@ def get_position_function_cd22(parameters):
     return telescopes.get_current(uri).get_position_function_cd22(header)
 
 
-def get_position_function_dimension_naxis1(params):
-    header = params.get('header')
-    uri = params.get('uri')
-    return telescopes.get_current(uri).get_position_function_dimension_naxis1(
-        header
-    )
-
-
-def get_position_function_dimension_naxis2(params):
-    header = params.get('header')
-    uri = params.get('uri')
-    return telescopes.get_current(uri).get_position_function_dimension_naxis2(
-        header
-    )
-
-
 def get_skycam_release_date(header):
     return ac.get_datetime(header.get('CLOCKVAL'))
-
-
-def get_target_type(uri):
-    return telescopes.get_current(uri).get_target_type()
 
 
 def get_telescope_name(uri):
@@ -333,11 +305,8 @@ def accumulate_bp(bp, uri):
     Observation level."""
     logging.debug('Begin accumulate_bp.')
     telescopes.factory(uri)
-    scheme, collection, f_name = mc.decompose_uri(uri)
-    if f_name.startswith('d'):
-        _accumulate_dao_bp(bp)
-    else:
-        _accumulate_skycam_bp(bp)
+    telescopes.get_current(uri).configure_axes(bp)
+    telescopes.get_current(uri).accumulate_bp(bp)
 
     meta_producer = mc.get_version(APPLICATION)
     bp.set('Observation.metaProducer', meta_producer)
@@ -376,165 +345,6 @@ def accumulate_bp(bp, uri):
         bp.set('CompositeObservation.members', 'get_members(header)')
         bp.add_fits_attribute('Observation.algorithm.name', 'PROCNAME')
     logging.debug('Done accumulate_bp.')
-
-
-def _accumulate_dao_bp(bp):
-    bp.configure_position_axes((1, 2))
-    bp.configure_time_axis(3)
-    bp.configure_energy_axis(4)
-    bp.configure_observable_axis(5)
-    bp.set('Observation.intent', 'get_obs_intent(header)')
-    bp.clear('Observation.metaRelease')
-    # from dao2caom2.config
-    bp.add_fits_attribute('Observation.metaRelease', 'DATE-OBS')
-
-    bp.set('Observation.target.type', 'get_target_type(uri)')
-    bp.clear('Observation.target.moving')
-    bp.set_default('Observation.target.moving', 'false')
-    bp.clear('Observation.target.standard')
-    bp.set_default('Observation.target.standard', 'false')
-
-    bp.clear('Observation.proposal.id')
-    bp.add_fits_attribute('Observation.proposal.id', 'DAOPRGID')
-    bp.clear('Observation.proposal.pi')
-    bp.add_fits_attribute('Observation.proposal.pi', 'PINAME')
-
-    bp.clear('Observation.environment.humidity')
-    bp.add_fits_attribute('Observation.environment.humidity', 'REL_HUMI')
-    bp.clear('Observation.environment.photometric')
-    bp.set_default('Observation.environment.photometric', 'false')
-
-    bp.set('Plane.dataProductType', 'get_data_product_type(uri)')
-    bp.set('Plane.calibrationLevel', 'get_calibration_level(uri)')
-    bp.clear('Plane.metaRelease')
-    # from dao2caom2.config
-    bp.add_fits_attribute('Plane.metaRelease', 'DATE-OBS')
-
-    bp.clear('Plane.provenance.lastExecuted')
-    bp.add_fits_attribute('Plane.provenance.lastExecuted', 'IRAF-TLM')
-    bp.set('Plane.provenance.project', 'DAO Science Archive')
-    bp.clear('Plane.provenance.name')
-    bp.add_fits_attribute('Plane.provenance.name', 'PROCNAME')
-    bp.set_default('Plane.provenance.name', 'DAO unprocessed data')
-    bp.set('Plane.provenance.producer', 'NRC Herzberg')
-    bp.set(
-        'Plane.provenance.reference',
-        'https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/dao/',
-    )
-    bp.clear('Plane.provenance.version')
-    bp.add_fits_attribute('Plane.provenance.version', 'PROCVERS')
-    bp.set_default('Plane.provenance.version', None)
-
-    bp.set('Artifact.productType', 'get_artifact_product_type(header)')
-    bp.set('Chunk.time.exposure', 'get_time_exposure(header)')
-    bp.set('Chunk.time.resolution', 'get_time_resolution(header)')
-
-    bp.set('Chunk.observable.axis.axis.ctype', 'FLUX')
-    bp.set('Chunk.observable.axis.axis.cunit', 'COUNTS')
-    bp.set('Chunk.observable.axis.function.refCoord.pix', 1)
-
-    bp.set(
-        'Chunk.energy.axis.function.delta',
-        'get_energy_axis_function_delta(parameters)',
-    )
-    bp.set(
-        'Chunk.energy.axis.function.naxis',
-        'get_energy_axis_function_naxis(parameters)',
-    )
-    bp.set(
-        'Chunk.energy.axis.function.refCoord.pix',
-        'get_energy_axis_function_refcoord_pix(parameters)',
-    )
-    bp.set(
-        'Chunk.energy.axis.function.refCoord.val',
-        'get_energy_axis_function_refcoord_val(parameters)',
-    )
-    bp.set(
-        'Chunk.energy.resolvingPower',
-        'get_energy_resolving_power(parameters)',
-    )
-    bp.clear('Chunk.energy.bandpassName')
-    bp.add_fits_attribute('Chunk.energy.bandpassName', 'FILTER')
-
-    bp.set('Chunk.position.axis.axis1.ctype', 'RA---TAN')
-    bp.set('Chunk.position.axis.axis2.ctype', 'DEC--TAN')
-    bp.set('Chunk.position.axis.axis1.cunit', 'deg')
-    bp.set('Chunk.position.axis.axis2.cunit', 'deg')
-    bp.set(
-        'Chunk.position.axis.function.dimension.naxis1',
-        'get_position_function_dimension_naxis1(params)',
-    )
-    bp.set(
-        'Chunk.position.axis.function.dimension.naxis2',
-        'get_position_function_dimension_naxis2(params)',
-    )
-    bp.set(
-        'Chunk.position.axis.function.refCoord.coord1.pix',
-        'get_position_function_coord1_pix(parameters)',
-    )
-    bp.set(
-        'Chunk.position.axis.function.refCoord.coord1.val',
-        'get_position_function_coord1_val(header)',
-    )
-    bp.set(
-        'Chunk.position.axis.function.refCoord.coord2.pix',
-        'get_position_function_coord2_pix(parameters)',
-    )
-    bp.set(
-        'Chunk.position.axis.function.refCoord.coord2.val',
-        'get_position_function_coord2_val(header)',
-    )
-    bp.set(
-        'Chunk.position.axis.function.cd11',
-        'get_position_function_cd11(parameters)',
-    )
-    bp.set(
-        'Chunk.position.axis.function.cd22',
-        'get_position_function_cd22(parameters)',
-    )
-    bp.set(
-        'Chunk.position.axis.function.cd12',
-        'get_position_function_cd12(parameters)',
-    )
-    bp.set(
-        'Chunk.position.axis.function.cd21',
-        'get_position_function_cd21(parameters)',
-    )
-
-
-def _accumulate_skycam_bp(bp):
-    # DB - 10-07-20
-    # https://github.com/opencadc-metadata-curation/dao2caom2/issues/10
-    bp.configure_time_axis(1)
-    bp.configure_observable_axis(2)
-    bp.configure_energy_axis(3)
-    bp.set('Observation.metaRelease', 'get_skycam_release_date(header)')
-    bp.set('Observation.intent', ObservationIntentType.CALIBRATION)
-    bp.set('Observation.instrument.name', 'Sky Camera')
-    bp.set('Plane.calibrationLevel', 1)
-    bp.set('Plane.dataProductType', DataProductType.IMAGE)
-    bp.set('Plane.dataRelease', 'get_skycam_release_date(header)')
-    bp.set('Plane.metaRelease', 'get_skycam_release_date(header)')
-    bp.set('Plane.provenance.project', 'DAO Science Archive')
-    bp.set(
-        'Plane.provenance.producer',
-        'NRC Herzberg Astronomy and Astrophysics Research Centre',
-    )
-    bp.set('Plane.provenance.name', 'DAO Sky Camera image')
-    bp.set(
-        'Plane.provenance.reference',
-        'https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/dao/',
-    )
-    bp.set('Artifact.productType', ProductType.CALIBRATION)
-
-    bp.set('Chunk.energy.axis.function.delta', 3000.0)
-    bp.set('Chunk.energy.axis.function.naxis', 1)
-    bp.set('Chunk.energy.axis.function.refCoord.pix', 0.5)
-    bp.set('Chunk.energy.axis.function.refCoord.val', 4000.0)
-    bp.set('Chunk.energy.resolvingPower', 5500.0 / 3000.0)
-
-    bp.add_fits_attribute('Chunk.time.exposure', 'EXPTIME')
-    bp.add_fits_attribute('Chunk.time.resolution', 'EXPTIME')
 
 
 def update(observation, **kwargs):
