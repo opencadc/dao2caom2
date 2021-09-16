@@ -82,6 +82,53 @@ __all__ = ['factory', 'get_current']
 class Telescope:
     """
     This class is the Spectrum implementation.
+
+    1. OBSMODE keyword => 'imaging' vs 'spectroscopy'
+    2. File name pattern
+
+    All energy is CTYPE = WAVE, CUNIT = A(ngstrom)
+    File Name Pattern
+    all imaging:                       CRVAL    'WAVELENG'
+                                       CDELT    'BANDPASS'
+                                       CRPIX    1
+                                       RP       CRVAL / CDELT
+
+    processed photographic plate spectrum
+    dao_[p]\d{3}_\d{6}(u|v|y|r|i|):
+                                       CRVAL   'CRVAL1'
+                                       CDELT   'CDELT1'
+                                       CRPIX   'CRPIX1'
+                                       RP      CRVAL/(2.5*CDELT)
+
+    unprocessed DAO RETICON spectrum
+    dao_[r]\d{3}_\d{4}_\d{6}:
+                                       CRVAL   ''
+                                       CDELT   ''
+                                       CRPIX   ''
+                                       RP      ''
+
+    unprocessed DAO CCD spectrum
+    dao_[c]\d{3}_\d{4}_\d{6}:
+                                       CRVAL   'WAVELENG'
+                                       CDELT   'DELTA_WL'
+                                       CRPIX   'REFPIXEL'
+                                       RP      CRVAL/(2.5*CDELT)
+
+                                       # DB 04-02-21
+                                       If no 'WAVELENG' no energy
+
+                                       CRVAL   'WAVELENG'
+                                       no `DELTA_WL', 'REFPIXEL'
+                                       CDELT   'DISPERSI' * 15.0 * xbin/1000.0
+                                       CRPIX   'DATASEC' + math
+
+    processed DAO spectrum
+    dao_[cr]\d{3}_\d{4}_\d{6}_[evBF], obs.type in ['object', 'comparison']:
+                                       CRVAL   'CRVAL1'
+                                       CDELT   'CDELT1'
+                                       CRPIX   'CRPIX1'
+                                       RP      CRVAL/(2.5*CDELT)
+
     """
     def __init__(self):
         self._uri = None
