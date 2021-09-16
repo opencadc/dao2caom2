@@ -142,8 +142,16 @@ class Telescope:
                         crpix = (int(yh) - int(yl)) / 2.0 + int(yl)
         return crpix
 
+    def get_energy_axis_function_refcoord_val(self, header):
+        return header.get('WAVELENG')
+
     def get_energy_axis_function_naxis(self, header):
         return 1
+
+    def get_energy_resolving_power(self, header):
+        numerator = self.get_energy_axis_function_refcoord_val(header)
+        denominator = self.get_energy_axis_function_delta(header)
+        return numerator / (2.5 * denominator)
 
     def get_geo(self):
         # DB 10-09-20
@@ -266,6 +274,11 @@ class Imaging(Telescope):
     def get_energy_axis_function_refcoord_pix(self, ignore_header):
         return 1.0
 
+    def get_energy_resolving_power(self, header):
+        wavelength = header.get('WAVELENG')
+        bandpass = header.get('BANDPASS')
+        return wavelength / bandpass
+
     def get_position_function_cd11(self, header):
         return self._get_position_by_scale_size_bin(header)
 
@@ -327,15 +340,6 @@ class Dao12MetreProcessedImage(Dao12MetreImage, Processed):
         return header.get('CRPIX2')
 
 
-class Dao12MetreProcessedSpectrum(Dao12Metre, Processed):
-
-    def __init__(self):
-        super().__init__()
-
-    def get_energy_axis_function_naxis(self, header):
-        return header.get('NAXIS1')
-
-
 class Dao12MetreSpectrum(Dao12Metre):
 
     def __init__(self):
@@ -347,6 +351,35 @@ class Dao12MetreSpectrum(Dao12Metre):
     def get_energy_axis_function_naxis(self, header):
         dispaxis = self._get_dispaxis(header)
         return header.get(f'NAXIS{dispaxis}')
+
+
+class Dao12MetreProcessedSpectrum(Dao12MetreSpectrum, Processed):
+
+    def __init__(self):
+        super().__init__()
+
+    def get_energy_axis_function_delta(self, header):
+        return header.get('CDELT1')
+
+    def get_energy_axis_function_naxis(self, header):
+        return header.get('NAXIS1')
+
+    def get_energy_axis_function_refcoord_pix(self, header):
+        return header.get('CRPIX1')
+
+    def get_energy_axis_function_refcoord_val(self, header):
+        return header.get('CRVAL1')
+
+    def get_energy_resolving_power(self, header):
+        obs_type = header.get('OBSTYPE')
+        self._logger.error(obs_type)
+        if obs_type in ['comparison', 'object']:
+            numerator = self.get_energy_axis_function_refcoord_val(header)
+            denominator = header.get('CDELT1')
+        else:
+            numerator = header.get('WAVELENG')
+            denominator = self.get_energy_axis_function_delta(header)
+        return numerator / (2.5 * denominator)
 
 
 class Dao18MetreImage(Dao18Metre, Imaging):
@@ -379,15 +412,6 @@ class Dao18MetreProcessedImage(Dao18MetreImage, Processed):
         return header.get('CRPIX2')
 
 
-class Dao18MetreProcessedSpectrum(Dao18Metre, Processed):
-
-    def __init__(self):
-        super().__init__()
-
-    def get_energy_axis_function_naxis(self, header):
-        return header.get('NAXIS1')
-
-
 class Dao18MetreSpectrum(Dao18Metre):
 
     def __init__(self):
@@ -399,6 +423,34 @@ class Dao18MetreSpectrum(Dao18Metre):
     def get_energy_axis_function_naxis(self, header):
         dispaxis = self._get_dispaxis(header)
         return header.get(f'NAXIS{dispaxis}')
+
+
+class Dao18MetreProcessedSpectrum(Dao18MetreSpectrum, Processed):
+
+    def __init__(self):
+        super().__init__()
+
+    def get_energy_axis_function_naxis(self, header):
+        return header.get('NAXIS1')
+
+    def get_energy_axis_function_naxis(self, header):
+        return header.get('NAXIS1')
+
+    def get_energy_axis_function_refcoord_pix(self, header):
+        return header.get('CRPIX1')
+
+    def get_energy_axis_function_refcoord_val(self, header):
+        return header.get('CRVAL1')
+
+    def get_energy_resolving_power(self, header):
+        obs_type = header.get('OBS_TYPE')
+        if obs_type in ['comparison', 'object']:
+            numerator = self.get_energy_axis_function_refcoord_val(header)
+            denominator = header.get('CDELT1')
+        else:
+            numerator = header.get('WAVELENG')
+            denominator = self.get_energy_axis_function_delta(header)
+        return numerator / (2.5 * denominator)
 
 
 # globally accessible pointer, placed here so they survive the

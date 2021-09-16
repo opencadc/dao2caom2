@@ -134,77 +134,31 @@ def get_energy_axis_function_naxis(parameters):
 def get_energy_axis_function_delta(parameters):
     uri = parameters.get('uri')
     header = parameters.get('header')
-    execution_path = _get_execution_path(parameters)
-    if execution_path is ExecutionPath.SPECT_CALIBRATED:
-        cdelt = header.get('CDELT1')
-    else:
-        cdelt = telescopes.get_current(uri).get_energy_axis_function_delta(
-            header
-        )
-    return cdelt
+    return telescopes.get_current(uri).get_energy_axis_function_delta(
+        header
+    )
 
 
 def get_energy_axis_function_refcoord_pix(parameters):
     uri = parameters.get('uri')
     header = parameters.get('header')
-    execution_path = _get_execution_path(parameters)
-    if execution_path is ExecutionPath.SPECT_CALIBRATED:
-        crpix = header.get('CRPIX1')
-    else:
-        crpix = telescopes.get_current(
-            uri
-        ).get_energy_axis_function_refcoord_pix(header)
-    return crpix
+    return telescopes.get_current(uri).get_energy_axis_function_refcoord_pix(
+        header
+    )
 
 
 def get_energy_axis_function_refcoord_val(parameters):
     header = parameters.get('header')
-    execution_path = _get_execution_path(parameters)
-    result = None
-    if execution_path in [ExecutionPath.IMAGING, ExecutionPath.SPECT_RAW]:
-        result = header.get('WAVELENG')
-    elif execution_path is ExecutionPath.SPECT_CALIBRATED:
-        result = header.get('CRVAL1')
-    return result
+    uri = parameters.get('uri')
+    return telescopes.get_current(uri).get_energy_axis_function_refcoord_val(
+        header
+    )
 
 
 def get_energy_resolving_power(parameters):
-    resolving_power = None
-    execution_path = _get_execution_path(parameters)
-    numerator = get_energy_axis_function_refcoord_val(parameters)
-    denominator = get_energy_axis_function_delta(parameters)
-    if numerator is not None and denominator is not None:
-        if execution_path is ExecutionPath.IMAGING:
-            resolving_power = numerator / denominator
-        elif execution_path in [
-            ExecutionPath.SPECT_RAW,
-            ExecutionPath.SPECT_CALIBRATED,
-        ]:
-            resolving_power = numerator / (2.5 * denominator)
-    return resolving_power
-
-
-class ExecutionPath(Enum):
-    IMAGING = (1,)
-    SPECT_CALIBRATED = (2,)
-    SPECT_RAW = 3
-
-
-def _get_execution_path(parameters):
     uri = parameters.get('uri')
     header = parameters.get('header')
-    obs_mode = _get_obs_mode(header)
-    obs_type = _get_obs_type(header)
-    if obs_mode == 'Imaging':
-        result = ExecutionPath.IMAGING
-    else:
-        result = ExecutionPath.SPECT_RAW
-        if dn.DAOName.is_processed(uri) and obs_type in [
-            'object',
-            'comparison',
-        ]:
-            result = ExecutionPath.SPECT_CALIBRATED
-    return result
+    return telescopes.get_current(uri).get_energy_resolving_power(header)
 
 
 def get_geo_x(uri):
