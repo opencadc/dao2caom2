@@ -157,9 +157,9 @@ class Telescope:
             'Chunk.energy.axis.function.refCoord.pix',
             'get_energy_axis_function_refcoord_pix(parameters)',
         )
-        bp.set(
-            'Chunk.energy.axis.function.refCoord.val',
-            'get_energy_axis_function_refcoord_val(parameters)',
+        bp.clear('Chunk.energy.axis.function.refCoord.val')
+        bp.add_fits_attribute(
+            'Chunk.energy.axis.function.refCoord.val', 'WAVELENG'
         )
 
         bp.set('Chunk.position.axis.function.dimension.naxis1', 1)
@@ -222,7 +222,7 @@ class Telescope:
         bp.add_fits_attribute('Plane.provenance.version', 'PROCVERS')
         bp.set_default('Plane.provenance.version', None)
 
-        bp.set('Artifact.productType', 'get_artifact_product_type(header)')
+        bp.set('Artifact.productType', 'get_artifact_product_type(parameters)')
         bp.set('Chunk.time.exposure', 'get_time_exposure(header)')
         bp.set('Chunk.time.resolution', 'get_time_resolution(header)')
 
@@ -304,14 +304,11 @@ class Telescope:
                         crpix = (int(yh) - int(yl)) / 2.0 + int(yl)
         return crpix
 
-    def get_energy_axis_function_refcoord_val(self, header):
-        return header.get('WAVELENG')
-
     def get_energy_axis_function_naxis(self, header):
         return 1
 
     def get_energy_resolving_power(self, header):
-        numerator = self.get_energy_axis_function_refcoord_val(header)
+        numerator = header.get('WAVELENG')
         denominator = self.get_energy_axis_function_delta(header)
         return numerator / (2.5 * denominator)
 
@@ -445,12 +442,18 @@ class Imaging(Telescope):
     def __init__(self):
         super().__init__()
 
+    def configure_axes(self, bp):
+        bp.configure_position_axes((1, 2))
+        bp.configure_time_axis(3)
+        bp.configure_energy_axis(4)
+
     def accumulate_bp(self, bp):
         super().accumulate_bp(bp)
         bp.set('Observation.target.type', TargetType.FIELD)
         bp.set('Plane.dataProductType', DataProductType.IMAGE)
         bp.clear('Chunk.energy.axis.function.delta')
         bp.add_fits_attribute('Chunk.energy.axis.function.delta', 'BANDPASS')
+        bp.set('Chunk.energy.axis.function.refCoord.pix', 1.0)
         bp.clear('Chunk.position.axis.function.dimension.naxis1')
         bp.add_fits_attribute(
             'Chunk.position.axis.function.dimension.naxis1', 'NAXIS1'
@@ -469,9 +472,6 @@ class Imaging(Telescope):
             result = platescale * pixsize * xbin / 3600000.0
         return result
 
-    def get_energy_axis_function_refcoord_pix(self, ignore_header):
-        return 1.0
-
     def get_energy_resolving_power(self, header):
         wavelength = header.get('WAVELENG')
         bandpass = header.get('BANDPASS')
@@ -488,12 +488,6 @@ class Imaging(Telescope):
 
     def get_position_function_coord2_pix(self, header):
         return header.get('NAXIS2') / 2.0
-
-
-class Processed(Telescope):
-
-    def __init__(self):
-        super().__init__()
 
 
 class ProcessedImage(Imaging):
@@ -522,7 +516,7 @@ class ProcessedImage(Imaging):
         )
 
 
-class ProcessedSpectrum(Processed):
+class ProcessedSpectrum(Telescope):
 
     def __init__(self):
         super().__init__()
@@ -649,11 +643,9 @@ def factory(uri):
     # from the file name only
     ignore_scheme, ignore_path, f_name = mc.decompose_uri(uri)
     if f_name.startswith('a'):
-        logging.error('skycam')
         result = SkyCam()
     else:
         defining_metadata = defining_metadata_finder.get(uri)
-        logging.error(defining_metadata)
         f_id = DAOName.remove_extensions(f_name)
         if defining_metadata.data_product_type == DataProductType.IMAGE:
             if (
@@ -662,20 +654,19 @@ def factory(uri):
             ):
                 if (
                     f_name.startswith('dao_c122') or
-                    f_name.startswith('dao_r122')
+                    f_name.startswith('dao_r122') or
+                    f_name.startswith('dao_p122')
                 ):
-                    logging.error('1.2m processed image')
                     result = Dao12MetreProcessedImage()
                 else:
-                    logging.error('1.8m processed image')
                     result = Dao18MetreProcessedImage()
             elif (
-                f_name.startswith('dao_c122') or f_name.startswith('dao_r122')
+                f_name.startswith('dao_c122') or
+                f_name.startswith('dao_r122') or
+                f_name.startswith('dao_p122')
             ):
-                logging.error('1.2m image')
                 result = Dao12MetreImage()
             else:
-                logging.error('1.8m image')
                 result = Dao18MetreImage()
         else:
             if (
@@ -684,20 +675,19 @@ def factory(uri):
             ):
                 if (
                     f_name.startswith('dao_c122') or
-                    f_name.startswith('dao_r122')
+                    f_name.startswith('dao_r122') or
+                    f_name.startswith('dao_p122')
                 ):
-                    logging.error('1.2m processed spectrum')
                     result = Dao12MetreProcessedSpectrum()
                 else:
-                    logging.error('1.8m processed spectrum')
                     result = Dao18MetreProcessedSpectrum()
             elif (
-                f_name.startswith('dao_c122') or f_name.startswith('dao_r122')
+                f_name.startswith('dao_c122') or
+                f_name.startswith('dao_r122') or
+                f_name.startswith('dao_p122')
             ):
-                logging.error('1.2m spectrum')
                 result = Dao12MetreSpectrum()
             else:
-                logging.error('1.8m spectrum')
                 result = Dao18MetreSpectrum()
 
     result.uri = uri

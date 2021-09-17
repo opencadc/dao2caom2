@@ -108,13 +108,10 @@ __all__ = ['dao_main_app', 'update', 'APPLICATION', 'to_caom2']
 APPLICATION = 'dao2caom2'
 
 
-def get_artifact_product_type(header):
-    obs_type = _get_obs_type(header)
-    if obs_type == 'object':
-        product_type = ProductType.SCIENCE
-    else:
-        product_type = ProductType.CALIBRATION
-    return product_type
+def get_artifact_product_type(parameters):
+    header = parameters.get('header')
+    uri = parameters.get('uri')
+    return telescopes.get_current(uri).get_artifact_product_type(header)
 
 
 def get_energy_axis_function_naxis(parameters):
@@ -305,6 +302,8 @@ def accumulate_bp(bp, uri):
     Observation level."""
     logging.debug('Begin accumulate_bp.')
     telescopes.factory(uri)
+    # for multi-planed/multi-artifact cases - ensure point to the
+    # correct instance
     telescopes.get_current(uri).configure_axes(bp)
     telescopes.get_current(uri).accumulate_bp(bp)
 
@@ -386,12 +385,6 @@ def update(observation, **kwargs):
                     if dao_name.file_name.startswith('d'):
                         if plane.data_product_type == DataProductType.SPECTRUM:
                             if (
-                                dn.DAOName.is_unprocessed_reticon(artifact.uri)
-                                or dn.DAOName.is_derived(artifact.uri)
-                                and observation.type == 'flat'
-                            ):
-                                cc.reset_energy(chunk)
-                            if (
                                 not artifact.product_type
                                 == ProductType.SCIENCE
                             ):
@@ -400,42 +393,15 @@ def update(observation, **kwargs):
                                     chunk.position_axis_2 = 4
                                 else:
                                     cc.reset_position(chunk)
-                                # no energy for calibration?
-                                if observation.type not in [
-                                    'flat',
-                                    'comparison',
-                                    'dark',
-                                ]:
-                                    cc.reset_energy(chunk)
-                            # DB 04-03-21
-                            #  If WAVELENG isn’t present (for unprocessed
-                            #  spectra) then all energy metadata should be
-                            #  ignored
-                            if (
-                                not dn.DAOName.is_processed(artifact.uri)
-                                and headers[0].get('WAVELENG') is None
-                            ):
-                                cc.reset_energy(chunk)
                         else:  # DataProductType.IMAGE
                             if dn.DAOName.override_provenance(artifact.uri):
                                 plane.provenance.producer = 'Spaceguard_C'
-                            # no observable axis when image
-                            cc.reset_observable(chunk)
-                            if (
-                                artifact.product_type
-                                == ProductType.CALIBRATION
-                            ):
-                                if observation.type != 'dark':
-                                    cc.reset_position(chunk)
-                                if observation.type not in ['flat', 'dark']:
-                                    cc.reset_energy(chunk)
-
                         if (
                             chunk.energy is not None
                             and not dn.DAOName.is_processed(artifact.uri)
                             and headers[0].get('WAVELENG') is None
                         ):
-                            # DB 16-02-21
+                            # DB 16-02-21/04-03-21
                             #  If WAVELENG isn’t present then all energy
                             #  metadata should be ignored (spectra and images)
                             cc.reset_energy(chunk)
@@ -453,15 +419,15 @@ def update(observation, **kwargs):
                         # the fits header and so the order could be preserved;
                         # in general do not assign the 3 and 4.
 
-                        chunk.energy_axis = None
-                        chunk.observable_axis = None
-                        chunk.time_axis = None
                         naxis = headers[0].get('NAXIS')
                         naxis1 = headers[0].get('NAXIS1')
                         naxis2 = headers[0].get('NAXIS2')
                         chunk.naxis = None
                         chunk.position_axis_1 = None
                         chunk.position_axis_2 = None
+                        chunk.energy_axis = None
+                        chunk.observable_axis = None
+                        chunk.time_axis = None
                         if naxis is not None:
                             if (
                                 naxis1 is not None
@@ -681,6 +647,8 @@ def _get_uris(args):
 
 def to_caom2():
     args = get_gen_proc_arg_parser().parse_args()
+    # only need the telescopes instances for this invocation
+    telescopes.current = {}
     uris = _get_uris(args)
     blueprints = _build_blueprints(uris)
     return gen_proc(args, blueprints)
