@@ -92,20 +92,32 @@ class DAOVaultDataSource(dsc.VaultDataSource):
         self._work = []
         self._logger = logging.getLogger(self.__class__.__name__)
 
-    def clean_up(self):
+    def clean_up(self, entry):
+        """
+        Move a file to the success or failure location, depending on whether
+        a file with the same checksum is at CADC.
+
+        :param entry:
+        """
         if self._cleanup_when_storing:
-            for fqn in self._work:
-                check_result, vos_meta = self._check_md5sum(fqn)
-                if check_result:
-                    # if vos_meta is None, it's already been cleaned up,
-                    # due to astropy fits verify failure cleanup
-                    if vos_meta is not None:
-                        # the transfer itself failed, so track as a failure
-                        self._move_action(
-                            fqn, self._cleanup_failure_directory
-                        )
-                else:
-                    self._move_action(fqn, self._cleanup_success_directory)
+            self._logger.debug(f'Begin clean_up with {entry}')
+            if isinstance(entry, str):
+                fqn = entry
+            else:
+                fqn = entry.entry_name
+            self._logger.debug(f'Clean up f{fqn}')
+            check_result, vos_meta = self._check_md5sum(fqn)
+            if check_result:
+                # if vos_meta is None, it's already been cleaned up,
+                # due to astropy fits verify failure cleanup
+                if vos_meta is not None:
+                    # the transfer itself failed, so track as a failure
+                    self._move_action(
+                        fqn, self._cleanup_failure_directory
+                    )
+            else:
+                self._move_action(fqn, self._cleanup_success_directory)
+            self._logger.debug('End clean_up.')
 
     def default_filter(self, entry, entry_fqn):
         copy_file = False

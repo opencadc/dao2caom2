@@ -196,7 +196,8 @@ def test_data_source_exists():
     test_vos_client.status.side_effect = _status
 
     # test execution
-    test_subject.clean_up()
+    for entry in test_subject._work:
+        test_subject.clean_up(entry)
     assert test_vos_client.status.called, 'expect status call'
     assert test_vos_client.delete.called, 'expect delete call'
     test_vos_client.delete.assert_called_with(

@@ -67,6 +67,9 @@
 # ***********************************************************************
 #
 
+import warnings
+from astropy.utils.exceptions import AstropyUserWarning
+
 from cadcdata import FileInfo
 from dao2caom2 import main_app, APPLICATION, COLLECTION, DAOName
 from dao2caom2 import metadata, telescopes
@@ -95,6 +98,7 @@ def pytest_generate_tests(metafunc):
 
 @patch('caom2utils.data_util.StorageClientWrapper')
 def test_main_app(data_client_mock, test_name):
+    warnings.simplefilter('ignore', category=AstropyUserWarning)
     config = mc.Config()
     config.use_local_files = True
     config.data_sources = [TEST_DATA_DIR]

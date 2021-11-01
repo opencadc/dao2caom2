@@ -88,7 +88,6 @@ import traceback
 
 from astropy.coordinates import SkyCoord, FK5
 import astropy.units as u
-from enum import Enum
 
 from caom2 import Observation, TargetType, DataProductType, ProductType
 from caom2 import ObservationIntentType, CalibrationLevel, TypedSet, PlaneURI

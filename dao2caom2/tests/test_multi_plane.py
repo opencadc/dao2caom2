@@ -72,6 +72,7 @@ import traceback
 
 from dao2caom2 import main_app, APPLICATION, COLLECTION, DAOName
 from dao2caom2 import metadata, telescopes
+from caom2pipe import astro_composable as ac
 from caom2pipe import manage_composable as mc
 
 import os
@@ -101,8 +102,10 @@ def pytest_generate_tests(metafunc):
     metafunc.parametrize('test_name', obs_id_list)
 
 
+@patch('caom2utils.data_util.get_local_headers_from_fits')
 @patch('caom2utils.data_util.StorageClientWrapper')
-def test_multi_plane(data_client_mock, test_name):
+def test_multi_plane(data_client_mock, local_headers_mock, test_name):
+    local_headers_mock.side_effect = ac.make_headers_from_file
     config = mc.Config()
     config.use_local_files = True
     config.data_sources = [f'{test_main_app.TEST_DATA_DIR}/processed']
