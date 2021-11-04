@@ -96,7 +96,6 @@ from caom2utils import ObsBlueprint, get_gen_proc_arg_parser, gen_proc
 from caom2pipe import astro_composable as ac
 from caom2pipe import caom_composable as cc
 from caom2pipe import manage_composable as mc
-from caom2pipe import name_builder_composable as nbc
 from dao2caom2 import dao_name as dn
 from dao2caom2 import telescopes
 

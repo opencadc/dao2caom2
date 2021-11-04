@@ -533,6 +533,9 @@ class ProcessedSpectrum(Telescope):
     def accumulate_bp(self, bp):
         super().accumulate_bp(bp)
         bp.set('Plane.calibrationLevel', CalibrationLevel.CALIBRATED)
+        if DAOName.is_derived(self.uri):
+            # original dao2caom2.py, l392, l400
+            bp.set('Observation.target.type', None)
         bp.clear('Chunk.energy.axis.function.delta')
         bp.add_fits_attribute('Chunk.energy.axis.function.delta', 'CDELT1')
         bp.clear('Chunk.energy.axis.function.naxis')

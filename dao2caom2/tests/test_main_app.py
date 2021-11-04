@@ -73,7 +73,7 @@ from astropy.utils.exceptions import AstropyUserWarning
 from cadcdata import FileInfo
 from caom2 import DataProductType
 from dao2caom2 import main_app, APPLICATION, COLLECTION, DAOName
-from dao2caom2 import metadata, telescopes
+from dao2caom2 import metadata, telescopes, PRODUCT_COLLECTION
 from caom2pipe import astro_composable as ac
 from caom2pipe import manage_composable as mc
 
@@ -93,7 +93,7 @@ def pytest_generate_tests(metafunc):
         files = [
             os.path.join(TEST_DATA_DIR, name)
             for name in os.listdir(TEST_DATA_DIR)
-            if (name.endswith('header') or name.endswith('.fits'))
+            if name.endswith('header')
         ]
     metafunc.parametrize('test_name', files)
 
@@ -117,13 +117,16 @@ def test_main_app(
     data_client_mock.return_value.info.side_effect = _get_file_info
     basename = os.path.basename(test_name)
     dao_name = DAOName(basename.replace('.header', '.gz'))
+    collection = (
+        PRODUCT_COLLECTION if DAOName.is_processed(test_name) else COLLECTION
+    )
 
-    obs_path = f'{TEST_DATA_DIR}/{dao_name.obs_id}.expected.xml'
-    output_file = f'{TEST_DATA_DIR}/{dao_name.obs_id}.actual.xml'
+    obs_path = f'{TEST_DATA_DIR}/{dao_name.file_id}.expected.xml'
+    output_file = f'{TEST_DATA_DIR}/{dao_name.file_id}.actual.xml'
 
     sys.argv = (
         f'{APPLICATION} --no_validate --local {test_name} '
-        f'--observation {COLLECTION} {dao_name.obs_id} -o {output_file} '
+        f'--observation {collection} {dao_name.obs_id} -o {output_file} '
         f'--plugin {PLUGIN} --module {PLUGIN} --lineage '
         f'{dao_name.lineage}'
     ).split()
@@ -131,10 +134,7 @@ def test_main_app(
     try:
         main_app.to_caom2()
     except Exception as e:
-        import logging
-        import traceback
-
-        logging.error(traceback.format_exc())
+        assert False, e
 
     compare_result = mc.compare_observations(output_file, obs_path)
     if compare_result is not None:

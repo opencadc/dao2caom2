@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <caom2:Observation xmlns:caom2="http://www.opencadc.org/caom2/xml/v2.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="caom2:DerivedObservation" caom2:id="00000000-0000-0000-89e5-016647254001" caom2:lastModified="2018-10-06T02:12:04.283" caom2:maxLastModified="2018-10-06T02:12:04.283" caom2:metaChecksum="md5:b542a893bac2c8b99e7c27ab0e9a9152" caom2:accMetaChecksum="md5:515a5c15d5289d0fa5a897a5326b70ea" caom2:metaProducer="dao2caom2/0.3.1">
-  <caom2:collection>DAO</caom2:collection>
+  <caom2:collection>DAOCADC</caom2:collection>
   <caom2:observationID>dao_c182_2017_005498_B</caom2:observationID>
   <caom2:metaRelease>2017-05-28T11:42:58.000</caom2:metaRelease>
   <caom2:algorithm>
