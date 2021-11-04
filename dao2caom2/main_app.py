@@ -339,7 +339,7 @@ def accumulate_bp(bp, uri):
 
     # derived observations
     if dn.DAOName.is_derived(uri):
-        bp.set('CompositeObservation.members', 'get_members(header)')
+        bp.set('DerivedObservation.members', 'get_members(header)')
         bp.add_fits_attribute('Observation.algorithm.name', 'PROCNAME')
     logging.debug('Done accumulate_bp.')
 
