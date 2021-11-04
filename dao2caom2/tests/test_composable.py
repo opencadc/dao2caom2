@@ -73,6 +73,14 @@ import test_main_app
 from mock import Mock, patch
 from dao2caom2 import composable, dao_name, COLLECTION
 
+F_NAME_LIST = [
+    'data_report.txt',
+    'failure_log.txt',
+    'rejected.yml',
+    'retries.txt',
+    'success_log.txt',
+]
+
 
 @patch('cadcutils.net.ws.WsCapabilities.get_access_url')
 @patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
@@ -106,13 +114,7 @@ def test_run(run_mock, access_mock):
         os.getcwd = getcwd_orig
         # clean up the summary report text file
         # clean up the files created as a by-product of a run
-        for f_name in [
-            'data_report.txt',
-            'failure_log.txt',
-            'rejected.yml',
-            'retries.txt',
-            'success_log.txt',
-        ]:
+        for f_name in F_NAME_LIST:
             fqn = os.path.join(test_main_app.TEST_DATA_DIR, f_name)
             if os.path.exists(fqn):
                 os.unlink(fqn)
@@ -163,13 +165,7 @@ def test_run_vo(run_mock, vo_client_mock, access_mock):
         os.getcwd = getcwd_orig
         # clean up the summary report text file
         # clean up the files created as a by-product of a run
-        for f_name in [
-            'data_report.txt',
-            'failure_log.txt',
-            'rejected.yml',
-            'retries.txt',
-            'success_log.txt',
-        ]:
+        for f_name in F_NAME_LIST:
             fqn = os.path.join(test_main_app.TEST_DATA_DIR, f_name)
             if os.path.exists(fqn):
                 os.unlink(fqn)
