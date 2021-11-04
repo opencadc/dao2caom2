@@ -71,8 +71,10 @@ import warnings
 from astropy.utils.exceptions import AstropyUserWarning
 
 from cadcdata import FileInfo
+from caom2 import DataProductType
 from dao2caom2 import main_app, APPLICATION, COLLECTION, DAOName
 from dao2caom2 import metadata, telescopes
+from caom2pipe import astro_composable as ac
 from caom2pipe import manage_composable as mc
 
 from mock import patch, Mock
@@ -96,9 +98,15 @@ def pytest_generate_tests(metafunc):
     metafunc.parametrize('test_name', files)
 
 
+@patch('caom2utils.data_util.get_local_headers_from_fits')
+@patch('dao2caom2.metadata.DefiningMetadataFinder.check_local')
 @patch('caom2utils.data_util.StorageClientWrapper')
-def test_main_app(data_client_mock, test_name):
+def test_main_app(
+    data_client_mock, local_headers_mock, util_headers_mock, test_name
+):
     warnings.simplefilter('ignore', category=AstropyUserWarning)
+    local_headers_mock.side_effect = _local_headers
+    util_headers_mock.side_effect = ac.make_headers_from_file
     config = mc.Config()
     config.use_local_files = True
     config.data_sources = [TEST_DATA_DIR]
@@ -108,7 +116,7 @@ def test_main_app(data_client_mock, test_name):
 
     data_client_mock.return_value.info.side_effect = _get_file_info
     basename = os.path.basename(test_name)
-    dao_name = DAOName(file_name=basename.replace('.header', '.gz'))
+    dao_name = DAOName(basename.replace('.header', '.gz'))
 
     obs_path = f'{TEST_DATA_DIR}/{dao_name.obs_id}.expected.xml'
     output_file = f'{TEST_DATA_DIR}/{dao_name.obs_id}.actual.xml'
@@ -137,3 +145,14 @@ def test_main_app(data_client_mock, test_name):
 def _get_file_info(file_id):
     return FileInfo(id=file_id, file_type='application/fits')
 
+
+def _local_headers(uri):
+    ign1, ign2, f_name = mc.decompose_uri(uri)
+    headers = ac.make_headers_from_file(
+        f'{TEST_DATA_DIR}/{f_name.replace(".gz", ".header")}'
+    )
+    temp = headers[0].get('OBSMODE')
+    dpt = (
+        DataProductType.SPECTRUM if '-slit' in temp else DataProductType.IMAGE
+    )
+    return metadata.DefiningMetadata(dpt, uri)

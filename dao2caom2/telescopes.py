@@ -319,7 +319,10 @@ class Telescope:
         return ac.get_location(48.519497, -123.416502, 210.0)
 
     def get_position_function_cd11(self, header):
-        return (-1) * self.get_position_function_cd22(header)
+        result = self.get_position_function_cd22(header)
+        if result is not None:
+            result = (-1) * result
+        return result
 
     def get_position_function_cd12(self, header):
         return self.get_position_function_cd21(header)
@@ -578,7 +581,6 @@ class Dao12MetreProcessedSpectrum(Dao12MetreSpectrum, ProcessedSpectrum):
 
     def get_energy_resolving_power(self, header):
         obs_type = header.get('OBSTYPE')
-        self._logger.error(obs_type)
         if obs_type in ['comparison', 'object']:
             numerator = header.get('CRVAL1')
             denominator = header.get('CDELT1')

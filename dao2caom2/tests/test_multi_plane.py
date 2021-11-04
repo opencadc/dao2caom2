@@ -71,7 +71,7 @@ import logging
 import traceback
 
 from dao2caom2 import main_app, APPLICATION, COLLECTION, DAOName
-from dao2caom2 import metadata, telescopes
+from dao2caom2 import metadata, telescopes, PRODUCT_COLLECTION
 from caom2pipe import astro_composable as ac
 from caom2pipe import manage_composable as mc
 
@@ -113,7 +113,7 @@ def test_multi_plane(data_client_mock, local_headers_mock, test_name):
     dmf = metadata.DefiningMetadataFinder(Mock(), config)
     telescopes.defining_metadata_finder = dmf
 
-    dao_name = DAOName(file_name=f'{LOOKUP[test_name][0]}.fits')
+    dao_name = DAOName(f'{LOOKUP[test_name][0]}.fits')
     lineage = _get_lineage(dao_name.obs_id)
     expected_fqn = (
         f'{test_main_app.TEST_DATA_DIR}/{DIR_NAME}/'
@@ -153,8 +153,11 @@ def test_multi_plane(data_client_mock, local_headers_mock, test_name):
 def _get_lineage(obs_id):
     result = ''
     for ii in LOOKUP[obs_id]:
+        collection = COLLECTION
+        if DAOName.is_processed(ii):
+            collection = PRODUCT_COLLECTION
         fits = mc.get_lineage(
-            COLLECTION, mc.StorageName.remove_extensions(ii), ii
+            collection, mc.StorageName.remove_extensions(ii), ii
         )
         result = f'{result} {fits}'
     return result

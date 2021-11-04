@@ -31,11 +31,10 @@
       </caom2:provenance>
       <caom2:artifacts>
         <caom2:artifact caom2:id="dbd168ca-2a13-45f3-bb7f-a16d039bbf26" caom2:metaProducer="dao2caom2/0.3.1">
-          <caom2:uri>ad:DAO/a2020_06_26_06_50_01.fits</caom2:uri>
+          <caom2:uri>ad:DAO/a2020_06_26_06_50_01.fits.gz</caom2:uri>
           <caom2:productType>calibration</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>
-          <caom2:contentLength>2494080</caom2:contentLength>
           <caom2:contentChecksum>md5:3cfbf0636541698741a87a94eedbff43</caom2:contentChecksum>
           <caom2:parts>
             <caom2:part caom2:id="5ade3e44-191a-4d05-963f-3079aa1930c5">

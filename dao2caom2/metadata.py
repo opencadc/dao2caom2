@@ -107,7 +107,7 @@ class DefiningMetadataFinder:
         data_product_type = DataProductType.IMAGE
         if '-slit' in obs_mode:
             data_product_type = DataProductType.SPECTRUM
-        self._logger.debug('End check_remote')
+        self._logger.debug('End _get_data_product_type')
         return data_product_type
 
     def check_caom2(self, uri):
@@ -134,7 +134,7 @@ class DefiningMetadataFinder:
             fqn = join(entry, f_name)
             if exists(fqn):
                 self._logger.debug(f'Looking in {fqn} for headers.')
-                headers = data_util.get_local_file_headers(fqn)
+                headers = data_util.get_local_headers_from_fits(fqn)
                 result = DefiningMetadata(
                     self._get_data_product_type(headers), uri
                 )

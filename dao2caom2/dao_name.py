@@ -75,10 +75,11 @@ from urllib.parse import urlparse
 
 from caom2pipe import manage_composable as mc
 
-__all__ = ['COLLECTION', 'DAOName']
+__all__ = ['COLLECTION', 'DAOName', 'PRODUCT_COLLECTION']
 
 
 COLLECTION = 'DAO'
+PRODUCT_COLLECTION = 'DAOCADC'
 
 
 class DAOName(mc.StorageName):
@@ -88,53 +89,42 @@ class DAOName(mc.StorageName):
     - uncompressed product files have an extension added to the input
       names - lower case if there's a single input, upper case if there's
       multiple inputs, as far as I can tell right now.
+
+    DB 2-11-21
+    Processed observation IDs are the same raw observation IDs, even though
+    the collections are different. That way, if someone just searches for a
+    specific observation ID but doesn’t specify the collection then they
+    will see both the unprocessed and processed dataset (if it exists) listed
+    in the results page.
     """
 
     DAO_NAME_PATTERN = '*'
 
     def __init__(
         self,
-        url=None,
-        file_name=None,
-        uri=None,
         entry=None,
     ):
-        if uri is not None:
-            scheme, archive, file_name = mc.decompose_uri(uri)
-            self._file_name = file_name
-        elif file_name is not None:
-            self._file_name = file_name.replace('.header', '')
-        elif url is not None:
-            temp = urlparse(url)
-            self._file_name = basename(temp.path)
+        self._file_name = mc.CaomName.extract_file_name(entry).replace(
+            '.header', ''
+        )
         obs_id = DAOName.get_obs_id(self._file_name)
         file_id = mc.StorageName.remove_extensions(self._file_name)
+        self._collection = (
+            PRODUCT_COLLECTION if DAOName.is_processed(entry) else COLLECTION
+        )
         super(DAOName, self).__init__(
             obs_id,
-            COLLECTION,
+            self._collection,
             DAOName.DAO_NAME_PATTERN,
             self._file_name,
             entry=entry,
             compression='',
         )
         self._file_id = file_id
-        if entry is None:
-            self._source_names = [self._file_name]
-        else:
-            self._source_names = [entry]
+        self._source_names = [entry]
         self._destination_uris = [self.file_uri]
         self._logger = logging.getLogger(__name__)
         self._logger.debug(self)
-
-    def __str__(self):
-        return (
-            f'\n'
-            f'          obs id: {self._obs_id}\n'
-            f'       file name: {self.file_name}\n'
-            f'         file id: {self._file_id}\n'
-            f'    source names: {self.source_names}\n'
-            f'destination uris: {self.destination_uris}\n'
-        )
 
     @property
     def file_id(self):
@@ -182,24 +172,22 @@ class DAOName(mc.StorageName):
     def is_derived(entry):
         # entry is a uri
         result = False
-        if re.match('ad:DAO/dao_[c]\\d{3}_\\d{4}_\\d{6}_[BF].\\w', entry):
+        if re.match('ad:DAOCADC/dao_[c]\\d{3}_\\d{4}_\\d{6}_[BF].\\w', entry):
             result = True
         return result
 
     @staticmethod
     def is_master_bias(entry):
-        # entry is an obs uri
-        return entry.endswith('_B')
+        return '_B' in entry
 
     @staticmethod
     def is_master_flat(entry):
-        # entry is an obs id
-        return entry.endswith('_F')
+        return '_F' in entry
 
     @staticmethod
     def is_processed(entry):
-        # the entry is a uri
-        file_id = mc.CaomName(entry).file_id
+        file_name = mc.CaomName.extract_file_name(entry)
+        file_id = DAOName.remove_extensions(file_name)
         result = False
         if re.match(
             'dao_[cr]\\d{3}_\\d{4}_\\d{6}_[aevBF]', file_id
@@ -209,8 +197,8 @@ class DAOName(mc.StorageName):
 
     @staticmethod
     def is_unprocessed_reticon(entry):
-        # the entry is a uri
-        file_id = mc.CaomName(entry).file_id
+        file_name = mc.CaomName.extract_file_name(entry)
+        file_id = DAOName.remove_extensions(file_name)
         result = False
         if re.match('dao_[r]\\d{3}_\\d{4}_\\d{6}', file_id):
             result = True
@@ -220,6 +208,6 @@ class DAOName(mc.StorageName):
     def override_provenance(entry):
         # entry is a uri
         result = False
-        if re.match('ad:DAO/dao_[c]\\d{3}_\\d{4}_\\d{6}_[aBF].\\w', entry):
+        if re.match('ad:DAOCADC/dao_[c]\\d{3}_\\d{4}_\\d{6}_[aBF].\\w', entry):
             result = True
         return result

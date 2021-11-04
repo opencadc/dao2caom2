@@ -89,8 +89,8 @@ import traceback
 from astropy.coordinates import SkyCoord, FK5
 import astropy.units as u
 
-from caom2 import Observation, TargetType, DataProductType, ProductType
-from caom2 import ObservationIntentType, CalibrationLevel, TypedSet, PlaneURI
+from caom2 import Observation, DataProductType, ProductType
+from caom2 import ObservationIntentType, TypedSet, PlaneURI
 from caom2 import ObservationURI
 from caom2utils import ObsBlueprint, get_gen_proc_arg_parser, gen_proc
 from caom2pipe import astro_composable as ac
@@ -360,9 +360,9 @@ def update(observation, **kwargs):
     uri = kwargs.get('uri')
     dao_name = None
     if uri is not None:
-        dao_name = dn.DAOName(uri=uri)
-    if fqn is not None:
-        dao_name = dn.DAOName(file_name=os.path.basename(fqn))
+        dao_name = dn.DAOName(uri)
+    if fqn is not None and dao_name is None:
+        dao_name = dn.DAOName(os.path.basename(fqn))
 
     if dao_name is None:
         raise mc.CadcException(
@@ -384,17 +384,39 @@ def update(observation, **kwargs):
                     if dao_name.file_name.startswith('d'):
                         if plane.data_product_type == DataProductType.SPECTRUM:
                             if (
-                                not artifact.product_type
-                                == ProductType.SCIENCE
+                                dn.DAOName.is_unprocessed_reticon(artifact.uri)
+                                or dn.DAOName.is_derived(artifact.uri)
+                                and observation.type == 'flat'
+                            ):
+                                cc.reset_energy(chunk)
+                            if (
+                                artifact.product_type != ProductType.SCIENCE
                             ):
                                 if observation.type == 'dark':
                                     chunk.position_axis_1 = 3
                                     chunk.position_axis_2 = 4
                                 else:
                                     cc.reset_position(chunk)
+                                # no energy for calibration?
+                                if observation.type not in [
+                                    'flat',
+                                    'comparison',
+                                    'dark',
+                                ]:
+                                    cc.reset_energy(chunk)
                         else:  # DataProductType.IMAGE
                             if dn.DAOName.override_provenance(artifact.uri):
                                 plane.provenance.producer = 'Spaceguard_C'
+                            # no observable axis when image
+                            cc.reset_observable(chunk)
+                            if (
+                                    artifact.product_type
+                                    == ProductType.CALIBRATION
+                            ):
+                                if observation.type != 'dark':
+                                    cc.reset_position(chunk)
+                                if observation.type not in ['flat', 'dark']:
+                                    cc.reset_energy(chunk)
                         if (
                             chunk.energy is not None
                             and not dn.DAOName.is_processed(artifact.uri)
@@ -510,7 +532,7 @@ def _repair_provenance_value(value, obs_id):
     # ZERO_18 = 'dao_c122_2016_012728.fits'
     # ZERO_19 = 'dao_c122_2016_012729.fits'
     # ZERO_20 = 'dao_c122_2016_012730.fits'
-    dao_name = dn.DAOName(file_name=value)
+    dao_name = dn.DAOName(value)
     prov_prod_id = dao_name.product_id
     prov_obs_id = dao_name.obs_id
     logging.debug(f'End _repair_provenance_value')
@@ -568,13 +590,13 @@ def _update_plane_provenance(observation, plane, headers):
     if observation.type in ['object', 'flat', 'comparison']:
         f_name = headers[0].get('BIAS')
         if f_name is not None:
-            bias_name = dn.DAOName(file_name=f_name)
+            bias_name = dn.DAOName(f_name)
             plane_uri = _make_uris(bias_name.obs_id, bias_name.product_id)
             plane.provenance.inputs.add(plane_uri)
     if observation.type in ['object', 'comparison']:
         f_name = headers[0].get('FLAT')
         if f_name is not None:
-            flat_name = dn.DAOName(file_name=f_name)
+            flat_name = dn.DAOName(f_name)
             plane_uri = _make_uris(flat_name.obs_id, flat_name.product_id)
             plane.provenance.inputs.add(plane_uri)
         # referral to raw plane
@@ -585,15 +607,13 @@ def _update_plane_provenance(observation, plane, headers):
     if observation.type == 'object':
         f_name = headers[0].get('DCLOG1')
         if f_name is not None:
-            ref_spec1_name = dn.DAOName(file_name=f_name.split()[2])
+            ref_spec1_name = dn.DAOName(f_name.split()[2])
             plane_uri = _make_uris(
                 ref_spec1_name.obs_id, ref_spec1_name.product_id
             )
             plane.provenance.inputs.add(plane_uri)
         if headers[0].get('DCLOG2') is not None:
-            ref_spec1_name = dn.DAOName(
-                file_name=headers[0].get('DCLOG2').split()[2]
-            )
+            ref_spec1_name = dn.DAOName(headers[0].get('DCLOG2').split()[2])
             plane_uri = _make_uris(
                 ref_spec1_name.obs_id, ref_spec1_name.product_id
             )
@@ -635,9 +655,8 @@ def _get_uris(args):
             ignore, uri = mc.decompose_lineage(ii)
             result.append(uri)
     elif args.local:
-        builder = nbc.GuessingBuilder(dn.DAOName)
         for ii in args.local:
-            dao_name = builder.build(ii)
+            dao_name = dn.DAOName(ii)
             result.append(dao_name.file_uri)
     else:
         raise mc.CadcException(f'Could not define uri from these args {args}')

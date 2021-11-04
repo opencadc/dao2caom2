@@ -146,7 +146,7 @@ def test_visit():
             f'{test_main_app.TEST_DATA_DIR}/previews/{key}'
         )
         for f_name in value:
-            test_name = dao_name.DAOName(file_name=f_name)
+            test_name = dao_name.DAOName(f_name)
             kwargs['storage_name'] = test_name
 
             try:
