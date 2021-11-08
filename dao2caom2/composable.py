@@ -102,7 +102,12 @@ def _common():
         clients, config
     )
     telescopes.defining_metadata_finder = defining_metadata_finder
-    return config, clients
+    files_source = None
+    if config.use_local_files and config.cleanup_files_when_storing:
+        files_source = dsc.UseLocalFilesDataSource(
+            config, clients.data_client, config.recurse_data_sources
+        )
+    return config, clients, files_source
 
 
 def _run():
@@ -112,7 +117,7 @@ def _run():
     :return 0 if successful, -1 if there's any sort of failure. Return status
         is used by airflow for task instance management and reporting.
     """
-    config, clients = _common()
+    config, clients, files_source = _common()
     name_builder = nbc.EntryBuilder(dao_name.DAOName)
     return rc.run_by_todo(
         name_builder=name_builder,
@@ -121,6 +126,7 @@ def _run():
         data_visitors=DATA_VISITORS,
         clients=clients,
         config=config,
+        source=files_source,
     )
 
 
@@ -143,7 +149,7 @@ def _run_vo():
     :return 0 if successful, -1 if there's any sort of failure. Return status
         is used by airflow for task instance management and reporting.
     """
-    config, clients = _common()
+    config, clients, ignore_files_source = _common()
     vos_client = Client(vospace_certfile=config.proxy_file_name)
     name_builder = nbc.EntryBuilder(dao_name.DAOName)
     source = data_source.DAOVaultDataSource(
@@ -177,8 +183,7 @@ def _run_state():
     """Uses a state file with a timestamp to control which entries will be
     processed.
     """
-    config, clients = _common()
-    source = dsc.QueryTimeBoxDataSourceTS(config, preview_suffix='png')
+    config, clients, files_source = _common()
     name_builder = nbc.EntryBuilder(dao_name.DAOName)
     return rc.run_by_state(
         name_builder=name_builder,
@@ -186,7 +191,7 @@ def _run_state():
         bookmark_name=DAO_BOOKMARK,
         meta_visitors=META_VISITORS,
         data_visitors=DATA_VISITORS,
-        source=source,
+        source=files_source,
         clients=clients,
     )
 
