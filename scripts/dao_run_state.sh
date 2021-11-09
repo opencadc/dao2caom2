@@ -10,7 +10,7 @@ echo "Get a proxy certificate"
 cp $HOME/.ssl/cadcproxy.pem ./ || exit $?
 
 echo "Run image ${IMAGE}"
-docker run --rm --name ${COLLECTION}_run -v ${PWD}:/usr/src/app/ ${IMAGE} ${COLLECTION}_run_state || exit $?
+docker run --rm --name ${COLLECTION}_run  --user $(id -u):$(id -g) -e HOME=/usr/src/app -v ${PWD}:/usr/src/app/ ${IMAGE} ${COLLECTION}_run_state || exit $?
 
 date
 exit 0

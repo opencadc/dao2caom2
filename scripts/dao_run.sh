@@ -10,7 +10,7 @@ echo "Get image ${IMAGE}"
 docker pull ${IMAGE} || exit $?
 
 echo "Run image ${IMAGE}"
-docker run --rm --name ${COLLECTION}_run -v ${PWD}:/usr/src/app/ ${IMAGE} ${COLLECTION}_run || exit $?
+docker run --rm --name ${COLLECTION}_run --user $(id -u):$(id -g) -e HOME=/usr/src/app -v /data:/data -v ${PWD}:/usr/src/app/ ${IMAGE} ${COLLECTION}_run || exit $?
 
 date
 exit 0
