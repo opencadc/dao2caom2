@@ -11,7 +11,6 @@ RUN pip install cadcdata \
     caom2 \
     caom2repo \
     caom2utils \
-    ftputil \
     importlib-metadata \
     python-dateutil \
     PyYAML \
