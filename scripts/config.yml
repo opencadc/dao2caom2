@@ -35,7 +35,7 @@ use_local_files: True
 # length 1. If use local_files is set to True, it may be set to 
 # the same value as the working_directory.
 data_sources:
-  - data
+  - /data
 # specify a list of the file extensions to be recognized for
 # processing by the pipeline. e.g. '.fits', '.fits.fz', '.hdf5'
 data_source_extensions:
