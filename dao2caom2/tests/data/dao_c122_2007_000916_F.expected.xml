@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <caom2:Observation xmlns:caom2="http://www.opencadc.org/caom2/xml/v2.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="caom2:DerivedObservation" caom2:id="00000000-0000-0000-55f7-0158ad605b5b" caom2:lastModified="2017-11-10T18:35:21.377" caom2:maxLastModified="2017-11-10T18:35:21.377" caom2:metaChecksum="md5:db18a995ac6f67e3681a8d8ef50fc022" caom2:accMetaChecksum="md5:cb8a9e422cb5dcd9aa9f0c3d189bc74e" caom2:metaProducer="dao2caom2/0.3.1">
-  <caom2:collection>DAO</caom2:collection>
+  <caom2:collection>DAOCADC</caom2:collection>
   <caom2:observationID>dao_c122_2007_000916_F</caom2:observationID>
   <caom2:metaRelease>2007-01-25T22:17:08.000</caom2:metaRelease>
   <caom2:algorithm>
@@ -10,7 +10,6 @@
   <caom2:intent>calibration</caom2:intent>
   <caom2:target>
     <caom2:name>FLAT</caom2:name>
-    <caom2:type>object</caom2:type>
     <caom2:standard>false</caom2:standard>
     <caom2:moving>false</caom2:moving>
   </caom2:target>
@@ -58,7 +57,7 @@
       </caom2:provenance>
       <caom2:artifacts>
         <caom2:artifact caom2:id="00000000-0000-0000-55f7-0158ad60671e" caom2:lastModified="2017-11-10T18:35:21.377" caom2:maxLastModified="2017-11-10T18:35:21.377" caom2:metaChecksum="md5:9459f4901f96a75e672d107e0360a138" caom2:accMetaChecksum="md5:682010c2e7572d169d486db601fd025e" caom2:metaProducer="dao2caom2/0.3.1">
-          <caom2:uri>ad:DAO/dao_c122_2007_000916_F.fits.gz</caom2:uri>
+          <caom2:uri>ad:DAOCADC/dao_c122_2007_000916_F.fits.gz</caom2:uri>
           <caom2:productType>calibration</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>

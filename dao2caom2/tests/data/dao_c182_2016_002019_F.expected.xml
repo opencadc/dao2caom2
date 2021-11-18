@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <caom2:Observation xmlns:caom2="http://www.opencadc.org/caom2/xml/v2.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="caom2:DerivedObservation" caom2:id="00000000-0000-0000-1d5d-0158ad60b27c" caom2:lastModified="2017-11-10T18:35:42.370" caom2:maxLastModified="2017-11-10T18:35:42.370" caom2:metaChecksum="md5:01d5e346cb5d5dc1c9af6d3104cb8a33" caom2:accMetaChecksum="md5:ad17d911a04afba7229dceb7d9f48fc3" caom2:metaProducer="dao2caom2/0.3.1">
-  <caom2:collection>DAO</caom2:collection>
+  <caom2:collection>DAOCADC</caom2:collection>
   <caom2:observationID>dao_c182_2016_002019_F</caom2:observationID>
   <caom2:metaRelease>2016-06-04T04:49:04.000</caom2:metaRelease>
   <caom2:algorithm>
@@ -64,7 +64,7 @@
       </caom2:provenance>
       <caom2:artifacts>
         <caom2:artifact caom2:id="00000000-0000-0000-1d5d-0158ad60beb5" caom2:lastModified="2017-11-10T18:35:42.370" caom2:maxLastModified="2017-11-10T18:35:42.370" caom2:metaChecksum="md5:f3db39333dc34f8f098efb9d8b44942e" caom2:accMetaChecksum="md5:12a49f0ba751bcdd118aed2d4236e899" caom2:metaProducer="dao2caom2/0.3.1">
-          <caom2:uri>ad:DAO/dao_c182_2016_002019_F.fits.gz</caom2:uri>
+          <caom2:uri>ad:DAOCADC/dao_c182_2016_002019_F.fits.gz</caom2:uri>
           <caom2:productType>calibration</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>

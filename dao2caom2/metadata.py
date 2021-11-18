@@ -3,7 +3,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2019.                            (c) 2019.
+#  (c) 2021.                            (c) 2021.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -62,106 +62,107 @@
 #  <http://www.gnu.org/licenses/>.      pas le cas, consultez :
 #                                       <http://www.gnu.org/licenses/>.
 #
-#  $Revision: 4 $
+#  : 4 $
 #
 # ***********************************************************************
 #
-import logging
-import pytest
 
-from dao2caom2 import main_app, APPLICATION, COLLECTION, DAOName
+import logging
+
+from dataclasses import dataclass
+from os.path import exists, join
+
+from caom2utils import data_util
+from caom2 import DataProductType
+from caom2pipe import client_composable as clc
 from caom2pipe import manage_composable as mc
 
-import os
-import sys
-
-from mock import patch
-import test_main_app
-
-# THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-# TEST_DATA_DIR = os.path.join(THIS_DIR, 'data')
-# PLUGIN = os.path.join(os.path.dirname(THIS_DIR), 'main_app.py')
-
-# structured by observation id, list of file ids that make up a multi-plane
-# observation
-DIR_NAME = 'processed'
-LOOKUP = {
-    'dao_c122_2007_000882': ['dao_c122_2007_000882_v.fits.gz'],
-    'dao_c122_2007_000881': [
-        'dao_c122_2007_000881.fits.gz',
-        'dao_c122_2007_000881_e.fits',
-    ],
-    'dao_c182_2016_004034': [
-        'dao_c182_2016_004034.fits.gz',
-        'dao_c182_2016_004034_a.fits',
-    ],
-}
+__all__ = ['DefiningMetadata', 'DefiningMetadataFinder']
 
 
-def pytest_generate_tests(metafunc):
-    obs_id_list = LOOKUP.keys()
-    metafunc.parametrize('test_name', obs_id_list)
+@dataclass
+class DefiningMetadata:
+    """The metadata that is required to know 'what to do next' for
+    ingesting a file.
+
+    The data_product_type changes the rules for most metadata calculation.
+    """
+    data_product_type: DataProductType
+    uri: str
 
 
-@patch('caom2utils.data_util.StorageClientWrapper')
-def test_multi_plane(data_client_mock, test_name):
-    dao_name = DAOName(file_name=f'{LOOKUP[test_name][0]}.fits')
-    lineage = _get_lineage(dao_name.obs_id)
-    expected_fqn = (
-        f'{test_main_app.TEST_DATA_DIR}/{DIR_NAME}/'
-        f'{dao_name.obs_id}.expected.xml'
-    )
-    actual_fqn = (
-        f'{test_main_app.TEST_DATA_DIR}/{DIR_NAME}/'
-        f'{dao_name.obs_id}.actual.xml'
-    )
+class DefiningMetadataFinder:
+    def __init__(self, clients, config):
+        self._clients = clients
+        self._data_sources = config.data_sources
+        self._use_local_files = config.use_local_files
+        self._connected = mc.TaskType.SCRAPE not in config.task_types
+        self._logger = logging.getLogger(self.__class__.__name__)
 
-    local = _get_local(test_name)
-    plugin = test_main_app.PLUGIN
+    def _get_data_product_type(self, headers):
+        obs_mode = headers[0].get('OBSMODE')
+        # DB 30-04-20
+        # I added an obsmodes hash to allow it to be imaging or Imaging but
+        # all should be 'Imaging'.
+        data_product_type = DataProductType.IMAGE
+        if '-slit' in obs_mode:
+            data_product_type = DataProductType.SPECTRUM
+        self._logger.debug('End _get_data_product_type')
+        return data_product_type
 
-    data_client_mock.return_value.info.side_effect = (
-        test_main_app._get_file_info
-    )
+    def check_caom2(self, uri):
+        self._logger.debug(f'Begin check_caom2 for {uri}')
+        query_string = f"""
+        SELECT P.dataProductType
+        FROM caom2.Observation AS O
+        JOIN caom2.Plane AS P on P.obsID = O.obsID
+        JOIN caom2.Artifact AS A on A.planeID = P.planeID
+        WHERE A.uri = '{uri}' 
+        """
+        table = clc.query_tap_client(query_string, self._clients.query_client)
+        result = None
+        if len(table) == 1:
+            result = DefiningMetadata(table[0]['dataProductType'], uri)
+        self._logger.debug('End check_caom2')
+        return result
 
-    if os.path.exists(actual_fqn):
-        os.remove(actual_fqn)
+    def check_local(self, uri):
+        self._logger.debug(f'Begin check_local for {uri}')
+        ignore_scheme, ignore_path, f_name = mc.decompose_uri(uri)
+        result = None
+        for entry in self._data_sources:
+            fqn = join(entry, f_name)
+            if exists(fqn):
+                self._logger.debug(f'Looking in {fqn} for headers.')
+                headers = data_util.get_local_headers_from_fits(fqn)
+                result = DefiningMetadata(
+                    self._get_data_product_type(headers), uri
+                )
+                break
+        self._logger.debug('End check_local')
+        return result
 
-    sys.argv = (
-        f'{APPLICATION} --quiet --no_validate --local {local} '
-        f'--observation {COLLECTION} {dao_name.obs_id} '
-        f'--plugin {plugin} --module {plugin} --out {actual_fqn} '
-        f'--lineage {lineage}'
-    ).split()
-    print(sys.argv)
-    try:
-        main_app.to_caom2()
-    except Exception as e:
-        import logging
-        import traceback
+    def check_remote(self, uri):
+        self._logger.debug(f'Begin check_remote for {uri}')
+        headers = self._clients.data_client.get_head(uri)
+        data_product_type = self._get_data_product_type(headers)
+        self._logger.debug('End check_remote')
+        return DefiningMetadata(data_product_type, uri)
 
-        logging.error(traceback.format_exc())
-
-    compare_result = mc.compare_observations(actual_fqn, expected_fqn)
-    if compare_result is not None:
-        raise AssertionError(compare_result)
-    # assert False  # cause I want to see logging messages
-
-
-def _get_lineage(obs_id):
-    result = ''
-    for ii in LOOKUP[obs_id]:
-        fits = mc.get_lineage(
-            COLLECTION, mc.StorageName.remove_extensions(ii), ii
-        )
-        result = f'{result} {fits}'
-    return result
-
-
-def _get_local(obs_id):
-    result = ''
-    for ii in LOOKUP[obs_id]:
-        result = (
-            f'{result} {test_main_app.TEST_DATA_DIR}/{DIR_NAME}/'
-            f'{mc.StorageName.remove_extensions(ii)}.fits.header'
-        )
-    return result
+    def get(self, uri):
+        """
+        :param uri: str CADC storage reference
+        :return: DefiningMetadata, if it can be found by a service, for the
+           uri.
+        """
+        if self._connected:
+            result = None
+            if self._use_local_files:
+                result = self.check_local(uri)
+            if result is None:
+                result = self.check_caom2(uri)
+            if result is None:
+                result = self.check_remote(uri)
+        else:
+            result = self.check_local(uri)
+        return result

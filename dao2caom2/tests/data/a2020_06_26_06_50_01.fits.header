@@ -1,0 +1,18 @@
+# HDU 0 in a2020_06_26_06_50_01.fits:
+SIMPLE  =                    T /                                                
+BITPIX  =                   16 /                                                
+NAXIS   =                    2 /                                                
+NAXIS1  =                 1292 /                                                
+NAXIS2  =                  964 /                                                
+BSCALE  =                  1.0 /                                                
+BZERO   =                    0 /                                                
+OBSERVAT= 'DAO'                / Location                                       
+DETECTOR='Manta_G-125B'        / Detector identification                        
+CAMERAID=              5001154 / Unique ID                                      
+PIXSIZE =                 3.75 / Pixel size, microns                            
+XBIN    =                    1 /                                                
+YBIN    =                    1 /                                                
+EXPTIME =             5.000000 /                                                
+CLOCKVAL=       1593154199.329 / Seconds since 00:00:00 January 1, 1970 GMT     
+GAIN    =                    0 /                                                
+OFFSET  =                    0 /                                                

@@ -77,9 +77,9 @@ from caom2pipe import data_source_composable as dsc
 from caom2pipe import manage_composable as mc
 
 
-class DAOVaultDataSource(dsc.VaultListDirDataSource):
-    def __init__(self, config, vo_client, cadc_client, recursive=True):
-        super(DAOVaultDataSource, self).__init__(vo_client, config)
+class DAOVaultDataSource(dsc.VaultDataSource):
+    def __init__(self, config, vault_client, cadc_client, recursive=True):
+        super(DAOVaultDataSource, self).__init__(vault_client, config)
         self._cleanup_when_storing = config.cleanup_files_when_storing
         self._cleanup_failure_directory = config.cleanup_failure_destination
         self._cleanup_success_directory = config.cleanup_success_destination
@@ -92,20 +92,32 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
         self._work = []
         self._logger = logging.getLogger(self.__class__.__name__)
 
-    def clean_up(self):
+    def clean_up(self, entry):
+        """
+        Move a file to the success or failure location, depending on whether
+        a file with the same checksum is at CADC.
+
+        :param entry:
+        """
         if self._cleanup_when_storing:
-            for fqn in self._work:
-                check_result, vos_meta = self._check_md5sum(fqn)
-                if check_result:
-                    # if vos_meta is None, it's already been cleaned up,
-                    # due to astropy fits verify failure cleanup
-                    if vos_meta is not None:
-                        # the transfer itself failed, so track as a failure
-                        self._move_action(
-                            fqn, self._cleanup_failure_directory
-                        )
-                else:
-                    self._move_action(fqn, self._cleanup_success_directory)
+            self._logger.debug(f'Begin clean_up with {entry}')
+            if isinstance(entry, str):
+                fqn = entry
+            else:
+                fqn = entry.entry_name
+            self._logger.debug(f'Clean up f{fqn}')
+            check_result, vos_meta = self._check_md5sum(fqn)
+            if check_result:
+                # if vos_meta is None, it's already been cleaned up,
+                # due to astropy fits verify failure cleanup
+                if vos_meta is not None:
+                    # the transfer itself failed, so track as a failure
+                    self._move_action(
+                        fqn, self._cleanup_failure_directory
+                    )
+            else:
+                self._move_action(fqn, self._cleanup_success_directory)
+            self._logger.debug('End clean_up.')
 
     def default_filter(self, entry, entry_fqn):
         copy_file = False
@@ -137,7 +149,7 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
     def _check_md5sum(self, entry_fqn):
         # get the metadata from VOS
         result = True
-        vos_meta = clc.vault_info(self._vo_client, entry_fqn)
+        vos_meta = clc.vault_info(self._vault_client, entry_fqn)
         # get the metadata at CADC
         f_name = basename(entry_fqn)
         scheme = 'cadc' if self._supports_latest_client else 'ad'
@@ -151,10 +163,10 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
         return result, vos_meta
 
     def _find_work(self, entry):
-        dir_listing = self._vo_client.listdir(entry)
+        dir_listing = self._vault_client.listdir(entry)
         for dir_entry in dir_listing:
             dir_entry_fqn = f'{entry}/{dir_entry}'
-            if self._vo_client.isdir(dir_entry_fqn) and self._recursive:
+            if self._vault_client.isdir(dir_entry_fqn) and self._recursive:
                 self._find_work(dir_entry_fqn)
             else:
                 if self.default_filter(dir_entry, dir_entry_fqn):
@@ -173,17 +185,17 @@ class DAOVaultDataSource(dsc.VaultListDirDataSource):
                 f_name = basename(fqn)
                 dest_fqn = join(destination, f_name)
                 try:
-                    if self._vo_client.status(dest_fqn):
+                    if self._vault_client.status(dest_fqn):
                         # vos: doesn't support over-write
                         self._logger.warning(
                             f'Removing {dest_fqn} prior to over-write.'
                         )
-                        self._vo_client.delete(dest_fqn)
+                        self._vault_client.delete(dest_fqn)
                 except exceptions.NotFoundException as not_found_e:
                     # do thing, since the node doesn't exist
                     pass
                 self._logger.warning(f'Moving {fqn} to {dest_fqn}')
-                self._vo_client.move(fqn, dest_fqn)
+                self._vault_client.move(fqn, dest_fqn)
             except Exception as e:
                 self._logger.debug(traceback.format_exc())
                 self._logger.error(

@@ -85,12 +85,29 @@ from caom2pipe import manage_composable as mc
 from caom2pipe import run_composable as rc
 from dao2caom2 import APPLICATION, dao_name, preview_augmentation
 from dao2caom2 import cleanup_augmentation, data_source, transfer
+from dao2caom2 import metadata, telescopes
 
 DAO_BOOKMARK = 'dao_timestamp'
 
 
 META_VISITORS = [cleanup_augmentation]
 DATA_VISITORS = [preview_augmentation]
+
+
+def _common():
+    config = mc.Config()
+    config.get_executors()
+    clients = clc.ClientCollection(config)
+    defining_metadata_finder = metadata.DefiningMetadataFinder(
+        clients, config
+    )
+    telescopes.defining_metadata_finder = defining_metadata_finder
+    files_source = None
+    if config.use_local_files and config.cleanup_files_when_storing:
+        files_source = dsc.UseLocalFilesDataSource(
+            config, clients.data_client, config.recurse_data_sources
+        )
+    return config, clients, files_source
 
 
 def _run():
@@ -100,12 +117,16 @@ def _run():
     :return 0 if successful, -1 if there's any sort of failure. Return status
         is used by airflow for task instance management and reporting.
     """
-    name_builder = nbc.GuessingBuilder(dao_name.DAOName)
+    config, clients, files_source = _common()
+    name_builder = nbc.EntryBuilder(dao_name.DAOName)
     return rc.run_by_todo(
         name_builder=name_builder,
         command_name=APPLICATION,
         meta_visitors=META_VISITORS,
         data_visitors=DATA_VISITORS,
+        clients=clients,
+        config=config,
+        source=files_source,
     )
 
 
@@ -128,11 +149,9 @@ def _run_vo():
     :return 0 if successful, -1 if there's any sort of failure. Return status
         is used by airflow for task instance management and reporting.
     """
-    config = mc.Config()
-    config.get_executors()
-    clients = clc.ClientCollection(config)
+    config, clients, ignore_files_source = _common()
     vos_client = Client(vospace_certfile=config.proxy_file_name)
-    name_builder = nbc.GuessingBuilder(dao_name.DAOName)
+    name_builder = nbc.EntryBuilder(dao_name.DAOName)
     source = data_source.DAOVaultDataSource(
         config, vos_client, clients.data_client, recursive=False
     )
@@ -164,17 +183,16 @@ def _run_state():
     """Uses a state file with a timestamp to control which entries will be
     processed.
     """
-    config = mc.Config()
-    config.get_executors()
-    source = dsc.QueryTimeBoxDataSourceTS(config, preview_suffix='png')
-    name_builder = nbc.GuessingBuilder(dao_name.DAOName)
+    config, clients, files_source = _common()
+    name_builder = nbc.EntryBuilder(dao_name.DAOName)
     return rc.run_by_state(
         name_builder=name_builder,
         command_name=APPLICATION,
         bookmark_name=DAO_BOOKMARK,
         meta_visitors=META_VISITORS,
         data_visitors=DATA_VISITORS,
-        source=source,
+        source=files_source,
+        clients=clients,
     )
 
 
