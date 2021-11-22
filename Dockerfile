@@ -57,8 +57,8 @@ COPY --from=builder /usr/local/bin/* /usr/local/bin/
 COPY --from=builder /usr/share/misc/magic /usr/share/misc/magic
 COPY --from=builder /etc/magic /etc/magic
 COPY --from=builder /etc/magic.mime /etc/magic.mime
-
 COPY --from=builder /usr/lib/x86_64-linux-gnu/libmagic* /usr/lib/x86_64-linux-gnu/
+
 COPY --from=builder /usr/bin/convert /usr/bin/convert
 COPY --from=builder /usr/lib/x86_64-linux-gnu/libMagick* /usr/lib/x86_64-linux-gnu/
 COPY --from=builder /usr/lib/x86_64-linux-gnu/liblcms* /usr/lib/x86_64-linux-gnu/

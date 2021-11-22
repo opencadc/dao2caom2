@@ -15,8 +15,8 @@ store_modified_files_only: True
 # to the cleanup_failure_destination when the transfer fails, or the
 # file fails FITS verification.
 cleanup_files_when_storing: True
-cleanup_success_destination: vos:DAO/Archive/Incoming/success
-cleanup_failure_destination: vos:DAO/Archive/Incoming/failure
+cleanup_success_destination: /data/success
+cleanup_failure_destination: /data/failure
 # - modifies entries on sc2.canfar.net
 # operational value is ivo://cadc.nrc.ca/ams
 resource_id: ivo://cadc.nrc.ca/ams
@@ -29,13 +29,13 @@ todo_file_name: todo.txt
 # when True, the application will look for files with
 # .fits, .gz, .json endings as defining the work to be 
 # done.
-use_local_files: False
+use_local_files: True
 # Specify locations in which
 # to search for files. This is a YAML list. It may be a list of
 # length 1. If use local_files is set to True, it may be set to 
 # the same value as the working_directory.
 data_sources:
-  - vos:DAO/Archive/Incoming
+  - /data
 # specify a list of the file extensions to be recognized for
 # processing by the pipeline. e.g. '.fits', '.fits.fz', '.hdf5'
 data_source_extensions:
@@ -106,4 +106,3 @@ task_types:
   - modify
 features:
   supports_latest_client: False
-  supports_multiple_files: False
