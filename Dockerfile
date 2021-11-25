@@ -54,10 +54,14 @@ WORKDIR /usr/src/app
 
 COPY --from=builder /usr/local/lib/python3.9/site-packages/ /usr/local/lib/python3.9/site-packages/
 COPY --from=builder /usr/local/bin/* /usr/local/bin/
-COPY --from=builder /usr/share/misc/magic /usr/share/misc/magic
+
 COPY --from=builder /etc/magic /etc/magic
 COPY --from=builder /etc/magic.mime /etc/magic.mime
 COPY --from=builder /usr/lib/x86_64-linux-gnu/libmagic* /usr/lib/x86_64-linux-gnu/
+COPY --from=builder /usr/lib/file/magic.mgc /usr/lib/file/
+COPY --from=builder /usr/share/misc/magic /usr/share/misc/magic
+COPY --from=builder /usr/share/misc/magic.mgc /usr/share/misc/magic.mgc
+COPY --from=builder /usr/share/file/magic.mgc /usr/share/file/magic.mgc
 
 COPY --from=builder /usr/bin/convert /usr/bin/convert
 COPY --from=builder /usr/lib/x86_64-linux-gnu/libMagick* /usr/lib/x86_64-linux-gnu/
