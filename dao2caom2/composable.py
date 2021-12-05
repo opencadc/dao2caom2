@@ -85,12 +85,12 @@ from caom2pipe import manage_composable as mc
 from caom2pipe import run_composable as rc
 from dao2caom2 import APPLICATION, dao_name, preview_augmentation
 from dao2caom2 import cleanup_augmentation, data_source, transfer
-from dao2caom2 import metadata, telescopes
+from dao2caom2 import metadata, telescopes, fits2caom2_augmentation
 
 DAO_BOOKMARK = 'dao_timestamp'
 
 
-META_VISITORS = [cleanup_augmentation]
+META_VISITORS = [fits2caom2_augmentation, cleanup_augmentation]
 DATA_VISITORS = [preview_augmentation]
 
 
