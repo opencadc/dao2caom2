@@ -74,7 +74,7 @@ from caom2pipe import caom_composable as cc
 from caom2pipe import manage_composable as mc
 from caom2utils import ObsBlueprint, GenericParser, FitsParser
 from caom2utils import update_artifact_meta_no_client
-from dao2caom2 import telescopes, DAOName, COLLECTION
+from dao2caom2 import telescopes, dao_name
 
 
 class Fits2caom2Visitor:
@@ -136,8 +136,8 @@ class Fits2caom2Visitor:
                         if self._storage_name.file_name.startswith('d'):
                             if plane.data_product_type == DataProductType.SPECTRUM:
                                 if (
-                                        DAOName.is_unprocessed_reticon(artifact.uri)
-                                        or DAOName.is_derived(artifact.uri)
+                                        dao_name.DAOName.is_unprocessed_reticon(artifact.uri)
+                                        or dao_name.DAOName.is_derived(artifact.uri)
                                         and self._observation.type == 'flat'
                                 ):
                                     cc.reset_energy(chunk)
@@ -157,7 +157,7 @@ class Fits2caom2Visitor:
                                     ]:
                                         cc.reset_energy(chunk)
                             else:  # DataProductType.IMAGE
-                                if DAOName.override_provenance(artifact.uri):
+                                if dao_name.DAOName.override_provenance(artifact.uri):
                                     plane.provenance.producer = 'Spaceguard_C'
                                 # no observable axis when image
                                 cc.reset_observable(chunk)
@@ -171,7 +171,7 @@ class Fits2caom2Visitor:
                                         cc.reset_energy(chunk)
                             if (
                                     chunk.energy is not None
-                                    and not DAOName.is_processed(artifact.uri)
+                                    and not dao_name.DAOName.is_processed(artifact.uri)
                                     and headers[0].get('WAVELENG') is None
                             ):
                                 # DB 16-02-21/04-03-21
@@ -245,7 +245,7 @@ class Fits2caom2Visitor:
                     plane,
                     headers,
                     'FLAT_',
-                    COLLECTION,
+                    'DAO',  # TODO
                     _repair_provenance_value,
                     self._observation.observation_id,
                 )
@@ -254,12 +254,12 @@ class Fits2caom2Visitor:
                     plane,
                     headers,
                     'ZERO_',
-                    COLLECTION,
+                    'DAO',  # TODO
                     _repair_provenance_value,
                     self._observation.observation_id,
                 )
 
-            if DAOName.is_processed(self._storage_name.file_uri):
+            if dao_name.DAOName.is_processed(self._storage_name.file_uri):
                 self._update_plane_provenance(plane, headers)
 
             if cc.is_composite(headers, 'FLAT_') or cc.is_composite(
@@ -317,34 +317,34 @@ class Fits2caom2Visitor:
         if self._observation.type in ['object', 'flat', 'comparison']:
             f_name = headers[0].get('BIAS')
             if f_name is not None:
-                bias_name = DAOName(f_name)
+                bias_name = dao_name.DAOName(f_name)
                 ignore, plane_uri = cc.make_plane_uri(bias_name.obs_id, bias_name.product_id,
-                    COLLECTION)
+                    'DAO')  # TODO
                 plane.provenance.inputs.add(plane_uri)
         if self._observation.type in ['object', 'comparison']:
             f_name = headers[0].get('FLAT')
             if f_name is not None:
-                flat_name = DAOName(f_name)
+                flat_name = dao_name.DAOName(f_name)
                 ignore, plane_uri = cc.make_plane_uri(flat_name.obs_id, flat_name.product_id,
-                    COLLECTION)
+                    'DAO')  # TODO
                 plane.provenance.inputs.add(plane_uri)
             # referral to raw plane
             ignore, plane_uri = cc.make_plane_uri(
                 self._observation.observation_id, self._observation.observation_id,
-                COLLECTION,
+                'DAO',  # TODO
             )
             plane.provenance.inputs.add(plane_uri)
         if self._observation.type == 'object':
             f_name = headers[0].get('DCLOG1')
             if f_name is not None:
-                ref_spec1_name = DAOName(f_name.split()[2])
+                ref_spec1_name = dao_name.DAOName(f_name.split()[2])
                 ignore, plane_uri = cc.make_plane_uri(
                     ref_spec1_name.obs_id, ref_spec1_name.product_id,
-                    COLLECTION,
+                    'DAO', # TODO
                 )
                 plane.provenance.inputs.add(plane_uri)
             if headers[0].get('DCLOG2') is not None:
-                ref_spec1_name = DAOName(headers[0].get('DCLOG2').split()[2])
+                ref_spec1_name = dao_name.DAOName(headers[0].get('DCLOG2').split()[2])
                 ignore, plane_uri = cc.make_plane_uri(
                     ref_spec1_name.obs_id, ref_spec1_name.product_id
                 )
@@ -365,7 +365,7 @@ def _repair_provenance_value(value, obs_id):
     # ZERO_18 = 'dao_c122_2016_012728.fits'
     # ZERO_19 = 'dao_c122_2016_012729.fits'
     # ZERO_20 = 'dao_c122_2016_012730.fits'
-    dao_name = DAOName(value)
+    dao_name = dao_name.DAOName(value)
     prov_prod_id = dao_name.product_id
     prov_obs_id = dao_name.obs_id
     logging.debug(f'End _repair_provenance_value')
