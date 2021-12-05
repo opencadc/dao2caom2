@@ -824,7 +824,7 @@ def factory_client(uri, headers):
     # from the file name only
     ignore_scheme, ignore_path, f_name = mc.decompose_uri(uri)
     if f_name.startswith('a'):
-        result = SkyCam(heaaders)
+        result = SkyCam(headers)
     else:
         # defining_metadata = defining_metadata_finder.get(uri)
         f_id = DAOName.remove_extensions(f_name)
