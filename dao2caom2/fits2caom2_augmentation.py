@@ -340,7 +340,7 @@ class Fits2caom2Visitor:
                 ref_spec1_name = dao_name.DAOName(f_name.split()[2])
                 ignore, plane_uri = cc.make_plane_uri(
                     ref_spec1_name.obs_id, ref_spec1_name.product_id,
-                    'DAO', # TODO
+                    'DAO',  # TODO
                 )
                 plane.provenance.inputs.add(plane_uri)
             if headers[0].get('DCLOG2') is not None:
@@ -365,9 +365,9 @@ def _repair_provenance_value(value, obs_id):
     # ZERO_18 = 'dao_c122_2016_012728.fits'
     # ZERO_19 = 'dao_c122_2016_012729.fits'
     # ZERO_20 = 'dao_c122_2016_012730.fits'
-    dao_name = dao_name.DAOName(value)
-    prov_prod_id = dao_name.product_id
-    prov_obs_id = dao_name.obs_id
+    dn = dao_name.DAOName(value)
+    prov_prod_id = dn.product_id
+    prov_obs_id = dn.obs_id
     logging.debug(f'End _repair_provenance_value')
     return prov_obs_id, prov_prod_id
 
