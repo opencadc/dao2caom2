@@ -74,10 +74,11 @@ from caom2 import CalibrationLevel, DataProductType, TargetType, ProductType
 from caom2 import ObservationIntentType
 from caom2pipe import astro_composable as ac
 from caom2pipe import manage_composable as mc
-from dao2caom2.dao_name import  DAOName
+from dao2caom2.dao_name import DAOName
+from dao2caom2.metadata import DefiningMetadataFinder
 
 
-__all__ = ['factory', 'get_current']
+__all__ = ['factory', 'factory_client']
 
 
 class Telescope:
@@ -131,12 +132,13 @@ class Telescope:
                                        RP      CRVAL/(2.5*CDELT)
 
     """
-    def __init__(self):
+    def __init__(self, headers):
         self._uri = None
+        self._headers = headers
         self._logger = logging.getLogger(self.__class__.__name__)
 
-    def _get_wavelength(self, header):
-        return mc.to_float(header.get('WAVELENG'))
+    def _get_wavelength(self, ext):
+        return mc.to_float(self._headers[ext].get('WAVELENG'))
 
     def configure_axes(self, bp):
         bp.configure_position_axes((1, 2))
@@ -147,15 +149,15 @@ class Telescope:
     def accumulate_bp(self, bp):
         bp.set(
             'Chunk.energy.axis.function.delta',
-            'get_energy_axis_function_delta(parameters)',
+            'get_energy_axis_function_delta()',
         )
         bp.set(
             'Chunk.energy.axis.function.naxis',
-            'get_energy_axis_function_naxis(parameters)',
+            'get_energy_axis_function_naxis()',
         )
         bp.set(
             'Chunk.energy.axis.function.refCoord.pix',
-            'get_energy_axis_function_refcoord_pix(parameters)',
+            'get_energy_axis_function_refcoord_pix()',
         )
         bp.clear('Chunk.energy.axis.function.refCoord.val')
         bp.add_fits_attribute(
@@ -166,21 +168,21 @@ class Telescope:
         bp.set('Chunk.position.axis.function.dimension.naxis2', 1)
         bp.set(
             'Chunk.position.axis.function.cd11',
-            'get_position_function_cd11(parameters)',
+            'get_position_function_cd11()',
         )
         bp.set(
             'Chunk.position.axis.function.cd22',
-            'get_position_function_cd22(parameters)',
+            'get_position_function_cd22()',
         )
         bp.set(
             'Chunk.position.axis.function.cd12',
-            'get_position_function_cd12(parameters)',
+            'get_position_function_cd12()',
         )
         bp.set(
             'Chunk.position.axis.function.cd21',
-            'get_position_function_cd21(parameters)',
+            'get_position_function_cd21()',
         )
-        bp.set('Observation.intent', 'get_obs_intent(header)')
+        bp.set('Observation.intent', 'get_obs_intent()')
         bp.clear('Observation.metaRelease')
         # from dao2caom2.config
         bp.add_fits_attribute('Observation.metaRelease', 'DATE-OBS')
@@ -222,7 +224,7 @@ class Telescope:
         bp.add_fits_attribute('Plane.provenance.version', 'PROCVERS')
         bp.set_default('Plane.provenance.version', None)
 
-        bp.set('Artifact.productType', 'get_artifact_product_type(parameters)')
+        bp.set('Artifact.productType', 'get_artifact_product_type()')
         bp.set('Chunk.time.exposure', 'get_time_exposure(header)')
         bp.set('Chunk.time.resolution', 'get_time_resolution(header)')
 
@@ -232,7 +234,7 @@ class Telescope:
 
         bp.set(
             'Chunk.energy.resolvingPower',
-            'get_energy_resolving_power(parameters)',
+            'get_energy_resolving_power()',
         )
         bp.clear('Chunk.energy.bandpassName')
         bp.add_fits_attribute('Chunk.energy.bandpassName', 'FILTER')
@@ -243,7 +245,7 @@ class Telescope:
         bp.set('Chunk.position.axis.axis2.cunit', 'deg')
         bp.set(
             'Chunk.position.axis.function.refCoord.coord1.pix',
-            'get_position_function_coord1_pix(parameters)',
+            'get_position_function_coord1_pix()',
         )
         bp.set(
             'Chunk.position.axis.function.refCoord.coord1.val',
@@ -251,45 +253,86 @@ class Telescope:
         )
         bp.set(
             'Chunk.position.axis.function.refCoord.coord2.pix',
-            'get_position_function_coord2_pix(parameters)',
+            'get_position_function_coord2_pix()',
         )
         bp.set(
             'Chunk.position.axis.function.refCoord.coord2.val',
             'get_position_function_coord2_val(header)',
         )
+        meta_producer = mc.get_version('dao2caom2')
+        bp.set('Observation.metaProducer', meta_producer)
+        bp.set('Plane.metaProducer', meta_producer)
+        bp.set('Artifact.metaProducer', meta_producer)
+        bp.set('Chunk.metaProducer', meta_producer)
 
-    def get_artifact_product_type(self, header):
-        obs_type = header.get('OBSTYPE')
+        bp.clear('Observation.algorithm.name')
+
+        bp.set('Observation.telescope.name', 'get_telescope_name()')
+        bp.set('Observation.telescope.geoLocationX', 'get_geo_x()')
+        bp.set('Observation.telescope.geoLocationY', 'get_geo_y()')
+        bp.set('Observation.telescope.geoLocationZ', 'get_geo_z()')
+
+        bp.set('Artifact.releaseType', 'data')
+
+        bp.set('Chunk.time.axis.axis.ctype', 'TIME')
+        bp.set('Chunk.time.axis.axis.cunit', 'd')
+        bp.set('Chunk.time.axis.function.naxis', '1')
+        bp.set(
+            'Chunk.time.axis.function.delta', 'get_time_axis_delta()'
+        )
+        bp.set('Chunk.time.axis.function.refCoord.pix', '0.5')
+        bp.set(
+            'Chunk.time.axis.function.refCoord.val',
+            'get_time_axis_val(params)'
+        )
+
+        bp.set('Chunk.observable.axis.axis.ctype', 'FLUX')
+        bp.set('Chunk.observable.axis.axis.cunit', 'COUNTS')
+        bp.set('Chunk.observable.axis.function.refCoord.pix', 1)
+
+        bp.set('Chunk.energy.axis.axis.ctype', 'WAVE')
+        bp.set('Chunk.energy.axis.axis.cunit', 'Angstrom')
+        bp.set('Chunk.energy.specsys', 'TOPOCENT')
+        bp.set('Chunk.energy.ssysobs', 'TOPOCENT')
+        bp.set('Chunk.energy.ssyssrc', 'TOPOCENT')
+
+        # derived observations
+        if DAOName.is_derived(self._uri):
+            bp.set('DerivedObservation.members', 'get_members()')
+            bp.add_fits_attribute('Observation.algorithm.name', 'PROCNAME')
+
+    def get_artifact_product_type(self, ext):
+        obs_type = self._headers[ext].get('OBSTYPE')
         if obs_type == 'object':
             product_type = ProductType.SCIENCE
         else:
             product_type = ProductType.CALIBRATION
         return product_type
 
-    def get_energy_axis_function_delta(self, header):
-        wavelength = self._get_wavelength(header)
-        cdelt = header.get('DELTA_WL')
+    def get_energy_axis_function_delta(self, ext):
+        wavelength = self._get_wavelength(ext)
+        cdelt = self._headers[ext].get('DELTA_WL')
         if wavelength is None:
             cdelt = None
         else:
             if cdelt is None:
-                dispersion = header.get('DISPERSI')
-                dispaxis = self._get_dispaxis(header)
+                dispersion = self._headers[ext].get('DISPERSI')
+                dispaxis = self._get_dispaxis(ext)
                 if dispaxis == 1:
-                    xbin = mc.to_float(header.get('XBIN'))
+                    xbin = mc.to_float(self._headers[ext].get('XBIN'))
                 else:
-                    xbin = mc.to_float(header.get('YBIN'))
+                    xbin = mc.to_float(self._headers[ext].get('YBIN'))
                 cdelt = dispersion * 15.0 * xbin / 1000.0
         return cdelt
 
-    def get_energy_axis_function_refcoord_pix(self, header):
-        wavelength = self._get_wavelength(header)
+    def get_energy_axis_function_refcoord_pix(self, ext):
+        wavelength = self._get_wavelength(ext)
         if wavelength is None:
             crpix = None
         else:
-            crpix = header.get('REFPIXEL')
+            crpix = self._headers[ext].get('REFPIXEL')
             if crpix is None:
-                temp = header.get('DATASEC')
+                temp = self._headers[ext].get('DATASEC')
                 if temp is not None:
                     datasec = re.sub(
                         r'(\[)(\d+:\d+,\d+:\d+)(\])', r'\g<2>', temp
@@ -297,19 +340,19 @@ class Telescope:
                     (dx, dy) = datasec.split(',')
                     (xl, xh) = dx.split(':')
                     (yl, yh) = dy.split(':')
-                    dispaxis = self._get_dispaxis(header)
+                    dispaxis = self._get_dispaxis(ext)
                     if dispaxis == 1:
                         crpix = (int(xh) - int(xl)) / 2.0 + int(xl)
                     else:
                         crpix = (int(yh) - int(yl)) / 2.0 + int(yl)
         return crpix
 
-    def get_energy_axis_function_naxis(self, header):
+    def get_energy_axis_function_naxis(self, ext):
         return 1
 
-    def get_energy_resolving_power(self, header):
-        numerator = header.get('WAVELENG')
-        denominator = self.get_energy_axis_function_delta(header)
+    def get_energy_resolving_power(self, ext):
+        numerator = self._headers[ext].get('WAVELENG')
+        denominator = self.get_energy_axis_function_delta(ext)
         return numerator / (2.5 * denominator)
 
     def get_geo(self):
@@ -318,24 +361,24 @@ class Telescope:
         # and -123.416502.  Not sure of the elevation.
         return ac.get_location(48.519497, -123.416502, 210.0)
 
-    def get_position_function_cd11(self, header):
-        result = self.get_position_function_cd22(header)
+    def get_position_function_cd11(self, ext):
+        result = self.get_position_function_cd22(ext)
         if result is not None:
             result = (-1) * result
         return result
 
-    def get_position_function_cd12(self, header):
-        return self.get_position_function_cd21(header)
+    def get_position_function_cd12(self, ext):
+        return self.get_position_function_cd21(ext)
 
-    def get_position_function_cd21(self, header):
-        obs_type = header.get('OBSTYPE')
+    def get_position_function_cd21(self, ext):
+        obs_type = self._headers[ext].get('OBSTYPE')
         result = None
         if obs_type in ['dark', 'object']:
             result = 0.0
         return result
 
-    def get_position_function_cd22(self, header):
-        obs_type = header.get('OBSTYPE')
+    def get_position_function_cd22(self, ext):
+        obs_type = self._headers[ext].get('OBSTYPE')
         result = None
         if obs_type in ['dark', 'object']:
             # DB - set entrance aperture to a fixed 5" by 5" because of lack
@@ -343,21 +386,93 @@ class Telescope:
             result = 0.001388
         return result
 
-    def get_position_function_coord1_pix(self, header):
-        return self.get_position_function_coord2_pix(header)
+    def get_position_function_coord1_pix(self, ext):
+        return self.get_position_function_coord2_pix(ext)
 
-    def get_position_function_coord2_pix(self, header):
-        obs_type = header.get('OBSTYPE')
+    def get_position_function_coord2_pix(self, ext):
+        obs_type = self._headers[ext].get('OBSTYPE')
         result = None
         if obs_type in ['dark', 'object']:
             result = 1.0
         return result
 
-    def get_telescope_name(self):
+    def get_telescope_name(self, ign):
         return None
 
-    def get_time_axis_val(self, header):
-        return ac.get_datetime(header.get('DATE-OBS'))
+    def get_time_axis_val(self, ext):
+        return ac.get_datetime(self._headers[ext].get('DATE-OBS'))
+
+    def get_geo_x(self, ext):
+        x, ign1, ign2 = self.get_geo()
+        return x
+
+    def get_geo_y(self, ext):
+        x, y, ign2 = self.get_geo()
+        return y
+
+    def get_geo_z(self, ext):
+        x, ign1, z = self.get_geo()
+        return z
+
+    def get_obs_intent(self, ext):
+        obs_type = self._headers[ext].get('OBSTYPE')
+        if obs_type == 'object':
+            intent = ObservationIntentType.SCIENCE
+        else:
+            intent = ObservationIntentType.CALIBRATION
+        return intent
+
+    def get_time_exposure(self, ext):
+        exptime = mc.to_float(self._headers[ext].get('EXPTIME'))
+        ncombine = mc.to_float(self._headers[ext].get('NCOMBINE'))
+        if ncombine is not None:
+            # DB - approximation of exposure time for products (assume identical
+            # EXPTIME)
+            exptime *= ncombine
+        return exptime
+
+    def get_time_resolution(self, ext):
+        exptime = mc.to_float(self._headers[ext].get('EXPTIME'))
+        ncombine = mc.to_float(self._headers[ext].get('NCOMBINE'))
+        if ncombine is None:
+            ncombine = 1
+        else:
+            exptime = exptime * ncombine
+        return exptime / ncombine
+
+    def get_position_function_coord1_val(self, ext):
+        ra, ignore_dec = self._get_position(ext)
+        return ra
+
+    def get_position_function_coord2_val(self, ext):
+        ignore_ra, dec = self._get_position(ext)
+        return dec
+
+    def _get_position(self, ext):
+        from astropy.coordinates import SkyCoord, FK5
+        import astropy.units as u
+        obs_type = self._headers[ext].get('OBSTYPE')
+        ra_deg = None
+        dec_deg = None
+        if obs_type in ['comparison', 'dark', 'object']:
+            if self._headers[ext].get('EQUINOX') is not None:
+                # DB - 11-09-19 - precession with astropy
+                ra = self._headers[ext].get('RA', 0)
+                dec = self._headers[ext].get('DEC', 0)
+                equinox = f'J{self._headers[ext].get("EQUINOX")}'
+                fk5 = FK5(equinox=equinox)
+                coord = SkyCoord(
+                    f'{ra} {dec}', unit=(u.hourangle, u.deg), frame=fk5
+                )
+                j2000 = FK5(equinox='J2000')
+                result = coord.transform_to(j2000)
+                ra_deg = result.ra.degree
+                dec_deg = result.dec.degree
+        return ra_deg, dec_deg
+
+    def get_time_axis_delta(self, ext):
+        exptime = self.get_time_exposure(ext)
+        return exptime / (24.0 * 3600.0)
 
     @property
     def uri(self):
@@ -370,32 +485,32 @@ class Telescope:
 
 class Dao12Metre(Telescope):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, headers):
+        super().__init__(headers)
 
     def get_geo(self):
         return ac.get_location(48.52092, -123.42006, 225.0)
 
-    def get_telescope_name(self):
+    def get_telescope_name(self, ext):
         return 'DAO 1.2-m'
 
 
 class Dao18Metre(Telescope):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, headers):
+        super().__init__(headers)
 
     def get_geo(self):
         return ac.get_location(48.51967, -123.41833, 232.0)
 
-    def get_telescope_name(self):
+    def get_telescope_name(self, ext):
         return 'DAO 1.8-m'
 
 
 class SkyCam(Telescope):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, headers):
+        super().__init__(headers)
 
     def configure_axes(self, bp):
         # DB - 10-07-20
@@ -405,13 +520,13 @@ class SkyCam(Telescope):
         bp.configure_energy_axis(3)
 
     def accumulate_bp(self, bp):
-        bp.set('Observation.metaRelease', 'get_skycam_release_date(header)')
+        bp.set('Observation.metaRelease', 'get_skycam_release_date()')
         bp.set('Observation.intent', ObservationIntentType.CALIBRATION)
         bp.set('Observation.instrument.name', 'Sky Camera')
         bp.set('Plane.calibrationLevel', 1)
         bp.set('Plane.dataProductType', DataProductType.IMAGE)
-        bp.set('Plane.dataRelease', 'get_skycam_release_date(header)')
-        bp.set('Plane.metaRelease', 'get_skycam_release_date(header)')
+        bp.set('Plane.dataRelease', 'get_skycam_release_date()')
+        bp.set('Plane.metaRelease', 'get_skycam_release_date()')
         bp.set('Plane.provenance.project', 'DAO Science Archive')
         bp.set(
             'Plane.provenance.producer',
@@ -433,17 +548,17 @@ class SkyCam(Telescope):
         bp.add_fits_attribute('Chunk.time.exposure', 'EXPTIME')
         bp.add_fits_attribute('Chunk.time.resolution', 'EXPTIME')
 
-    def get_telescope_name(self):
+    def get_telescope_name(self, ext):
         return 'DAO Skycam'
 
-    def get_time_axis_val(self, header):
-        return ac.get_datetime(header.get('CLOCKVAL'))
+    def get_time_axis_val(self, ext):
+        return ac.get_datetime(self._headers[ext].get('CLOCKVAL'))
 
 
 class Imaging(Telescope):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, headers):
+        super().__init__(headers)
 
     def configure_axes(self, bp):
         bp.configure_position_axes((1, 2))
@@ -466,37 +581,37 @@ class Imaging(Telescope):
             'Chunk.position.axis.function.dimension.naxis2', 'NAXI2'
         )
 
-    def _get_position_by_scale_size_bin(self, header):
+    def _get_position_by_scale_size_bin(self, ext):
         result = None
-        platescale = mc.to_float(header.get('PLTSCALE'))
-        pixsize = mc.to_float(header.get('PIXSIZE'))
-        xbin = mc.to_float(header.get('XBIN'))
+        platescale = mc.to_float(self._headers[ext].get('PLTSCALE'))
+        pixsize = mc.to_float(self._headers[ext].get('PIXSIZE'))
+        xbin = mc.to_float(self._headers[ext].get('XBIN'))
         if platescale is not None and pixsize is not None and xbin is not None:
             result = platescale * pixsize * xbin / 3600000.0
         return result
 
-    def get_energy_resolving_power(self, header):
-        wavelength = header.get('WAVELENG')
-        bandpass = header.get('BANDPASS')
+    def get_energy_resolving_power(self, ext):
+        wavelength = self._headers[ext].get('WAVELENG')
+        bandpass = self._headers[ext].get('BANDPASS')
         return wavelength / bandpass
 
-    def get_position_function_cd11(self, header):
-        return self._get_position_by_scale_size_bin(header)
+    def get_position_function_cd11(self, ext):
+        return self._get_position_by_scale_size_bin(ext)
 
-    def get_position_function_cd22(self, header):
-        return self._get_position_by_scale_size_bin(header)
+    def get_position_function_cd22(self, ext):
+        return self._get_position_by_scale_size_bin(ext)
 
-    def get_position_function_coord1_pix(self, header):
-        return header.get('NAXIS1') / 2.0
+    def get_position_function_coord1_pix(self, ext):
+        return self._headers[ext].get('NAXIS1') / 2.0
 
-    def get_position_function_coord2_pix(self, header):
-        return header.get('NAXIS2') / 2.0
+    def get_position_function_coord2_pix(self, ext):
+        return self._headers[ext].get('NAXIS2') / 2.0
 
 
 class ProcessedImage(Imaging):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, headers):
+        super().__init__(headers)
 
     def accumulate_bp(self, bp):
         super().accumulate_bp(bp)
@@ -521,8 +636,8 @@ class ProcessedImage(Imaging):
 
 class ProcessedSpectrum(Telescope):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, headers):
+        super().__init__(headers)
 
     def configure_axes(self, bp):
         bp.configure_position_axes((2, 3))
@@ -554,83 +669,83 @@ class ProcessedSpectrum(Telescope):
 
 class Dao12MetreImage(Dao12Metre, Imaging):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, headers):
+        super().__init__(headers)
 
 
 class Dao12MetreProcessedImage(Dao12MetreImage, ProcessedImage):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, headers):
+        super().__init__(headers)
 
 
 class Dao12MetreSpectrum(Dao12Metre):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, headers):
+        super().__init__(headers)
 
-    def _get_dispaxis(self, header):
-        return header.get('DISPAXIS', 2)
+    def _get_dispaxis(self, ext):
+        return self._headers[ext].get('DISPAXIS', 2)
 
-    def get_energy_axis_function_naxis(self, header):
-        dispaxis = self._get_dispaxis(header)
-        return header.get(f'NAXIS{dispaxis}')
+    def get_energy_axis_function_naxis(self, ext):
+        dispaxis = self._get_dispaxis(ext)
+        return self._headers[ext].get(f'NAXIS{dispaxis}')
 
 
 class Dao12MetreProcessedSpectrum(Dao12MetreSpectrum, ProcessedSpectrum):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, headers):
+        super().__init__(headers)
 
-    def get_energy_resolving_power(self, header):
-        obs_type = header.get('OBSTYPE')
+    def get_energy_resolving_power(self, ext):
+        obs_type = self._headers[ext].get('OBSTYPE')
         if obs_type in ['comparison', 'object']:
-            numerator = header.get('CRVAL1')
-            denominator = header.get('CDELT1')
+            numerator = self._headers[ext].get('CRVAL1')
+            denominator = self._headers[ext].get('CDELT1')
         else:
-            numerator = header.get('WAVELENG')
-            denominator = self.get_energy_axis_function_delta(header)
+            numerator = self._headers[ext].get('WAVELENG')
+            denominator = self.get_energy_axis_function_delta(ext)
         return numerator / (2.5 * denominator)
 
 
 class Dao18MetreImage(Dao18Metre, Imaging):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, headers):
+        super().__init__(headers)
 
 
 class Dao18MetreProcessedImage(Dao18MetreImage, ProcessedImage):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, headers):
+        super().__init__(headers)
 
 
 class Dao18MetreSpectrum(Dao18Metre):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, headers):
+        super().__init__(headers)
 
-    def _get_dispaxis(self, header):
-        return header.get('DISPAXIS', 1)
+    def _get_dispaxis(self, ext):
+        return self._headers[ext].get('DISPAXIS', 1)
 
-    def get_energy_axis_function_naxis(self, header):
-        dispaxis = self._get_dispaxis(header)
-        return header.get(f'NAXIS{dispaxis}')
+    def get_energy_axis_function_naxis(self, ext):
+        dispaxis = self._get_dispaxis()
+        return self._headers[ext].get(f'NAXIS{dispaxis}')
 
 
 class Dao18MetreProcessedSpectrum(Dao18MetreSpectrum, ProcessedSpectrum):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, headers):
+        super().__init__(headers)
 
-    def get_energy_resolving_power(self, header):
-        obs_type = header.get('OBS_TYPE')
+    def get_energy_resolving_power(self, ext):
+        obs_type = self._headers[ext].get('OBS_TYPE')
         if obs_type in ['comparison', 'object']:
-            numerator = header.get('CRVAL1')
-            denominator = header.get('CDELT1')
+            numerator = self._headers[ext].get('CRVAL1')
+            denominator = self._headers[ext].get('CDELT1')
         else:
-            numerator = header.get('WAVELENG')
-            denominator = self.get_energy_axis_function_delta(header)
+            numerator = self._headers[ext].get('WAVELENG')
+            denominator = self.get_energy_axis_function_delta(ext)
         return numerator / (2.5 * denominator)
 
 
@@ -640,17 +755,17 @@ class Dao18MetreProcessedSpectrum(Dao18MetreSpectrum, ProcessedSpectrum):
 # latest instances of Telescope
 current = {}
 # single instance of DefiningMetadataFinder
-defining_metadata_finder = None
+# defining_metadata_finder = None
 
 
-def factory(uri):
+def factory(uri, defining_metadata):
     # at this point, decompose the classes based on what can be determined
     # from the file name only
     ignore_scheme, ignore_path, f_name = mc.decompose_uri(uri)
     if f_name.startswith('a'):
         result = SkyCam()
     else:
-        defining_metadata = defining_metadata_finder.get(uri)
+        # defining_metadata = defining_metadata_finder.get(uri)
         f_id = DAOName.remove_extensions(f_name)
         if defining_metadata.data_product_type == DataProductType.IMAGE:
             if (
@@ -696,9 +811,72 @@ def factory(uri):
                 result = Dao18MetreSpectrum()
 
     result.uri = uri
-    global current
-    current[uri] = result
+#     global current
+#     current[uri] = result
+#
+#
+# def get_current(uri):
+#     return current.get(uri)
 
 
-def get_current(uri):
-    return current.get(uri)
+def factory_client(uri, headers):
+    # at this point, decompose the classes based on what can be determined
+    # from the file name only
+    ignore_scheme, ignore_path, f_name = mc.decompose_uri(uri)
+    if f_name.startswith('a'):
+        result = SkyCam()
+    else:
+        # defining_metadata = defining_metadata_finder.get(uri)
+        f_id = DAOName.remove_extensions(f_name)
+        data_product_type = DefiningMetadataFinder.get_data_product_type(
+            headers
+        )
+        if data_product_type == DataProductType.IMAGE:
+            if (
+                    re.match('dao_[cr]\\d{3}_\\d{4}_\\d{6}_[aevBF]', f_id) or
+                    re.match('dao_[p]\\d{3}_\\d{6}(u|v|y|r|i|)', f_id)
+            ):
+                if (
+                        f_name.startswith('dao_c122') or
+                        f_name.startswith('dao_r122') or
+                        f_name.startswith('dao_p122')
+                ):
+                    result = Dao12MetreProcessedImage(headers)
+                else:
+                    result = Dao18MetreProcessedImage(headers)
+            elif (
+                    f_name.startswith('dao_c122') or
+                    f_name.startswith('dao_r122') or
+                    f_name.startswith('dao_p122')
+            ):
+                result = Dao12MetreImage(headers)
+            else:
+                result = Dao18MetreImage(headers)
+        else:
+            if (
+                    re.match('dao_[cr]\\d{3}_\\d{4}_\\d{6}_[aevBF]', f_id) or
+                    re.match('dao_[p]\\d{3}_\\d{6}(u|v|y|r|i|)', f_id)
+            ):
+                if (
+                        f_name.startswith('dao_c122') or
+                        f_name.startswith('dao_r122') or
+                        f_name.startswith('dao_p122')
+                ):
+                    result = Dao12MetreProcessedSpectrum(headers)
+                else:
+                    result = Dao18MetreProcessedSpectrum(headers)
+            elif (
+                    f_name.startswith('dao_c122') or
+                    f_name.startswith('dao_r122') or
+                    f_name.startswith('dao_p122')
+            ):
+                result = Dao12MetreSpectrum(headers)
+            else:
+                result = Dao18MetreSpectrum(headers)
+
+    result.uri = uri
+    return result
+
+
+# def get_current(uri):
+#     return current.get(uri)

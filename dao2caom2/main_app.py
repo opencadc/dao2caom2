@@ -86,13 +86,18 @@ import os
 import sys
 import traceback
 
+import astropy.io.fits
 from astropy.coordinates import SkyCoord, FK5
 import astropy.units as u
 
+from dataclasses import dataclass
+
+from cadcdata import FileInfo
 from caom2 import Observation, DataProductType, ProductType
 from caom2 import ObservationIntentType, TypedSet, PlaneURI
 from caom2 import ObservationURI
 from caom2utils import ObsBlueprint, get_gen_proc_arg_parser, gen_proc
+from caom2utils import gen_proc_with_headers
 from caom2pipe import astro_composable as ac
 from caom2pipe import caom_composable as cc
 from caom2pipe import manage_composable as mc
@@ -106,204 +111,207 @@ __all__ = ['dao_main_app', 'update', 'APPLICATION', 'to_caom2']
 APPLICATION = 'dao2caom2'
 
 
-def get_artifact_product_type(parameters):
-    header = parameters.get('header')
-    uri = parameters.get('uri')
-    return telescopes.get_current(uri).get_artifact_product_type(header)
+# def get_artifact_product_type(parameters):
+#     header = parameters.get('header')
+#     uri = parameters.get('uri')
+#     return telescopes.get_current(uri).get_artifact_product_type(header)
+#
+#
+# def get_energy_axis_function_naxis(parameters):
+#     uri = parameters.get('uri')
+#     header = parameters.get('header')
+#     return telescopes.get_current(uri).get_energy_axis_function_naxis(header)
+#
+#
+# def get_energy_axis_function_delta(parameters):
+#     uri = parameters.get('uri')
+#     header = parameters.get('header')
+#     return telescopes.get_current(uri).get_energy_axis_function_delta(
+#         header
+#     )
+#
+#
+# def get_energy_axis_function_refcoord_pix(parameters):
+#     uri = parameters.get('uri')
+#     header = parameters.get('header')
+#     return telescopes.get_current(uri).get_energy_axis_function_refcoord_pix(
+#         header
+#     )
+#
+#
+# def get_energy_axis_function_refcoord_val(parameters):
+#     header = parameters.get('header')
+#     uri = parameters.get('uri')
+#     return telescopes.get_current(uri).get_energy_axis_function_refcoord_val(
+#         header
+#     )
+#
+#
+# def get_energy_resolving_power(parameters):
+#     uri = parameters.get('uri')
+#     header = parameters.get('header')
+#     return telescopes.get_current(uri).get_energy_resolving_power(header)
+#
+#
+# def get_geo_x(uri):
+#     x, ignore_y, ignore_z = _get_geo(uri)
+#     return x
+#
+#
+# def get_geo_y(uri):
+#     ignore_x, y, ignore_z = _get_geo(uri)
+#     return y
+#
+#
+# def get_geo_z(uri):
+#     ignore_x, ignore_y, z = _get_geo(uri)
+#     return z
+#
+#
+# def get_members(header):
+#     # this function exists so fits2caom2 creates the correct Observation type
+#     pass
+#
+#
+# def get_obs_intent(header):
+#     obs_type = _get_obs_type(header)
+#     if obs_type == 'object':
+#         intent = ObservationIntentType.SCIENCE
+#     else:
+#         intent = ObservationIntentType.CALIBRATION
+#     return intent
+#
+#
+# def get_position_function_coord1_pix(parameters):
+#     uri = parameters.get('uri')
+#     header = parameters.get('header')
+#     return telescopes.get_current(uri).get_position_function_coord1_pix(
+#         header
+#     )
+#
+#
+# def get_position_function_coord2_pix(parameters):
+#     uri = parameters.get('uri')
+#     header = parameters.get('header')
+#     return telescopes.get_current(uri).get_position_function_coord2_pix(
+#         header
+#     )
+#
+#
+# def get_position_function_coord1_val(header):
+#     ra, ignore_dec = _get_position(header)
+#     return ra
+#
+#
+# def get_position_function_coord2_val(header):
+#     ignore_ra, dec = _get_position(header)
+#     return dec
+#
+#
+# def get_position_function_cd11(parameters):
+#     uri = parameters.get('uri')
+#     header = parameters.get('header')
+#     return telescopes.get_current(uri).get_position_function_cd11(header)
+#
+#
+# def get_position_function_cd12(parameters):
+#     uri = parameters.get('uri')
+#     header = parameters.get('header')
+#     return telescopes.get_current(uri).get_position_function_cd12(header)
+#
+#
+# def get_position_function_cd21(parameters):
+#     uri = parameters.get('uri')
+#     header = parameters.get('header')
+#     return telescopes.get_current(uri).get_position_function_cd21(header)
+#
+#
+# def get_position_function_cd22(parameters):
+#     uri = parameters.get('uri')
+#     header = parameters.get('header')
+#     return telescopes.get_current(uri).get_position_function_cd22(header)
+#
+#
+# def get_skycam_release_date(header):
+#     return ac.get_datetime(header.get('CLOCKVAL'))
+#
+#
+# def get_telescope_name(uri):
+#     return telescopes.get_current(uri).get_telescope_name()
+#
+#
+# def get_time_axis_delta(header):
+#     exptime = get_time_exposure(header)
+#     return exptime / (24.0 * 3600.0)
+#
+#
+# def get_time_axis_val(params):
+#     header = params.get('header')
+#     uri = params.get('uri')
+#     return telescopes.get_current(uri).get_time_axis_val(header)
+#
+#
+# def get_time_exposure(header):
+#     exptime = mc.to_float(header.get('EXPTIME'))
+#     ncombine = mc.to_float(header.get('NCOMBINE'))
+#     if ncombine is not None:
+#         # DB - approximation of exposure time for products (assume identical
+#         # EXPTIME)
+#         exptime *= ncombine
+#     return exptime
+#
+#
+# def get_time_resolution(header):
+#     exptime = mc.to_float(header.get('EXPTIME'))
+#     ncombine = mc.to_float(header.get('NCOMBINE'))
+#     if ncombine is None:
+#         ncombine = 1
+#     else:
+#         exptime = exptime * ncombine
+#     return exptime / ncombine
+#
+#
+# def _get_geo(uri):
+#     return telescopes.get_current(uri).get_geo()
+#
+#
+# def _get_obs_type(header):
+#     return header.get('OBSTYPE')
+#
+#
+# def _get_position(header):
+#     obs_type = _get_obs_type(header)
+#     ra_deg = None
+#     dec_deg = None
+#     if obs_type in ['comparison', 'dark', 'object']:
+#         if header.get('EQUINOX') is not None:
+#             # DB - 11-09-19 - precession with astropy
+#             ra = header.get('RA', 0)
+#             dec = header.get('DEC', 0)
+#             equinox = f'J{header.get("EQUINOX")}'
+#             fk5 = FK5(equinox=equinox)
+#             coord = SkyCoord(
+#                 f'{ra} {dec}', unit=(u.hourangle, u.deg), frame=fk5
+#             )
+#             j2000 = FK5(equinox='J2000')
+#             result = coord.transform_to(j2000)
+#             ra_deg = result.ra.degree
+#             dec_deg = result.dec.degree
+#     return ra_deg, dec_deg
 
 
-def get_energy_axis_function_naxis(parameters):
-    uri = parameters.get('uri')
-    header = parameters.get('header')
-    return telescopes.get_current(uri).get_energy_axis_function_naxis(header)
-
-
-def get_energy_axis_function_delta(parameters):
-    uri = parameters.get('uri')
-    header = parameters.get('header')
-    return telescopes.get_current(uri).get_energy_axis_function_delta(
-        header
-    )
-
-
-def get_energy_axis_function_refcoord_pix(parameters):
-    uri = parameters.get('uri')
-    header = parameters.get('header')
-    return telescopes.get_current(uri).get_energy_axis_function_refcoord_pix(
-        header
-    )
-
-
-def get_energy_axis_function_refcoord_val(parameters):
-    header = parameters.get('header')
-    uri = parameters.get('uri')
-    return telescopes.get_current(uri).get_energy_axis_function_refcoord_val(
-        header
-    )
-
-
-def get_energy_resolving_power(parameters):
-    uri = parameters.get('uri')
-    header = parameters.get('header')
-    return telescopes.get_current(uri).get_energy_resolving_power(header)
-
-
-def get_geo_x(uri):
-    x, ignore_y, ignore_z = _get_geo(uri)
-    return x
-
-
-def get_geo_y(uri):
-    ignore_x, y, ignore_z = _get_geo(uri)
-    return y
-
-
-def get_geo_z(uri):
-    ignore_x, ignore_y, z = _get_geo(uri)
-    return z
-
-
-def get_members(header):
-    # this function exists so fits2caom2 creates the correct Observation type
-    pass
-
-
-def get_obs_intent(header):
-    obs_type = _get_obs_type(header)
-    if obs_type == 'object':
-        intent = ObservationIntentType.SCIENCE
-    else:
-        intent = ObservationIntentType.CALIBRATION
-    return intent
-
-
-def get_position_function_coord1_pix(parameters):
-    uri = parameters.get('uri')
-    header = parameters.get('header')
-    return telescopes.get_current(uri).get_position_function_coord1_pix(
-        header
-    )
-
-
-def get_position_function_coord2_pix(parameters):
-    uri = parameters.get('uri')
-    header = parameters.get('header')
-    return telescopes.get_current(uri).get_position_function_coord2_pix(
-        header
-    )
-
-
-def get_position_function_coord1_val(header):
-    ra, ignore_dec = _get_position(header)
-    return ra
-
-
-def get_position_function_coord2_val(header):
-    ignore_ra, dec = _get_position(header)
-    return dec
-
-
-def get_position_function_cd11(parameters):
-    uri = parameters.get('uri')
-    header = parameters.get('header')
-    return telescopes.get_current(uri).get_position_function_cd11(header)
-
-
-def get_position_function_cd12(parameters):
-    uri = parameters.get('uri')
-    header = parameters.get('header')
-    return telescopes.get_current(uri).get_position_function_cd12(header)
-
-
-def get_position_function_cd21(parameters):
-    uri = parameters.get('uri')
-    header = parameters.get('header')
-    return telescopes.get_current(uri).get_position_function_cd21(header)
-
-
-def get_position_function_cd22(parameters):
-    uri = parameters.get('uri')
-    header = parameters.get('header')
-    return telescopes.get_current(uri).get_position_function_cd22(header)
-
-
-def get_skycam_release_date(header):
-    return ac.get_datetime(header.get('CLOCKVAL'))
-
-
-def get_telescope_name(uri):
-    return telescopes.get_current(uri).get_telescope_name()
-
-
-def get_time_axis_delta(header):
-    exptime = get_time_exposure(header)
-    return exptime / (24.0 * 3600.0)
-
-
-def get_time_axis_val(params):
-    header = params.get('header')
-    uri = params.get('uri')
-    return telescopes.get_current(uri).get_time_axis_val(header)
-
-
-def get_time_exposure(header):
-    exptime = mc.to_float(header.get('EXPTIME'))
-    ncombine = mc.to_float(header.get('NCOMBINE'))
-    if ncombine is not None:
-        # DB - approximation of exposure time for products (assume identical
-        # EXPTIME)
-        exptime *= ncombine
-    return exptime
-
-
-def get_time_resolution(header):
-    exptime = mc.to_float(header.get('EXPTIME'))
-    ncombine = mc.to_float(header.get('NCOMBINE'))
-    if ncombine is None:
-        ncombine = 1
-    else:
-        exptime = exptime * ncombine
-    return exptime / ncombine
-
-
-def _get_geo(uri):
-    return telescopes.get_current(uri).get_geo()
-
-
-def _get_obs_type(header):
-    return header.get('OBSTYPE')
-
-
-def _get_position(header):
-    obs_type = _get_obs_type(header)
-    ra_deg = None
-    dec_deg = None
-    if obs_type in ['comparison', 'dark', 'object']:
-        if header.get('EQUINOX') is not None:
-            # DB - 11-09-19 - precession with astropy
-            ra = header.get('RA', 0)
-            dec = header.get('DEC', 0)
-            equinox = f'J{header.get("EQUINOX")}'
-            fk5 = FK5(equinox=equinox)
-            coord = SkyCoord(
-                f'{ra} {dec}', unit=(u.hourangle, u.deg), frame=fk5
-            )
-            j2000 = FK5(equinox='J2000')
-            result = coord.transform_to(j2000)
-            ra_deg = result.ra.degree
-            dec_deg = result.dec.degree
-    return ra_deg, dec_deg
-
-
-def accumulate_bp(bp, uri):
+def accumulate_bp(bp, uri, telescope_data):
     """Configure the telescope-specific ObsBlueprint at the CAOM model
     Observation level."""
     logging.debug('Begin accumulate_bp.')
-    telescopes.factory(uri)
-    # for multi-planed/multi-artifact cases - ensure point to the
-    # correct instance
-    telescopes.get_current(uri).configure_axes(bp)
-    telescopes.get_current(uri).accumulate_bp(bp)
+    # telescopes.factory(uri)
+    # # for multi-planed/multi-artifact cases - ensure point to the
+    # # correct instance
+    # telescopes.get_current(uri).configure_axes(bp)
+    # telescopes.get_current(uri).accumulate_bp(bp)
+    logging.error(dir(telescope_data))
+    telescope_data.configure_axes(bp)
+    telescope_data.accumulate_bp(bp)
 
     meta_producer = mc.get_version(APPLICATION)
     bp.set('Observation.metaProducer', meta_producer)
@@ -628,7 +636,7 @@ def _make_uris(obs_id, product_id):
     return plane_uri
 
 
-def _build_blueprints(uris):
+def _build_blueprints(uris, current_telescopes):
     """This application relies on the caom2utils fits2caom2 ObsBlueprint
     definition for mapping FITS file values to CAOM model element
     attributes. This method builds the DAO blueprint for a single
@@ -642,9 +650,36 @@ def _build_blueprints(uris):
     blueprints = {}
     for uri in uris:
         blueprint = ObsBlueprint(module=module)
-        accumulate_bp(blueprint, uri)
+        telescope_data = telescopes.factory(uri)
+        current_telescopes[uri] = telescope_data
+        # telescopes.factory(uri)
+        # # for multi-planed/multi-artifact cases - ensure point to the
+        # # correct instance
+        # telescopes.get_current(uri).configure_axes(bp)
+        # telescopes.get_current(uri).accumulate_bp(bp)
+        accumulate_bp(blueprint, uri, telescope_data)
         blueprints[uri] = blueprint
     return blueprints
+
+
+def _build_blueprints_with_client(xs, current_telescopes):
+    module = importlib.import_module(__name__)
+    for entry in xs:
+        blueprint = ObsBlueprint(module=module)
+        telescope_data = telescopes.factory_client(entry)
+        current_telescopes[entry.uri] = telescope_data
+        telescope_data.configure_axes(blueprint)
+        accumulate_bp(blueprint, entry.uri, telescope_data)
+        entry.blueprint = blueprint
+
+
+@dataclass
+class X:
+    uri: str
+    product_id: str
+    headers: [astropy.io.fits.Header]
+    blueprint: ObsBlueprint
+    file_info: FileInfo
 
 
 def _get_uris(args):
@@ -662,6 +697,25 @@ def _get_uris(args):
     return result
 
 
+def _get_uris_with_client(args, header_client):
+    result = []
+    if args.local:
+        for ii in args.local:
+            dao_name = dn.DAOName(ii)
+            headers = header_client.get_head(ii)
+            y = X(dao_name.file_uri, dao_name.product_id, headers, None, None)
+            result.append(y)
+    elif args.lineage:
+        for ii in args.lineage:
+            product_id, uri = mc.decompose_lineage(ii)
+            headers = header_client.get_head(uri)
+            y = X(uri, product_id, headers, None, None)
+            result.append(y)
+    else:
+        raise mc.CadcException(f'Could not define uri from these args {args}')
+    return result
+
+
 def to_caom2():
     args = get_gen_proc_arg_parser().parse_args()
     # only need the telescopes instances for this invocation
@@ -669,6 +723,18 @@ def to_caom2():
     uris = _get_uris(args)
     blueprints = _build_blueprints(uris)
     return gen_proc(args, blueprints)
+
+
+def to_caom2_with_client(header_client):
+    args = get_gen_proc_arg_parser().parse_args()
+    # only need the telescopes instances for this invocation
+    # telescopes.current = {}
+    current_telescopes = {}
+    xs = _get_uris_with_client(args, header_client)
+    _build_blueprints_with_client(xs, current_telescopes)
+    kwargs = {'blueprints': xs}
+    result = gen_proc_with_headers(args, **kwargs)
+    return result
 
 
 def dao_main_app():

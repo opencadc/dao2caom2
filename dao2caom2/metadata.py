@@ -99,7 +99,8 @@ class DefiningMetadataFinder:
         self._connected = mc.TaskType.SCRAPE not in config.task_types
         self._logger = logging.getLogger(self.__class__.__name__)
 
-    def _get_data_product_type(self, headers):
+    @staticmethod
+    def get_data_product_type(headers):
         obs_mode = headers[0].get('OBSMODE')
         # DB 30-04-20
         # I added an obsmodes hash to allow it to be imaging or Imaging but
@@ -107,7 +108,6 @@ class DefiningMetadataFinder:
         data_product_type = DataProductType.IMAGE
         if '-slit' in obs_mode:
             data_product_type = DataProductType.SPECTRUM
-        self._logger.debug('End _get_data_product_type')
         return data_product_type
 
     def check_caom2(self, uri):
@@ -136,7 +136,7 @@ class DefiningMetadataFinder:
                 self._logger.debug(f'Looking in {fqn} for headers.')
                 headers = data_util.get_local_headers_from_fits(fqn)
                 result = DefiningMetadata(
-                    self._get_data_product_type(headers), uri
+                    DefiningMetadataFinder.get_data_product_type(headers), uri
                 )
                 break
         self._logger.debug('End check_local')
@@ -145,7 +145,9 @@ class DefiningMetadataFinder:
     def check_remote(self, uri):
         self._logger.debug(f'Begin check_remote for {uri}')
         headers = self._clients.data_client.get_head(uri)
-        data_product_type = self._get_data_product_type(headers)
+        data_product_type = DefiningMetadataFinder.get_data_product_type(
+            headers
+        )
         self._logger.debug('End check_remote')
         return DefiningMetadata(data_product_type, uri)
 
