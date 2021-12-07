@@ -74,6 +74,7 @@ from caom2.diff import get_differences
 from cadcdata import FileInfo
 from caom2pipe import astro_composable as ac
 from caom2pipe import manage_composable as mc
+from caom2pipe import reader_composable as rdc
 from dao2caom2 import DAOName
 from dao2caom2 import fits2caom2_augmentation
 
@@ -98,7 +99,9 @@ def test_visitor(test_name):
     headers = ac.make_headers_from_file(test_name)
     kwargs = {
         'storage_name': dao_name,
-        'file_metadata': {dao_name.file_uri: [headers, file_info]},
+        'file_metadata': {
+            dao_name.file_uri: rdc.FileMetadata(headers, file_info),
+        },
     }
     observation = None
     observation = fits2caom2_augmentation.visit(observation, **kwargs)

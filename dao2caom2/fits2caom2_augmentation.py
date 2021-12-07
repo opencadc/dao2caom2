@@ -83,18 +83,16 @@ class Fits2caom2Visitor:
         self._logger = logging.getLogger(self.__class__.__name__)
 
     def visit(self):
-        for uri, values in self._file_metadata.items():
-            headers = values[0]
-            file_info = values[1]
-            telescope_data = telescopes.factory(uri, headers)
+        for uri, file_metadata in self._file_metadata.items():
+            telescope_data = telescopes.factory(uri, file_metadata.headers)
             blueprint = ObsBlueprint(instantiated_class=telescope_data)
             telescope_data.configure_axes(blueprint)
             telescope_data.accumulate_bp(blueprint)
 
-            if len(headers) == 0:
+            if len(file_metadata.headers) == 0:
                 parser = GenericParser(blueprint, uri)
             else:
-                parser = FitsParser(headers, blueprint, uri)
+                parser = FitsParser(file_metadata.headers, blueprint, uri)
 
             if self._dump_config:
                 print(f'Blueprint for {uri}: {blueprint}')
@@ -122,7 +120,10 @@ class Fits2caom2Visitor:
             )
 
             telescope_data.update(
-                headers, file_info, self._observation, self._storage_name
+                file_metadata.headers,
+                file_metadata.file_info,
+                self._observation,
+                self._storage_name,
             )
         return self._observation
 
