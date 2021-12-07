@@ -70,7 +70,7 @@
 import logging
 import re
 
-from caom2utils import update_artifact_meta_no_client
+from caom2utils import update_artifact_meta
 from caom2 import CalibrationLevel, DataProductType, TargetType, ProductType
 from caom2 import ObservationIntentType, TypedSet, ObservationURI
 from caom2pipe import astro_composable as ac
@@ -79,7 +79,7 @@ from caom2pipe import manage_composable as mc
 from dao2caom2.dao_name import DAOName, COLLECTION
 
 
-__all__ = ['factory', 'factory_client']
+__all__ = ['factory']
 
 
 class Telescope:
@@ -153,7 +153,7 @@ class Telescope:
                     logging.error(f'artifact uri {artifact.uri} file_uri {self._storage_name.file_uri}')
                     continue
 
-                update_artifact_meta_no_client(artifact, file_info)
+                update_artifact_meta(artifact, file_info)
                 for part in artifact.parts.values():
                     for chunk in part.chunks:
                         time_delta = self.get_time_axis_delta(ext=0)
