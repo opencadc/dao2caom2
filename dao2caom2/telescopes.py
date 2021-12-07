@@ -70,12 +70,13 @@
 import logging
 import re
 
+from caom2utils import update_artifact_meta_no_client
 from caom2 import CalibrationLevel, DataProductType, TargetType, ProductType
-from caom2 import ObservationIntentType
+from caom2 import ObservationIntentType, TypedSet, ObservationURI
 from caom2pipe import astro_composable as ac
+from caom2pipe import caom_composable as cc
 from caom2pipe import manage_composable as mc
-from dao2caom2.dao_name import DAOName
-from dao2caom2.metadata import DefiningMetadataFinder
+from dao2caom2.dao_name import DAOName, COLLECTION
 
 
 __all__ = ['factory', 'factory_client']
@@ -136,6 +137,247 @@ class Telescope:
         self._uri = None
         self._headers = headers
         self._logger = logging.getLogger(self.__class__.__name__)
+
+    def update(self, headers, file_info, observation, storage_name):
+        """Called to fill multiple CAOM model elements and/or attributes (an n:n
+        relationship between TDM attributes and CAOM attributes). Must have this
+        signature for import_module loading and execution.
+        """
+        logging.debug('Begin update.')
+        # correct the *_axis values
+        for plane in observation.planes.values():
+            for artifact in plane.artifacts.values():
+                if artifact.uri.replace('.gz', '') != storage_name.file_uri.replace(
+                        '.gz', ''
+                ):
+                    logging.error(f'artifact uri {artifact.uri} file_uri {self._storage_name.file_uri}')
+                    continue
+
+                update_artifact_meta_no_client(artifact, file_info)
+                for part in artifact.parts.values():
+                    for chunk in part.chunks:
+                        time_delta = self.get_time_axis_delta(ext=0)
+                        cc.undo_astropy_cdfix_call(chunk, time_delta)
+
+                        if storage_name.file_name.startswith('d'):
+                            if plane.data_product_type == DataProductType.SPECTRUM:
+                                if (
+                                        DAOName.is_unprocessed_reticon(artifact.uri)
+                                        or DAOName.is_derived(artifact.uri)
+                                        and observation.type == 'flat'
+                                ):
+                                    cc.reset_energy(chunk)
+                                if (
+                                        artifact.product_type != ProductType.SCIENCE
+                                ):
+                                    if observation.type == 'dark':
+                                        chunk.position_axis_1 = 3
+                                        chunk.position_axis_2 = 4
+                                    else:
+                                        cc.reset_position(chunk)
+                                    # no energy for calibration?
+                                    if observation.type not in [
+                                        'flat',
+                                        'comparison',
+                                        'dark',
+                                    ]:
+                                        cc.reset_energy(chunk)
+                            else:  # DataProductType.IMAGE
+                                if DAOName.override_provenance(artifact.uri):
+                                    plane.provenance.producer = 'Spaceguard_C'
+                                # no observable axis when image
+                                cc.reset_observable(chunk)
+                                if (
+                                        artifact.product_type
+                                        == ProductType.CALIBRATION
+                                ):
+                                    if observation.type != 'dark':
+                                        cc.reset_position(chunk)
+                                    if observation.type not in ['flat', 'dark']:
+                                        cc.reset_energy(chunk)
+                            if (
+                                    chunk.energy is not None
+                                    and not DAOName.is_processed(artifact.uri)
+                                    and headers[0].get('WAVELENG') is None
+                            ):
+                                # DB 16-02-21/04-03-21
+                                #  If WAVELENG isn’t present then all energy
+                                #  metadata should be ignored (spectra and images)
+                                cc.reset_energy(chunk)
+
+                            # WCS axis wisdom from Pat:
+                            #
+                            # In general, assigning axis indices above the value of
+                            # naxis is allowed but more or less pointless. The
+                            # only use case that would justify it is that in a FITS
+                            # file there could be a header with NAXIS=2 and
+                            # WCSAXES=4 which would tell the fits reader to look
+                            # for CTYPE1 through 4 and axes 3 and 4 are metadata.
+                            # Assign those values to Chunk only if you care about
+                            # capturing that the extra wcs metadata was really in
+                            # the fits header and so the order could be preserved;
+                            # in general do not assign the 3 and 4.
+
+                            naxis = headers[0].get('NAXIS')
+                            naxis1 = headers[0].get('NAXIS1')
+                            naxis2 = headers[0].get('NAXIS2')
+                            chunk.naxis = None
+                            chunk.position_axis_1 = None
+                            chunk.position_axis_2 = None
+                            chunk.energy_axis = None
+                            chunk.observable_axis = None
+                            chunk.time_axis = None
+                            if naxis is not None:
+                                if (
+                                        naxis1 is not None
+                                        and naxis2 is not None
+                                        and naxis == 2
+                                        and chunk.position is not None
+                                        and plane.data_product_type
+                                        is DataProductType.IMAGE
+                                ):
+                                    chunk.naxis = 2
+                                    chunk.position_axis_1 = 1
+                                    chunk.position_axis_2 = 2
+                                if (
+                                        naxis1 is not None
+                                        and naxis == 1
+                                        and chunk.energy is not None
+                                ):
+                                    chunk.naxis = 1
+                                    chunk.energy_axis = 1
+                        else:
+                            chunk.energy_axis = None
+
+            if plane.product_id != storage_name.product_id:
+                continue
+
+            # provenance: inputs vs members
+            #
+            # DB - 29-04-20
+            # The inconsistencies are consistent for both telescope for the
+            # derived observations: the processed, co-added flats (files with F
+            # suffix) and co-added biases (files with B suffix).  These should
+            # have the ‘members’ list added to the inputs.  From the definition of
+            # provenance:inputs I’m assuming for the science observations,
+            # processed comparison arcs, and processed flats having a composite
+            # flat and/or bias observation as an ‘input’ is okay rather than
+            # breaking these down into their individual members (since those
+            # derived observations will all be available in the archive with
+            # proper provenance provided).
+
+            if observation.type == 'flat' and cc.is_composite(headers, 'FLAT_'):
+                cc.update_plane_provenance(
+                    plane,
+                    headers,
+                    'FLAT_',
+                    'DAO',  # TODO
+                    _repair_provenance_value,
+                    observation.observation_id,
+                )
+            elif observation.type == 'bias' and cc.is_composite(headers, 'ZERO_'):
+                cc.update_plane_provenance(
+                    plane,
+                    headers,
+                    'ZERO_',
+                    'DAO',  # TODO
+                    _repair_provenance_value,
+                    observation.observation_id,
+                )
+
+            if DAOName.is_processed(storage_name.file_uri):
+                self._update_plane_provenance(observation, plane, headers)
+
+            if cc.is_composite(headers, 'FLAT_') or cc.is_composite(
+                    headers, 'ZERO_'
+            ):
+                self._update_observation_members(observation)
+
+        logging.debug('Done update.')
+
+    def _update_observation_members(self, observation):
+        """
+        Must filter results because:
+        DB - 11-06-20
+        For the spectra there is a minor issue with members for master flat,
+        *_F, observations.  The master bias used in the processing, the *_B.fits
+        file, shouldn’t be a member for the master flats.
+
+        The master bias is in the list of inputs though:  Inputs for master flat
+        are the unprocessed flats and the master bias.  The master bias is
+        subtracted pixel-by-pixel from each unprocessed flat as part of the
+        processing before the flats are then co-added.
+
+        The composite/derived master flats (F) and master biases (B) should
+        never be members.  At least for any processing that is currently being
+        done.  For now the only members should those given by the
+        NCOMBINE x ZERO_# or FLAT_# keyword values.
+        """
+
+        def filter_fun(x):
+            result = True
+            if DAOName.is_master_flat(observation.observation_id):
+                if DAOName.is_master_bias(x.get_observation_uri().uri):
+                    result = False
+            return result
+
+        inputs = []
+        members_inputs = TypedSet(ObservationURI,)
+        for plane in observation.planes.values():
+            if (
+                    plane.provenance is not None
+                    and plane.provenance.inputs is not None
+            ):
+                inputs = filter(filter_fun, plane.provenance.inputs)
+
+        for entry in inputs:
+            members_inputs.add(entry.get_observation_uri())
+            logging.debug(f'Adding Observation URI {entry.get_observation_uri()}')
+        mc.update_typed_set(observation.members, members_inputs)
+
+    def _update_plane_provenance(self, observation, plane, headers):
+        logging.debug(
+            f'Begin _update_plane_provenance for {plane.product_id} with'
+            f'observation type: {observation.type}.'
+        )
+        if observation.type in ['object', 'flat', 'comparison']:
+            f_name = headers[0].get('BIAS')
+            if f_name is not None:
+                bias_name = DAOName(f_name)
+                ignore, plane_uri = cc.make_plane_uri(bias_name.obs_id, bias_name.product_id,
+                    'DAO')  # TODO
+                plane.provenance.inputs.add(plane_uri)
+        if observation.type in ['object', 'comparison']:
+            f_name = headers[0].get('FLAT')
+            if f_name is not None:
+                flat_name = DAOName(f_name)
+                ignore, plane_uri = cc.make_plane_uri(flat_name.obs_id, flat_name.product_id,
+                    'DAO')  # TODO
+                plane.provenance.inputs.add(plane_uri)
+            # referral to raw plane
+            ignore, plane_uri = cc.make_plane_uri(
+                observation.observation_id, observation.observation_id,
+                'DAO',  # TODO
+            )
+            plane.provenance.inputs.add(plane_uri)
+        if observation.type == 'object':
+            f_name = headers[0].get('DCLOG1')
+            if f_name is not None:
+                ref_spec1_name = DAOName(f_name.split()[2])
+                ignore, plane_uri = cc.make_plane_uri(
+                    ref_spec1_name.obs_id, ref_spec1_name.product_id,
+                    'DAO',  # TODO
+                )
+                plane.provenance.inputs.add(plane_uri)
+            if headers[0].get('DCLOG2') is not None:
+                ref_spec1_name = DAOName(headers[0].get('DCLOG2').split()[2])
+                ignore, plane_uri = cc.make_plane_uri(
+                    ref_spec1_name.obs_id,
+                    ref_spec1_name.product_id,
+                    COLLECTION,
+                )
+                plane.provenance.inputs.add(plane_uri)
+        logging.debug(f'End _update_plane_provenance.')
 
     def _get_wavelength(self, ext):
         return mc.to_float(self._headers[ext].get('WAVELENG'))
@@ -259,47 +501,7 @@ class Telescope:
             'Chunk.position.axis.function.refCoord.coord2.val',
             'get_position_function_coord2_val(header)',
         )
-        meta_producer = mc.get_version('dao2caom2')
-        bp.set('Observation.metaProducer', meta_producer)
-        bp.set('Plane.metaProducer', meta_producer)
-        bp.set('Artifact.metaProducer', meta_producer)
-        bp.set('Chunk.metaProducer', meta_producer)
-
-        bp.clear('Observation.algorithm.name')
-
-        bp.set('Observation.telescope.name', 'get_telescope_name()')
-        bp.set('Observation.telescope.geoLocationX', 'get_geo_x()')
-        bp.set('Observation.telescope.geoLocationY', 'get_geo_y()')
-        bp.set('Observation.telescope.geoLocationZ', 'get_geo_z()')
-
-        bp.set('Artifact.releaseType', 'data')
-
-        bp.set('Chunk.time.axis.axis.ctype', 'TIME')
-        bp.set('Chunk.time.axis.axis.cunit', 'd')
-        bp.set('Chunk.time.axis.function.naxis', '1')
-        bp.set(
-            'Chunk.time.axis.function.delta', 'get_time_axis_delta()'
-        )
-        bp.set('Chunk.time.axis.function.refCoord.pix', '0.5')
-        bp.set(
-            'Chunk.time.axis.function.refCoord.val',
-            'get_time_axis_val(params)'
-        )
-
-        bp.set('Chunk.observable.axis.axis.ctype', 'FLUX')
-        bp.set('Chunk.observable.axis.axis.cunit', 'COUNTS')
-        bp.set('Chunk.observable.axis.function.refCoord.pix', 1)
-
-        bp.set('Chunk.energy.axis.axis.ctype', 'WAVE')
-        bp.set('Chunk.energy.axis.axis.cunit', 'Angstrom')
-        bp.set('Chunk.energy.specsys', 'TOPOCENT')
-        bp.set('Chunk.energy.ssysobs', 'TOPOCENT')
-        bp.set('Chunk.energy.ssyssrc', 'TOPOCENT')
-
-        # derived observations
-        if DAOName.is_derived(self._uri):
-            bp.set('DerivedObservation.members', 'get_members()')
-            bp.add_fits_attribute('Observation.algorithm.name', 'PROCNAME')
+        self._accumulate_common_bp(bp)
 
     def get_artifact_product_type(self, ext):
         obs_type = self._headers[ext].get('OBSTYPE')
@@ -482,6 +684,49 @@ class Telescope:
     def uri(self, value):
         self._uri = value
 
+    def _accumulate_common_bp(self, bp):
+        meta_producer = mc.get_version('dao2caom2')
+        bp.set('Observation.metaProducer', meta_producer)
+        bp.set('Plane.metaProducer', meta_producer)
+        bp.set('Artifact.metaProducer', meta_producer)
+        bp.set('Chunk.metaProducer', meta_producer)
+
+        bp.clear('Observation.algorithm.name')
+
+        bp.set('Observation.telescope.name', 'get_telescope_name()')
+        bp.set('Observation.telescope.geoLocationX', 'get_geo_x()')
+        bp.set('Observation.telescope.geoLocationY', 'get_geo_y()')
+        bp.set('Observation.telescope.geoLocationZ', 'get_geo_z()')
+
+        bp.set('Artifact.releaseType', 'data')
+
+        bp.set('Chunk.time.axis.axis.ctype', 'TIME')
+        bp.set('Chunk.time.axis.axis.cunit', 'd')
+        bp.set('Chunk.time.axis.function.naxis', '1')
+        bp.set(
+            'Chunk.time.axis.function.delta', 'get_time_axis_delta()'
+        )
+        bp.set('Chunk.time.axis.function.refCoord.pix', '0.5')
+        bp.set(
+            'Chunk.time.axis.function.refCoord.val',
+            'get_time_axis_val(params)'
+        )
+
+        bp.set('Chunk.observable.axis.axis.ctype', 'FLUX')
+        bp.set('Chunk.observable.axis.axis.cunit', 'COUNTS')
+        bp.set('Chunk.observable.axis.function.refCoord.pix', 1)
+
+        bp.set('Chunk.energy.axis.axis.ctype', 'WAVE')
+        bp.set('Chunk.energy.axis.axis.cunit', 'Angstrom')
+        bp.set('Chunk.energy.specsys', 'TOPOCENT')
+        bp.set('Chunk.energy.ssysobs', 'TOPOCENT')
+        bp.set('Chunk.energy.ssyssrc', 'TOPOCENT')
+
+        # derived observations
+        if DAOName.is_derived(self._uri):
+            bp.set('DerivedObservation.members', 'get_members()')
+            bp.add_fits_attribute('Observation.algorithm.name', 'PROCNAME')
+
 
 class Dao12Metre(Telescope):
 
@@ -520,13 +765,13 @@ class SkyCam(Telescope):
         bp.configure_energy_axis(3)
 
     def accumulate_bp(self, bp):
-        bp.set('Observation.metaRelease', 'get_skycam_release_date()')
+        bp.set('Observation.metaRelease', 'get_release_date()')
         bp.set('Observation.intent', ObservationIntentType.CALIBRATION)
         bp.set('Observation.instrument.name', 'Sky Camera')
         bp.set('Plane.calibrationLevel', 1)
         bp.set('Plane.dataProductType', DataProductType.IMAGE)
-        bp.set('Plane.dataRelease', 'get_skycam_release_date()')
-        bp.set('Plane.metaRelease', 'get_skycam_release_date()')
+        bp.set('Plane.dataRelease', 'get_release_date()')
+        bp.set('Plane.metaRelease', 'get_release_date()')
         bp.set('Plane.provenance.project', 'DAO Science Archive')
         bp.set(
             'Plane.provenance.producer',
@@ -538,6 +783,7 @@ class SkyCam(Telescope):
             'https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/dao/',
         )
         bp.set('Artifact.productType', ProductType.CALIBRATION)
+        bp.set('Artifact.releaseType', 'data')
 
         bp.set('Chunk.energy.axis.function.delta', 3000.0)
         bp.set('Chunk.energy.axis.function.naxis', 1)
@@ -547,6 +793,10 @@ class SkyCam(Telescope):
 
         bp.add_fits_attribute('Chunk.time.exposure', 'EXPTIME')
         bp.add_fits_attribute('Chunk.time.resolution', 'EXPTIME')
+        self._accumulate_common_bp(bp)
+
+    def get_release_date(self, ext):
+        return ac.get_datetime(self._headers[ext].get('CLOCKVAL'))
 
     def get_telescope_name(self, ext):
         return 'DAO Skycam'
@@ -729,7 +979,7 @@ class Dao18MetreSpectrum(Dao18Metre):
         return self._headers[ext].get('DISPAXIS', 1)
 
     def get_energy_axis_function_naxis(self, ext):
-        dispaxis = self._get_dispaxis()
+        dispaxis = self._get_dispaxis(ext)
         return self._headers[ext].get(f'NAXIS{dispaxis}')
 
 
@@ -749,77 +999,38 @@ class Dao18MetreProcessedSpectrum(Dao18MetreSpectrum, ProcessedSpectrum):
         return numerator / (2.5 * denominator)
 
 
-# globally accessible pointer, placed here so they survive the
-# importlib.import_module call from fits2caom2
-
-# latest instances of Telescope
-current = {}
-# single instance of DefiningMetadataFinder
-# defining_metadata_finder = None
-
-
-def factory(uri, defining_metadata):
-    # at this point, decompose the classes based on what can be determined
-    # from the file name only
-    ignore_scheme, ignore_path, f_name = mc.decompose_uri(uri)
-    if f_name.startswith('a'):
-        result = SkyCam()
-    else:
-        # defining_metadata = defining_metadata_finder.get(uri)
-        f_id = DAOName.remove_extensions(f_name)
-        if defining_metadata.data_product_type == DataProductType.IMAGE:
-            if (
-                re.match('dao_[cr]\\d{3}_\\d{4}_\\d{6}_[aevBF]', f_id) or
-                re.match('dao_[p]\\d{3}_\\d{6}(u|v|y|r|i|)', f_id)
-            ):
-                if (
-                    f_name.startswith('dao_c122') or
-                    f_name.startswith('dao_r122') or
-                    f_name.startswith('dao_p122')
-                ):
-                    result = Dao12MetreProcessedImage()
-                else:
-                    result = Dao18MetreProcessedImage()
-            elif (
-                f_name.startswith('dao_c122') or
-                f_name.startswith('dao_r122') or
-                f_name.startswith('dao_p122')
-            ):
-                result = Dao12MetreImage()
-            else:
-                result = Dao18MetreImage()
-        else:
-            if (
-                re.match('dao_[cr]\\d{3}_\\d{4}_\\d{6}_[aevBF]', f_id) or
-                re.match('dao_[p]\\d{3}_\\d{6}(u|v|y|r|i|)', f_id)
-            ):
-                if (
-                    f_name.startswith('dao_c122') or
-                    f_name.startswith('dao_r122') or
-                    f_name.startswith('dao_p122')
-                ):
-                    result = Dao12MetreProcessedSpectrum()
-                else:
-                    result = Dao18MetreProcessedSpectrum()
-            elif (
-                f_name.startswith('dao_c122') or
-                f_name.startswith('dao_r122') or
-                f_name.startswith('dao_p122')
-            ):
-                result = Dao12MetreSpectrum()
-            else:
-                result = Dao18MetreSpectrum()
-
-    result.uri = uri
-#     global current
-#     current[uri] = result
-#
-#
-# def get_current(uri):
-#     return current.get(uri)
+def _repair_provenance_value(value, obs_id):
+    logging.debug(f'Begin _repair_provenance_value for {obs_id}')
+    # values look like:
+    # FLAT_1  = 'dao_c122_2007_000916.fits'
+    # FLAT_2  = 'dao_c122_2007_000917.fits'
+    # FLAT_3  = 'dao_c122_2007_000918.fits'
+    # FLAT_4  = 'dao_c122_2007_000919.fits'
+    #
+    # OR
+    #
+    # ZERO_18 = 'dao_c122_2016_012728.fits'
+    # ZERO_19 = 'dao_c122_2016_012729.fits'
+    # ZERO_20 = 'dao_c122_2016_012730.fits'
+    dn = DAOName(value)
+    prov_prod_id = dn.product_id
+    prov_obs_id = dn.obs_id
+    logging.debug(f'End _repair_provenance_value')
+    return prov_obs_id, prov_prod_id
 
 
-def factory_client(uri, headers):
+def get_data_product_type(headers):
+    obs_mode = headers[0].get('OBSMODE')
+    # DB 30-04-20
+    # I added an obsmodes hash to allow it to be imaging or Imaging but
+    # all should be 'Imaging'.
+    data_product_type = DataProductType.IMAGE
+    if '-slit' in obs_mode:
+        data_product_type = DataProductType.SPECTRUM
+    return data_product_type
+
+
+def factory(uri, headers):
     # at this point, decompose the classes based on what can be determined
     # from the file name only
     ignore_scheme, ignore_path, f_name = mc.decompose_uri(uri)
@@ -828,9 +1039,7 @@ def factory_client(uri, headers):
     else:
         # defining_metadata = defining_metadata_finder.get(uri)
         f_id = DAOName.remove_extensions(f_name)
-        data_product_type = DefiningMetadataFinder.get_data_product_type(
-            headers
-        )
+        data_product_type = get_data_product_type(headers)
         if data_product_type == DataProductType.IMAGE:
             if (
                     re.match('dao_[cr]\\d{3}_\\d{4}_\\d{6}_[aevBF]', f_id) or
@@ -876,7 +1085,3 @@ def factory_client(uri, headers):
 
     result.uri = uri
     return result
-
-
-# def get_current(uri):
-#     return current.get(uri)

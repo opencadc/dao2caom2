@@ -67,36 +67,43 @@
 # ***********************************************************************
 #
 
-from os.path import basename
+from os import listdir
+from os.path import basename, exists, join
 
+from caom2.diff import get_differences
 from cadcdata import FileInfo
 from caom2pipe import astro_composable as ac
 from caom2pipe import manage_composable as mc
 from dao2caom2 import DAOName
+from dao2caom2 import fits2caom2_augmentation
 import test_main_app
 
 
-def test_visitor():
-    from caom2 import SimpleObservation, Algorithm
-    from caom2.diff import get_differences
-    from dao2caom2 import fits2caom2_augmentation
-    fqn = '/usr/src/app/dao2caom2/dao2caom2/tests/data/dao_c122_2016_012731.fits.header'
-    dao_name = DAOName(basename(fqn).replace('.header', '.gz'))
-    observation = SimpleObservation(
-        collection='DAO',
-        observation_id=dao_name.obs_id,
-        algorithm=Algorithm('exposure'),
-    )
+def pytest_generate_tests(metafunc):
+    files = []
+    if exists(test_main_app.TEST_DATA_DIR):
+        files = [
+            join(test_main_app.TEST_DATA_DIR, name)
+            for name in listdir(test_main_app.TEST_DATA_DIR)
+            if name.endswith('header')
+        ]
+    metafunc.parametrize('test_name', files)
 
+
+def test_visitor(test_name):
+    dao_name = DAOName(basename(test_name).replace('.header', '.gz'))
     file_info = FileInfo(id=dao_name.file_uri, file_type='application/fits')
-    headers = ac.make_headers_from_file(fqn)
+    headers = ac.make_headers_from_file(test_name)
     kwargs = {
         'storage_name': dao_name,
-        'headers_dict': {dao_name.file_uri: [headers, file_info]},
+        'file_metadata': {dao_name.file_uri: [headers, file_info]},
     }
-    fits2caom2_augmentation.visit(observation, **kwargs)
+    observation = None
+    observation = fits2caom2_augmentation.visit(observation, **kwargs)
 
-    expected_fqn = f'{test_main_app.TEST_DATA_DIR}/{dao_name.file_id}.expected.xml'
+    expected_fqn = (
+        f'{test_main_app.TEST_DATA_DIR}/{dao_name.file_id}.expected.xml'
+    )
     expected = mc.read_obs_from_file(expected_fqn)
     compare_result = get_differences(expected, observation)
     if compare_result is not None:
@@ -107,4 +114,4 @@ def test_visitor():
             f'Differences found in observation {expected.observation_id}\n'
             f'{compare_text}'
         )
-        raise AssertionError(compare_text)
+        raise AssertionError(msg)
