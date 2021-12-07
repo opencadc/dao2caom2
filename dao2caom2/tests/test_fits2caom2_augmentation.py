@@ -68,7 +68,7 @@
 #
 
 from os import listdir
-from os.path import basename, exists, join
+from os.path import basename, dirname, exists, join, realpath
 
 from caom2.diff import get_differences
 from cadcdata import FileInfo
@@ -76,15 +76,17 @@ from caom2pipe import astro_composable as ac
 from caom2pipe import manage_composable as mc
 from dao2caom2 import DAOName
 from dao2caom2 import fits2caom2_augmentation
-import test_main_app
+
+THIS_DIR = dirname(realpath(__file__))
+TEST_DATA_DIR = join(THIS_DIR, 'data')
 
 
 def pytest_generate_tests(metafunc):
     files = []
-    if exists(test_main_app.TEST_DATA_DIR):
+    if exists(TEST_DATA_DIR):
         files = [
-            join(test_main_app.TEST_DATA_DIR, name)
-            for name in listdir(test_main_app.TEST_DATA_DIR)
+            join(TEST_DATA_DIR, name)
+            for name in listdir(TEST_DATA_DIR)
             if name.endswith('header')
         ]
     metafunc.parametrize('test_name', files)
@@ -102,7 +104,7 @@ def test_visitor(test_name):
     observation = fits2caom2_augmentation.visit(observation, **kwargs)
 
     expected_fqn = (
-        f'{test_main_app.TEST_DATA_DIR}/{dao_name.file_id}.expected.xml'
+        f'{TEST_DATA_DIR}/{dao_name.file_id}.expected.xml'
     )
     expected = mc.read_obs_from_file(expected_fqn)
     compare_result = get_differences(expected, observation)

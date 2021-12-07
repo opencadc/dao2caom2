@@ -68,7 +68,7 @@
 #
 
 import os
-import test_main_app
+import test_fits2caom2_augmentation
 
 from mock import Mock, patch
 from dao2caom2 import composable, dao_name, COLLECTION
@@ -90,7 +90,7 @@ def test_run(run_mock, access_mock):
     test_obs_id = test_f_id
     test_f_name = f'{test_f_id}.fits'
     getcwd_orig = os.getcwd
-    os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
+    os.getcwd = Mock(return_value=test_fits2caom2_augmentation.TEST_DATA_DIR)
     try:
         # execution
         composable._run()
@@ -115,7 +115,9 @@ def test_run(run_mock, access_mock):
         # clean up the summary report text file
         # clean up the files created as a by-product of a run
         for f_name in F_NAME_LIST:
-            fqn = os.path.join(test_main_app.TEST_DATA_DIR, f_name)
+            fqn = os.path.join(
+                test_fits2caom2_augmentation.TEST_DATA_DIR, f_name
+            )
             if os.path.exists(fqn):
                 os.unlink(fqn)
 
@@ -128,7 +130,7 @@ def test_run_vo(run_mock, vo_client_mock, access_mock):
     test_obs_id = 'sky_cam_image'
     test_f_name = f'{test_obs_id}.fits.gz'
     getcwd_orig = os.getcwd
-    os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
+    os.getcwd = Mock(return_value=test_fits2caom2_augmentation.TEST_DATA_DIR)
     vo_client_mock.return_value.listdir.return_value = [
         'sky_cam_image.fits.gz',
     ]
@@ -166,6 +168,8 @@ def test_run_vo(run_mock, vo_client_mock, access_mock):
         # clean up the summary report text file
         # clean up the files created as a by-product of a run
         for f_name in F_NAME_LIST:
-            fqn = os.path.join(test_main_app.TEST_DATA_DIR, f_name)
+            fqn = os.path.join(
+                test_fits2caom2_augmentation.TEST_DATA_DIR, f_name
+            )
             if os.path.exists(fqn):
                 os.unlink(fqn)

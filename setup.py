@@ -4,20 +4,17 @@
 import glob
 import os
 import sys
-import imp
 from setuptools.command.test import test as TestCommand
 from setuptools import find_packages
 
 from setuptools import setup
 
-import distutils.cmd
-import distutils.log
-import subprocess
 
 # read the README.md file and return as string.
 def readme():
     with open('README.md') as r_obj:
         return r_obj.read()
+
 
 # Get some values from the setup.cfg
 try:
@@ -55,6 +52,7 @@ for entry_point in entry_point_list:
     entry_points['console_scripts'].append('{0} = {1}'.format(entry_point[0],
                                                               entry_point[1]))
 
+
 # add the --cov option to the test command
 class PyTest(TestCommand):
     """class py.test for the testing
@@ -76,6 +74,7 @@ class PyTest(TestCommand):
 # ``setup``, since these are now deprecated. See this link for more details:
 # https://groups.google.com/forum/#!topic/astropy-dev/urYO8ckB2uM
 
+
 setup(name=PACKAGENAME,
       version=VERSION,
       description=DESCRIPTION,
@@ -90,16 +89,17 @@ setup(name=PACKAGENAME,
       use_2to3=False,
       setup_requires=[],
       entry_points=entry_points,
-      python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, <4',
+      python_requires='>=3.9.*',
       packages=find_packages(),
-      package_data={PACKAGENAME: ['data/*', 'tests/data/*', '*/data/*', '*/tests/data/*']},
+      package_data={PACKAGENAME: ['data/*']},
+      data_files=[('.config', ['config/config.yml'])],
       classifiers=[
         'Natural Language :: English',
         'License :: OSI Approved :: GNU Affero General Public License v3',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3.6'
+        'Programming Language :: Python :: 3.9'
       ],
-      cmdclass = {
+      cmdclass={
           'coverage': PyTest,
       }
 )

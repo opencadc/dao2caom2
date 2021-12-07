@@ -70,12 +70,12 @@
 from caom2pipe import manage_composable as mc
 from dao2caom2 import cleanup_augmentation
 
-import test_main_app
+import test_fits2caom2_augmentation
 
 
 def test_cleanup_augmentation():
     test_observation = mc.read_obs_from_file(
-        f'{test_main_app.TEST_DATA_DIR}/cleanup/double_uris.xml'
+        f'{test_fits2caom2_augmentation.TEST_DATA_DIR}/cleanup/double_uris.xml'
     )
     test_product_id = 'dao_c122_2005_007071'
     assert (
@@ -86,12 +86,10 @@ def test_cleanup_augmentation():
     test_result = cleanup_augmentation.visit(test_observation, **kwargs)
 
     assert test_result is not None, 'expect a result'
-    assert test_result.get('artifacts') is not None, 'expect artifact count'
-    assert test_result.get('artifacts') == 1, 'delete 1 artifact'
     assert (
-        len(test_observation.planes[test_product_id].artifacts) == 3
+        len(test_result.planes[test_product_id].artifacts) == 3
     ), 'wrong artifact count'
     assert (
         'ad:DAO/dao_c122_2005_007071.fits.gz'
-        in test_observation.planes[test_product_id].artifacts.keys()
+        in test_result.planes[test_product_id].artifacts.keys()
     ), 'removed wrong uri'
