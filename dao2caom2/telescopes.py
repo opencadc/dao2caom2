@@ -150,7 +150,9 @@ class Telescope:
                 if artifact.uri.replace('.gz', '') != storage_name.file_uri.replace(
                         '.gz', ''
                 ):
-                    logging.error(f'artifact uri {artifact.uri} file_uri {self._storage_name.file_uri}')
+                    self._logger.debug(
+                        f'Skipping artifact {storage_name.file_uri}'
+                    )
                     continue
 
                 update_artifact_meta(artifact, file_info)
