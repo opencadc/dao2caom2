@@ -70,6 +70,7 @@
 import logging
 import traceback
 
+from collections import deque
 from cadcutils import exceptions
 from os.path import basename, join
 from caom2pipe import client_composable as clc
@@ -89,7 +90,7 @@ class DAOVaultDataSource(dsc.VaultDataSource):
         self._collection = config.collection
         self._recursive = recursive
         self._cadc_client = cadc_client
-        self._work = []
+        self._work = deque()
         self._logger = logging.getLogger(self.__class__.__name__)
 
     def clean_up(self, entry):
