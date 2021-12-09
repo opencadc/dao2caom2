@@ -97,11 +97,12 @@ def test_visitor(test_name):
     dao_name = DAOName(basename(test_name).replace('.header', '.gz'))
     file_info = FileInfo(id=dao_name.file_uri, file_type='application/fits')
     headers = ac.make_headers_from_file(test_name)
+    metadata_reader = rdc.FileMetadataReader()
+    metadata_reader._headers = {dao_name.file_uri: headers}
+    metadata_reader._file_info = {dao_name.file_uri: file_info}
     kwargs = {
         'storage_name': dao_name,
-        'file_metadata': {
-            dao_name.file_uri: rdc.FileMetadata(headers, file_info),
-        },
+        'metadata_reader': metadata_reader,
     }
     observation = None
     observation = fits2caom2_augmentation.visit(observation, **kwargs)

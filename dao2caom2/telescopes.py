@@ -70,6 +70,9 @@
 import logging
 import re
 
+from astropy.coordinates import SkyCoord, FK5
+import astropy.units as u
+
 from caom2utils import update_artifact_meta
 from caom2 import CalibrationLevel, DataProductType, TargetType, ProductType
 from caom2 import ObservationIntentType, TypedSet, ObservationURI
@@ -653,8 +656,6 @@ class Telescope:
         return dec
 
     def _get_position(self, ext):
-        from astropy.coordinates import SkyCoord, FK5
-        import astropy.units as u
         obs_type = self._headers[ext].get('OBSTYPE')
         ra_deg = None
         dec_deg = None
