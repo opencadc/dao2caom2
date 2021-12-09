@@ -3,7 +3,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2018.                            (c) 2018.
+#  (c) 2021.                            (c) 2021.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -62,97 +62,73 @@
 #  <http://www.gnu.org/licenses/>.      pas le cas, consultez :
 #                                       <http://www.gnu.org/licenses/>.
 #
-#  $Revision: 4 $
+#  : 4 $
 #
 # ***********************************************************************
 #
 
-import warnings
-from astropy.utils.exceptions import AstropyUserWarning
+import logging
 
-from cadcdata import FileInfo
-from caom2 import DataProductType
-from dao2caom2 import main_app, APPLICATION, COLLECTION, DAOName
-from dao2caom2 import metadata, telescopes, PRODUCT_COLLECTION
-from caom2pipe import astro_composable as ac
-from caom2pipe import manage_composable as mc
-
-from mock import patch, Mock
-
-import os
-import sys
-
-THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-TEST_DATA_DIR = os.path.join(THIS_DIR, 'data')
-PLUGIN = os.path.join(os.path.dirname(THIS_DIR), 'main_app.py')
+from caom2 import SimpleObservation, DerivedObservation, Algorithm
+from caom2utils import ObsBlueprint, GenericParser, FitsParser
+from dao2caom2 import telescopes
 
 
-def pytest_generate_tests(metafunc):
-    files = []
-    if os.path.exists(TEST_DATA_DIR):
-        files = [
-            os.path.join(TEST_DATA_DIR, name)
-            for name in os.listdir(TEST_DATA_DIR)
-            if name.endswith('header')
-        ]
-    metafunc.parametrize('test_name', files)
+class Fits2caom2Visitor:
+    def __init__(self, observation, **kwargs):
+        self._observation = observation
+        self._storage_name = kwargs.get('storage_name')
+        self._metadata_reader = kwargs.get('metadata_reader')
+        self._dump_config = False
+        self._logger = logging.getLogger(self.__class__.__name__)
+
+    def visit(self):
+        for uri, file_info in self._metadata_reader.file_info.items():
+            headers = self._metadata_reader.headers.get(uri)
+            telescope_data = telescopes.factory(uri, headers)
+            blueprint = ObsBlueprint(instantiated_class=telescope_data)
+            telescope_data.configure_axes(blueprint)
+            telescope_data.accumulate_bp(blueprint)
+
+            if len(headers) == 0:
+                parser = GenericParser(blueprint, uri)
+            else:
+                parser = FitsParser(headers, blueprint, uri)
+
+            if self._dump_config:
+                print(f'Blueprint for {uri}: {blueprint}')
+
+            if self._observation is None:
+                if blueprint._get('DerivedObservation.members') is None:
+                    self._logger.debug('Build a SimpleObservation')
+                    self._observation = SimpleObservation(
+                        collection=self._storage_name.collection,
+                        observation_id=self._storage_name.obs_id,
+                        algorithm=Algorithm('exposure'),
+                    )
+                else:
+                    self._logger.debug('Build a DerivedObservation')
+                    self._observation = DerivedObservation(
+                        collection=self._storage_name.collection,
+                        observation_id=self._storage_name.obs_id,
+                        algorithm=Algorithm('composite'),
+                    )
+
+            parser.augment_observation(
+                observation=self._observation,
+                artifact_uri=uri,
+                product_id=self._storage_name.product_id,
+            )
+
+            telescope_data.update(
+                headers,
+                file_info,
+                self._observation,
+                self._storage_name,
+            )
+        return self._observation
 
 
-@patch('caom2utils.data_util.get_local_headers_from_fits')
-@patch('dao2caom2.metadata.DefiningMetadataFinder.check_local')
-@patch('caom2utils.data_util.StorageClientWrapper')
-def test_main_app(
-    data_client_mock, local_headers_mock, util_headers_mock, test_name
-):
-    warnings.simplefilter('ignore', category=AstropyUserWarning)
-    local_headers_mock.side_effect = _local_headers
-    util_headers_mock.side_effect = ac.make_headers_from_file
-    config = mc.Config()
-    config.use_local_files = True
-    config.data_sources = [TEST_DATA_DIR]
-    config.task_types = [mc.TaskType.SCRAPE]
-    dmf = metadata.DefiningMetadataFinder(Mock(), config)
-    telescopes.defining_metadata_finder = dmf
-
-    data_client_mock.return_value.info.side_effect = _get_file_info
-    basename = os.path.basename(test_name)
-    dao_name = DAOName(basename.replace('.header', '.gz'))
-    collection = (
-        PRODUCT_COLLECTION if DAOName.is_processed(test_name) else COLLECTION
-    )
-
-    obs_path = f'{TEST_DATA_DIR}/{dao_name.file_id}.expected.xml'
-    output_file = f'{TEST_DATA_DIR}/{dao_name.file_id}.actual.xml'
-
-    sys.argv = (
-        f'{APPLICATION} --no_validate --local {test_name} '
-        f'--observation {collection} {dao_name.obs_id} -o {output_file} '
-        f'--plugin {PLUGIN} --module {PLUGIN} --lineage '
-        f'{dao_name.lineage}'
-    ).split()
-    print(sys.argv)
-    try:
-        main_app.to_caom2()
-    except Exception as e:
-        assert False, e
-
-    compare_result = mc.compare_observations(output_file, obs_path)
-    if compare_result is not None:
-        raise AssertionError(compare_result)
-    # assert False  # cause I want to see logging messages
-
-
-def _get_file_info(file_id):
-    return FileInfo(id=file_id, file_type='application/fits')
-
-
-def _local_headers(uri):
-    ign1, ign2, f_name = mc.decompose_uri(uri)
-    headers = ac.make_headers_from_file(
-        f'{TEST_DATA_DIR}/{f_name.replace(".gz", ".header")}'
-    )
-    temp = headers[0].get('OBSMODE')
-    dpt = (
-        DataProductType.SPECTRUM if '-slit' in temp else DataProductType.IMAGE
-    )
-    return metadata.DefiningMetadata(dpt, uri)
+def visit(observation, **kwargs):
+    s = Fits2caom2Visitor(observation, **kwargs)
+    return s.visit()

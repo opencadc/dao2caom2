@@ -67,102 +67,57 @@
 # ***********************************************************************
 #
 
-import logging
+from os import listdir
+from os.path import basename, dirname, exists, join, realpath
 
-from dataclasses import dataclass
-from os.path import exists, join
-
-from caom2utils import data_util
-from caom2 import DataProductType
-from caom2pipe import client_composable as clc
+from caom2.diff import get_differences
+from cadcdata import FileInfo
+from caom2pipe import astro_composable as ac
 from caom2pipe import manage_composable as mc
+from caom2pipe import reader_composable as rdc
+from dao2caom2 import DAOName
+from dao2caom2 import fits2caom2_augmentation
 
-__all__ = ['DefiningMetadata', 'DefiningMetadataFinder']
-
-
-@dataclass
-class DefiningMetadata:
-    """The metadata that is required to know 'what to do next' for
-    ingesting a file.
-
-    The data_product_type changes the rules for most metadata calculation.
-    """
-    data_product_type: DataProductType
-    uri: str
+THIS_DIR = dirname(realpath(__file__))
+TEST_DATA_DIR = join(THIS_DIR, 'data')
 
 
-class DefiningMetadataFinder:
-    def __init__(self, clients, config):
-        self._clients = clients
-        self._data_sources = config.data_sources
-        self._use_local_files = config.use_local_files
-        self._connected = mc.TaskType.SCRAPE not in config.task_types
-        self._logger = logging.getLogger(self.__class__.__name__)
+def pytest_generate_tests(metafunc):
+    files = []
+    if exists(TEST_DATA_DIR):
+        files = [
+            join(TEST_DATA_DIR, name)
+            for name in listdir(TEST_DATA_DIR)
+            if name.endswith('header')
+        ]
+    metafunc.parametrize('test_name', files)
 
-    def _get_data_product_type(self, headers):
-        obs_mode = headers[0].get('OBSMODE')
-        # DB 30-04-20
-        # I added an obsmodes hash to allow it to be imaging or Imaging but
-        # all should be 'Imaging'.
-        data_product_type = DataProductType.IMAGE
-        if '-slit' in obs_mode:
-            data_product_type = DataProductType.SPECTRUM
-        self._logger.debug('End _get_data_product_type')
-        return data_product_type
 
-    def check_caom2(self, uri):
-        self._logger.debug(f'Begin check_caom2 for {uri}')
-        query_string = f"""
-        SELECT P.dataProductType
-        FROM caom2.Observation AS O
-        JOIN caom2.Plane AS P on P.obsID = O.obsID
-        JOIN caom2.Artifact AS A on A.planeID = P.planeID
-        WHERE A.uri = '{uri}' 
-        """
-        table = clc.query_tap_client(query_string, self._clients.query_client)
-        result = None
-        if len(table) == 1:
-            result = DefiningMetadata(table[0]['dataProductType'], uri)
-        self._logger.debug('End check_caom2')
-        return result
+def test_visitor(test_name):
+    dao_name = DAOName(basename(test_name).replace('.header', '.gz'))
+    file_info = FileInfo(id=dao_name.file_uri, file_type='application/fits')
+    headers = ac.make_headers_from_file(test_name)
+    metadata_reader = rdc.FileMetadataReader()
+    metadata_reader._headers = {dao_name.file_uri: headers}
+    metadata_reader._file_info = {dao_name.file_uri: file_info}
+    kwargs = {
+        'storage_name': dao_name,
+        'metadata_reader': metadata_reader,
+    }
+    observation = None
+    observation = fits2caom2_augmentation.visit(observation, **kwargs)
 
-    def check_local(self, uri):
-        self._logger.debug(f'Begin check_local for {uri}')
-        ignore_scheme, ignore_path, f_name = mc.decompose_uri(uri)
-        result = None
-        for entry in self._data_sources:
-            fqn = join(entry, f_name)
-            if exists(fqn):
-                self._logger.debug(f'Looking in {fqn} for headers.')
-                headers = data_util.get_local_headers_from_fits(fqn)
-                result = DefiningMetadata(
-                    self._get_data_product_type(headers), uri
-                )
-                break
-        self._logger.debug('End check_local')
-        return result
-
-    def check_remote(self, uri):
-        self._logger.debug(f'Begin check_remote for {uri}')
-        headers = self._clients.data_client.get_head(uri)
-        data_product_type = self._get_data_product_type(headers)
-        self._logger.debug('End check_remote')
-        return DefiningMetadata(data_product_type, uri)
-
-    def get(self, uri):
-        """
-        :param uri: str CADC storage reference
-        :return: DefiningMetadata, if it can be found by a service, for the
-           uri.
-        """
-        if self._connected:
-            result = None
-            if self._use_local_files:
-                result = self.check_local(uri)
-            if result is None:
-                result = self.check_caom2(uri)
-            if result is None:
-                result = self.check_remote(uri)
-        else:
-            result = self.check_local(uri)
-        return result
+    expected_fqn = (
+        f'{TEST_DATA_DIR}/{dao_name.file_id}.expected.xml'
+    )
+    expected = mc.read_obs_from_file(expected_fqn)
+    compare_result = get_differences(expected, observation)
+    if compare_result is not None:
+        actual_fqn = expected_fqn.replace('expected', 'actual')
+        mc.write_obs_to_file(observation, actual_fqn)
+        compare_text = '\n'.join([r for r in compare_result])
+        msg = (
+            f'Differences found in observation {expected.observation_id}\n'
+            f'{compare_text}'
+        )
+        raise AssertionError(msg)

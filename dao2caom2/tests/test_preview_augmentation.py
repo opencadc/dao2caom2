@@ -71,10 +71,12 @@ import os
 
 from caom2pipe import manage_composable as mc
 from dao2caom2 import preview_augmentation, dao_name
-import test_main_app
+import test_fits2caom2_augmentation
 
 TEST_FILES_DIR = '/test_files'
-REJECTED_FILE = os.path.join(test_main_app.TEST_DATA_DIR, 'rejected.yml')
+REJECTED_FILE = os.path.join(
+    test_fits2caom2_augmentation.TEST_DATA_DIR, 'rejected.yml'
+)
 
 
 def test_visit():
@@ -143,7 +145,7 @@ def test_visit():
 
     for key, value in test_files.items():
         obs = mc.read_obs_from_file(
-            f'{test_main_app.TEST_DATA_DIR}/previews/{key}'
+            f'{test_fits2caom2_augmentation.TEST_DATA_DIR}/previews/{key}'
         )
         for f_name in value:
             test_name = dao_name.DAOName(f_name)
