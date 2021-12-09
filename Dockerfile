@@ -54,6 +54,7 @@ WORKDIR /usr/src/app
 
 COPY --from=builder /usr/local/lib/python3.9/site-packages/ /usr/local/lib/python3.9/site-packages/
 COPY --from=builder /usr/local/bin/* /usr/local/bin/
+COPY --from=builder /usr/local/.config/* /usr/local/.config/
 
 COPY --from=builder /etc/magic /etc/magic
 COPY --from=builder /etc/magic.mime /etc/magic.mime
