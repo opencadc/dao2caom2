@@ -81,6 +81,7 @@ import numpy as np
 from astropy.io import fits
 from astropy.visualization import ZScaleInterval, SqrtStretch, ImageNormalize
 from matplotlib import pylab
+from PIL import Image
 from urllib.parse import urlparse
 
 from caom2 import ReleaseType, ProductType
@@ -342,8 +343,11 @@ class DAOPreview(mc.PreviewVisitor):
         pylab.title(title, color='k', fontweight='bold')
         temp_fn = 'temp.png'
         pylab.savefig(temp_fn, format='png')
-        mc.exec_cmd(f'convert -resize 256x256 {temp_fn} {thumb_fqn}')
-        mc.exec_cmd(f'convert -resize 1024x1024 {temp_fn} {preview_fqn}')
+        img = Image.open(temp_fn)
+        img.thumbnail((1024, 1024))
+        img.save(preview_fqn)
+        img.thumbnail((256, 256))
+        img.save(thumb_fqn)
         self.add_to_delete(f'{self._working_dir}/{temp_fn}')
 
 
