@@ -42,14 +42,14 @@
         <caom2:reference>https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/dao/</caom2:reference>
         <caom2:lastExecuted>2018-10-06T14:15:31.000</caom2:lastExecuted>
         <caom2:inputs>
+          <caom2:planeURI>caom:DAO/dao_c182_2016_003944_B/dao_c182_2016_003944_B</caom2:planeURI>
           <caom2:planeURI>caom:DAO/dao_c182_2016_003933_F/dao_c182_2016_003933_F</caom2:planeURI>
           <caom2:planeURI>caom:DAO/dao_c182_2016_004034/dao_c182_2016_004034</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c182_2016_003944_B/dao_c182_2016_003944_B</caom2:planeURI>
         </caom2:inputs>
       </caom2:provenance>
       <caom2:artifacts>
         <caom2:artifact caom2:id="00000000-0000-0000-2c65-0166651e4ba5" caom2:lastModified="2018-10-11T21:53:02.363" caom2:maxLastModified="2018-10-11T21:53:02.363" caom2:metaChecksum="md5:5b0bcd2d720184b091579dd20343eb2f" caom2:accMetaChecksum="md5:3c5f3b38d952dba0a1ab87d98ad83807" caom2:metaProducer="dao2caom2/0.3.1">
-          <caom2:uri>ad:DAOCADC/dao_c182_2016_004034_a.fits.gz</caom2:uri>
+          <caom2:uri>cadc:DAOCADC/dao_c182_2016_004034_a.fits.gz</caom2:uri>
           <caom2:productType>science</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>

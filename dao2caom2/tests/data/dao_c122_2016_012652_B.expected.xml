@@ -45,42 +45,42 @@
         <caom2:reference>https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/dao/</caom2:reference>
         <caom2:lastExecuted>2016-12-02T01:40:58.000</caom2:lastExecuted>
         <caom2:inputs>
-          <caom2:planeURI>caom:DAO/dao_c122_2016_012657/dao_c122_2016_012657</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2016_012730/dao_c122_2016_012730</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2016_012666/dao_c122_2016_012666</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2016_012659/dao_c122_2016_012659</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2016_012652/dao_c122_2016_012652</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2016_012731/dao_c122_2016_012731</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2016_012655/dao_c122_2016_012655</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2016_012656/dao_c122_2016_012656</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2016_012729/dao_c122_2016_012729</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2016_012737/dao_c122_2016_012737</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2016_012662/dao_c122_2016_012662</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2016_012665/dao_c122_2016_012665</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2016_012740/dao_c122_2016_012740</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2016_012736/dao_c122_2016_012736</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2016_012727/dao_c122_2016_012727</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2016_012732/dao_c122_2016_012732</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2016_012739/dao_c122_2016_012739</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2016_012660/dao_c122_2016_012660</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2016_012733/dao_c122_2016_012733</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2016_012664/dao_c122_2016_012664</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2016_012735/dao_c122_2016_012735</caom2:planeURI>
           <caom2:planeURI>caom:DAO/dao_c122_2016_012734/dao_c122_2016_012734</caom2:planeURI>
           <caom2:planeURI>caom:DAO/dao_c122_2016_012741/dao_c122_2016_012741</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2016_012738/dao_c122_2016_012738</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2016_012726/dao_c122_2016_012726</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2016_012735/dao_c122_2016_012735</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2016_012737/dao_c122_2016_012737</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2016_012740/dao_c122_2016_012740</caom2:planeURI>
           <caom2:planeURI>caom:DAO/dao_c122_2016_012653/dao_c122_2016_012653</caom2:planeURI>
           <caom2:planeURI>caom:DAO/dao_c122_2016_012654/dao_c122_2016_012654</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2016_012661/dao_c122_2016_012661</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2016_012726/dao_c122_2016_012726</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2016_012663/dao_c122_2016_012663</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2016_012659/dao_c122_2016_012659</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2016_012738/dao_c122_2016_012738</caom2:planeURI>
           <caom2:planeURI>caom:DAO/dao_c122_2016_012728/dao_c122_2016_012728</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2016_012652/dao_c122_2016_012652</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2016_012727/dao_c122_2016_012727</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2016_012660/dao_c122_2016_012660</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2016_012661/dao_c122_2016_012661</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2016_012731/dao_c122_2016_012731</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2016_012656/dao_c122_2016_012656</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2016_012729/dao_c122_2016_012729</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2016_012730/dao_c122_2016_012730</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2016_012663/dao_c122_2016_012663</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2016_012665/dao_c122_2016_012665</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2016_012666/dao_c122_2016_012666</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2016_012657/dao_c122_2016_012657</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2016_012655/dao_c122_2016_012655</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2016_012736/dao_c122_2016_012736</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2016_012739/dao_c122_2016_012739</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2016_012664/dao_c122_2016_012664</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2016_012662/dao_c122_2016_012662</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2016_012732/dao_c122_2016_012732</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2016_012733/dao_c122_2016_012733</caom2:planeURI>
           <caom2:planeURI>caom:DAO/dao_c122_2016_012658/dao_c122_2016_012658</caom2:planeURI>
         </caom2:inputs>
       </caom2:provenance>
       <caom2:artifacts>
         <caom2:artifact caom2:id="00000000-0000-0000-e481-0158c157e489" caom2:lastModified="2017-11-10T19:20:57.160" caom2:maxLastModified="2017-11-10T19:20:57.160" caom2:metaChecksum="md5:e8204881408c0458cd170f7e738f1a18" caom2:accMetaChecksum="md5:68628e3a5f2da21a8fde1621c5909844" caom2:metaProducer="dao2caom2/0.3.1">
-          <caom2:uri>ad:DAOCADC/dao_c122_2016_012652_B.fits.gz</caom2:uri>
+          <caom2:uri>cadc:DAOCADC/dao_c122_2016_012652_B.fits.gz</caom2:uri>
           <caom2:productType>calibration</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>
@@ -127,36 +127,36 @@
     </caom2:plane>
   </caom2:planes>
   <caom2:members>
-    <caom2:observationURI>caom:DAO/dao_c122_2016_012665</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2016_012740</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2016_012658</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2016_012732</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2016_012731</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2016_012661</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2016_012652</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2016_012727</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2016_012655</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2016_012729</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2016_012741</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2016_012734</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2016_012726</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2016_012663</caom2:observationURI>
     <caom2:observationURI>caom:DAO/dao_c122_2016_012653</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2016_012654</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2016_012657</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2016_012737</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2016_012739</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2016_012738</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2016_012660</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2016_012735</caom2:observationURI>
     <caom2:observationURI>caom:DAO/dao_c122_2016_012662</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2016_012730</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2016_012664</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2016_012656</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2016_012728</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2016_012736</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2016_012654</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2016_012726</caom2:observationURI>
     <caom2:observationURI>caom:DAO/dao_c122_2016_012733</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2016_012659</caom2:observationURI>
     <caom2:observationURI>caom:DAO/dao_c122_2016_012666</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2016_012727</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2016_012728</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2016_012664</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2016_012729</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2016_012734</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2016_012656</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2016_012735</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2016_012661</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2016_012658</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2016_012657</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2016_012740</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2016_012732</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2016_012737</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2016_012655</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2016_012739</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2016_012730</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2016_012731</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2016_012660</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2016_012665</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2016_012652</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2016_012738</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2016_012659</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2016_012663</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2016_012741</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2016_012736</caom2:observationURI>
   </caom2:members>
 </caom2:Observation>
