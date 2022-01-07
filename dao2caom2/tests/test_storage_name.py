@@ -91,7 +91,7 @@ def test_processed():
     ), 'wrong source names'
     assert (
         test_subject.destination_uris ==
-        [f'ad:{PRODUCT_COLLECTION}/dao_c122_2020_004100_v.fits']
+        [f'cadc:{PRODUCT_COLLECTION}/dao_c122_2020_004100_v.fits']
     ), 'wrong destination uris'
     assert (
             test_subject.collection == PRODUCT_COLLECTION
@@ -99,14 +99,14 @@ def test_processed():
 
 
 def test_raw():
-    test_result = DAOName('ad:DAO/dao_c182_2018_015013.fits')
+    test_result = DAOName('cadc:DAO/dao_c182_2018_015013.fits')
     assert test_result is not None, 'expect a result'
     assert test_result.obs_id == 'dao_c182_2018_015013'
     assert test_result.file_name == 'dao_c182_2018_015013.fits'
     assert test_result.file_id == 'dao_c182_2018_015013'
-    assert test_result.source_names == ['ad:DAO/dao_c182_2018_015013.fits']
+    assert test_result.source_names == ['cadc:DAO/dao_c182_2018_015013.fits']
     assert (
-        test_result.destination_uris == ['ad:DAO/dao_c182_2018_015013.fits']
+        test_result.destination_uris == ['cadc:DAO/dao_c182_2018_015013.fits']
     ), 'wrong destination uris'
 
     test_result_2 = DAOName(
@@ -118,5 +118,5 @@ def test_raw():
     )
     assert (
         test_result_2.destination_uris ==
-        [f'ad:{COLLECTION}/dao_c182_2018_015013.fits.gz']
+        [f'cadc:{COLLECTION}/dao_c182_2018_015013.fits.gz']
     ), 'wrong destination uris'

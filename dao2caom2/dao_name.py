@@ -70,9 +70,6 @@
 import logging
 import re
 
-from os.path import basename
-from urllib.parse import urlparse
-
 from caom2pipe import manage_composable as mc
 
 __all__ = ['COLLECTION', 'DAOName', 'PRODUCT_COLLECTION']
@@ -119,6 +116,7 @@ class DAOName(mc.StorageName):
             self._file_name,
             entry=entry,
             compression='',
+            scheme='cadc',
         )
         self._file_id = file_id
         self._source_names = [entry]
@@ -172,7 +170,9 @@ class DAOName(mc.StorageName):
     def is_derived(entry):
         # entry is a uri
         result = False
-        if re.match('ad:DAOCADC/dao_[c]\\d{3}_\\d{4}_\\d{6}_[BF].\\w', entry):
+        if re.match(
+            'cadc:DAOCADC/dao_[c]\\d{3}_\\d{4}_\\d{6}_[BF].\\w', entry
+        ):
             result = True
         return result
 
@@ -208,6 +208,8 @@ class DAOName(mc.StorageName):
     def override_provenance(entry):
         # entry is a uri
         result = False
-        if re.match('ad:DAOCADC/dao_[c]\\d{3}_\\d{4}_\\d{6}_[aBF].\\w', entry):
+        if re.match(
+            'cadc:DAOCADC/dao_[c]\\d{3}_\\d{4}_\\d{6}_[aBF].\\w', entry
+        ):
             result = True
         return result

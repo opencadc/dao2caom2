@@ -34,7 +34,7 @@
       <caom2:calibrationLevel>1</caom2:calibrationLevel>
       <caom2:artifacts>
         <caom2:artifact caom2:id="00000000-0000-0000-8fc1-016fc3ecc549" caom2:lastModified="2020-01-20T17:07:58.390" caom2:maxLastModified="2020-01-20T17:07:58.390" caom2:metaChecksum="md5:2de90aaac6fef597d51751df989cc7ab" caom2:accMetaChecksum="md5:e7a60029b9a4d94fd503f982c4a5c14a">
-          <caom2:uri>ad:DAO/dao_c122_2007_000882.fits.gz</caom2:uri>
+          <caom2:uri>cadc:DAO/dao_c122_2007_000882.fits.gz</caom2:uri>
           <caom2:productType>science</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>
@@ -52,7 +52,7 @@
       <caom2:calibrationLevel>2</caom2:calibrationLevel>
       <caom2:artifacts>
         <caom2:artifact caom2:id="00000000-0000-0000-1b4c-0158ad5fee65" caom2:lastModified="2017-11-10T18:35:13.673" caom2:maxLastModified="2017-11-10T18:35:13.673" caom2:metaChecksum="md5:938ebc812daf212b68749ca9a3d7a485" caom2:accMetaChecksum="md5:9142da179c32bbd597b393ffb6cdfa24">
-          <caom2:uri>ad:DAOCADC/dao_c122_2007_000882_v.fits</caom2:uri>
+          <caom2:uri>cadc:DAOCADC/dao_c122_2007_000882_v.fits</caom2:uri>
           <caom2:productType>science</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>

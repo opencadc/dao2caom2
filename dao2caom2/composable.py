@@ -100,7 +100,7 @@ def _common():
     clients = clc.ClientCollection(config)
     files_source = None
     if config.use_local_files and config.cleanup_files_when_storing:
-        files_source = dsc.UseLocalFilesDataSource(
+        files_source = dsc.LocalFilesDataSource(
             config, clients.data_client, config.recurse_data_sources
         )
     name_builder = nbc.EntryBuilder(dao_name.DAOName)
