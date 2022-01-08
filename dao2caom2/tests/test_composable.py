@@ -70,8 +70,14 @@
 import os
 import test_fits2caom2_augmentation
 
+from collections import deque
 from mock import Mock, patch
-from dao2caom2 import composable, dao_name, COLLECTION
+from tempfile import TemporaryDirectory
+
+from cadcdata import FileInfo
+from caom2 import SimpleObservation
+from caom2pipe import manage_composable as mc
+from dao2caom2 import composable, dao_name
 
 F_NAME_LIST = [
     'data_report.txt',
@@ -165,3 +171,79 @@ def test_run_vo(run_mock, vo_client_mock, access_mock):
             )
             if os.path.exists(fqn):
                 os.unlink(fqn)
+
+
+@patch('cadcutils.net.ws.WsCapabilities.get_access_url')
+@patch('caom2pipe.reader_composable.FileMetadataReader._retrieve_headers')
+@patch('caom2pipe.reader_composable.FileMetadataReader._retrieve_file_info')
+@patch('caom2pipe.data_source_composable.LocalFilesDataSource.clean_up')
+@patch('caom2pipe.data_source_composable.LocalFilesDataSource.get_work')
+@patch('caom2pipe.client_composable.CAOM2RepoClient')
+@patch('caom2pipe.client_composable.StorageClientWrapper')
+def test_run_store_ingest(
+    data_client_mock,
+    repo_client_mock,
+    get_work_mock,
+    cleanup_mock,
+    reader_file_info_mock,
+    reader_headers_mock,
+    access_mock,
+):
+    access_mock.return_value = 'https://localhost'
+    temp_deque = deque()
+    temp_deque.append('/data/abc.fits')
+    get_work_mock.return_value = temp_deque
+    repo_client_mock.return_value.read.return_value = None
+    reader_headers_mock.return_value = []
+    reader_file_info_mock.return_value = FileInfo(
+        id='cadc:DAOCADC/abc.fits',
+        file_type='application/fits',
+        md5sum='md5:def',
+    )
+
+    cwd = os.getcwd()
+    with TemporaryDirectory() as tmp_dir_name:
+        os.chdir(tmp_dir_name)
+        test_config = mc.Config()
+        test_config.working_directory = tmp_dir_name
+        test_config.task_types = [mc.TaskType.STORE, mc.TaskType.INGEST]
+        test_config.use_local_files = True
+        test_config.cleanup_files_when_storing = True
+        test_config.cleanup_failure_destination = '/data/failure'
+        test_config.cleanup_success_destination = '/data/success'
+        test_config.data_sources = ['/data']
+        test_config.data_source_extensions = ['.fits']
+        test_config.logging_level = 'INFO'
+        test_config.proxy_file_name = 'cadcproxy.pem'
+        test_config.proxy_fqn = f'{tmp_dir_name}/cadcproxy.pem'
+        test_config.features.supports_latest_client = True
+        mc.Config.write_to_file(test_config)
+        with open(test_config.proxy_fqn, 'w') as f:
+            f.write('test content')
+        getcwd_orig = os.getcwd
+        os.getcwd = Mock(return_value=tmp_dir_name)
+        try:
+            test_result = composable._run()
+            assert test_result is not None, 'expect result'
+            assert test_result == 0, 'expect success'
+            assert repo_client_mock.return_value.read.called, 'read called'
+            # make sure data is not really being written to CADC storage :)
+            assert (
+                data_client_mock.return_value.put.called
+            ), 'put should be called'
+            assert (
+                    data_client_mock.return_value.put.call_count == 1
+            ), 'wrong number of puts'
+            data_client_mock.return_value.put.assert_called_with(
+                '/data', 'cadc:DAO/abc.fits', None
+            )
+            assert cleanup_mock.called, 'cleanup'
+            cleanup_mock.assert_called_with(
+                '/data/abc.fits', 0
+            ), 'wrong cleanup args'
+            assert repo_client_mock.return_value.create.called, 'create call'
+            args, kwargs = repo_client_mock.return_value.create.call_args
+            assert isinstance(args[0], SimpleObservation), 'wrong arg type'
+        finally:
+            os.getcwd = getcwd_orig
+            os.chdir(cwd)
