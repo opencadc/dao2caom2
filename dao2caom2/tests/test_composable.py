@@ -239,7 +239,7 @@ def test_run_store_ingest(
             )
             assert cleanup_mock.called, 'cleanup'
             cleanup_mock.assert_called_with(
-                '/data/abc.fits', 0
+                '/data/abc.fits', 0, 0
             ), 'wrong cleanup args'
             assert repo_client_mock.return_value.create.called, 'create call'
             args, kwargs = repo_client_mock.return_value.create.call_args
