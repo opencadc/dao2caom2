@@ -173,6 +173,8 @@ def test_run_vo(run_mock, vo_client_mock, access_mock):
                 os.unlink(fqn)
 
 
+@patch('caom2pipe.execute_composable.CaomExecute._caom2_store')
+@patch('caom2pipe.execute_composable.CaomExecute._visit_meta')
 @patch('cadcutils.net.ws.WsCapabilities.get_access_url')
 @patch('caom2pipe.reader_composable.FileMetadataReader._retrieve_headers')
 @patch('caom2pipe.reader_composable.FileMetadataReader._retrieve_file_info')
@@ -188,15 +190,17 @@ def test_run_store_ingest(
     reader_file_info_mock,
     reader_headers_mock,
     access_mock,
+    visit_meta_mock,
+    caom2_store_mock,
 ):
     access_mock.return_value = 'https://localhost'
     temp_deque = deque()
-    temp_deque.append('/data/abc.fits')
+    temp_deque.append('/data/dao_c122_2021_005157_e.fits')
     get_work_mock.return_value = temp_deque
     repo_client_mock.return_value.read.return_value = None
-    reader_headers_mock.return_value = []
+    reader_headers_mock.return_value = [{'OBSMODE': 'abc'}]
     reader_file_info_mock.return_value = FileInfo(
-        id='cadc:DAOCADC/abc.fits',
+        id='cadc:DAOCADC/dao_c122_2021_005157_e.fits',
         file_type='application/fits',
         md5sum='md5:def',
     )
@@ -213,7 +217,7 @@ def test_run_store_ingest(
         test_config.cleanup_success_destination = '/data/success'
         test_config.data_sources = ['/data']
         test_config.data_source_extensions = ['.fits']
-        test_config.logging_level = 'INFO'
+        test_config.logging_level = 'DEBUG'
         test_config.proxy_file_name = 'cadcproxy.pem'
         test_config.proxy_fqn = f'{tmp_dir_name}/cadcproxy.pem'
         test_config.features.supports_latest_client = True
@@ -235,15 +239,28 @@ def test_run_store_ingest(
                     data_client_mock.return_value.put.call_count == 1
             ), 'wrong number of puts'
             data_client_mock.return_value.put.assert_called_with(
-                '/data', 'cadc:DAO/abc.fits', None
+                '/data', 'cadc:DAOCADC/dao_c122_2021_005157_e.fits', None
             )
             assert cleanup_mock.called, 'cleanup'
             cleanup_mock.assert_called_with(
-                '/data/abc.fits', 0, 0
+                '/data/dao_c122_2021_005157_e.fits', 0, 0
             ), 'wrong cleanup args'
-            assert repo_client_mock.return_value.create.called, 'create call'
-            args, kwargs = repo_client_mock.return_value.create.call_args
-            assert isinstance(args[0], SimpleObservation), 'wrong arg type'
+            assert visit_meta_mock.called, '_visit_meta call'
+            assert visit_meta_mock.call_count == 1, '_visit_meta call count'
+            assert caom2_store_mock.called, '_caom2_store call'
+            assert caom2_store_mock.call_count == 1, '_caom2_store call count'
+            assert reader_file_info_mock.called, 'info'
+            assert (
+                    reader_file_info_mock.call_count == 1
+            ), 'wrong number of info calls'
+            reader_file_info_mock.assert_called_with(
+                '/data/dao_c122_2021_005157_e.fits',
+            )
+            assert reader_headers_mock.called, 'get_head should be called'
+            assert reader_headers_mock.call_count == 1, 'get_head call count'
+            reader_headers_mock.assert_called_with(
+                '/data/dao_c122_2021_005157_e.fits',
+            ), 'get_head parameters'
         finally:
             os.getcwd = getcwd_orig
             os.chdir(cwd)
