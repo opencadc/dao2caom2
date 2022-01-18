@@ -71,7 +71,7 @@ import os
 import test_fits2caom2_augmentation
 
 from collections import deque
-from mock import Mock, patch
+from mock import Mock, patch, call
 from tempfile import TemporaryDirectory
 
 from cadcdata import FileInfo
@@ -196,15 +196,18 @@ def test_run_store_ingest(
     access_mock.return_value = 'https://localhost'
     temp_deque = deque()
     temp_deque.append('/data/dao_c122_2021_005157_e.fits')
+    temp_deque.append('/data/dao_c122_2021_005157.fits')
     get_work_mock.return_value = temp_deque
     repo_client_mock.return_value.read.return_value = None
     reader_headers_mock.return_value = [{'OBSMODE': 'abc'}]
-    reader_file_info_mock.return_value = FileInfo(
-        id='cadc:DAOCADC/dao_c122_2021_005157_e.fits',
-        file_type='application/fits',
-        md5sum='md5:def',
-    )
+    def _file_info_mock(uri):
+        return FileInfo(
+            id=uri,
+            file_type='application/fits',
+            md5sum='md5:def',
+        )
 
+    reader_file_info_mock.side_effect = _file_info_mock
     cwd = os.getcwd()
     with TemporaryDirectory() as tmp_dir_name:
         os.chdir(tmp_dir_name)
@@ -236,31 +239,41 @@ def test_run_store_ingest(
                 data_client_mock.return_value.put.called
             ), 'put should be called'
             assert (
-                    data_client_mock.return_value.put.call_count == 1
+                data_client_mock.return_value.put.call_count == 2
             ), 'wrong number of puts'
-            data_client_mock.return_value.put.assert_called_with(
-                '/data', 'cadc:DAOCADC/dao_c122_2021_005157_e.fits', None
+            put_calls = [
+                call('/data', 'cadc:DAOCADC/dao_c122_2021_005157_e.fits', None),
+                call('/data', 'cadc:DAO/dao_c122_2021_005157.fits', None),
+            ]
+            data_client_mock.return_value.put.assert_has_calls(
+                put_calls, any_order=False
             )
             assert cleanup_mock.called, 'cleanup'
-            cleanup_mock.assert_called_with(
-                '/data/dao_c122_2021_005157_e.fits', 0, 0
-            ), 'wrong cleanup args'
+            cleanup_calls = [
+                call('/data/dao_c122_2021_005157_e.fits', 0, 0),
+                call('/data/dao_c122_2021_005157.fits', 0, 0),
+            ]
+            cleanup_mock.assert_has_calls(cleanup_calls), 'wrong cleanup args'
             assert visit_meta_mock.called, '_visit_meta call'
-            assert visit_meta_mock.call_count == 1, '_visit_meta call count'
+            assert visit_meta_mock.call_count == 2, '_visit_meta call count'
             assert caom2_store_mock.called, '_caom2_store call'
-            assert caom2_store_mock.call_count == 1, '_caom2_store call count'
+            assert caom2_store_mock.call_count == 2, '_caom2_store call count'
             assert reader_file_info_mock.called, 'info'
             assert (
-                    reader_file_info_mock.call_count == 1
+                reader_file_info_mock.call_count == 2
             ), 'wrong number of info calls'
-            reader_file_info_mock.assert_called_with(
-                '/data/dao_c122_2021_005157_e.fits',
-            )
+            reader_info_calls = [
+                call('/data/dao_c122_2021_005157_e.fits'),
+                call('/data/dao_c122_2021_005157.fits'),
+            ]
+            reader_file_info_mock.assert_has_calls(reader_info_calls), 'info'
             assert reader_headers_mock.called, 'get_head should be called'
-            assert reader_headers_mock.call_count == 1, 'get_head call count'
-            reader_headers_mock.assert_called_with(
-                '/data/dao_c122_2021_005157_e.fits',
-            ), 'get_head parameters'
+            assert reader_headers_mock.call_count == 2, 'get_head call count'
+            header_calls = [
+                call('/data/dao_c122_2021_005157_e.fits'),
+                call('/data/dao_c122_2021_005157.fits'),
+            ]
+            reader_headers_mock.assert_has_calls(header_calls), 'get_head'
         finally:
             os.getcwd = getcwd_orig
             os.chdir(cwd)

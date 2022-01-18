@@ -72,7 +72,7 @@ import re
 
 from caom2pipe import manage_composable as mc
 
-__all__ = ['COLLECTION', 'DAOName', 'PRODUCT_COLLECTION']
+__all__ = ['COLLECTION', 'DAOName', 'get_collection', 'PRODUCT_COLLECTION']
 
 
 COLLECTION = 'DAO'
@@ -213,3 +213,7 @@ class DAOName(mc.StorageName):
         ):
             result = True
         return result
+
+
+def get_collection(entry):
+    return PRODUCT_COLLECTION if DAOName.is_processed(entry) else COLLECTION

@@ -76,6 +76,19 @@ from os.path import basename, join
 from caom2pipe import client_composable as clc
 from caom2pipe import data_source_composable as dsc
 from caom2pipe import manage_composable as mc
+from dao2caom2 import dao_name
+
+
+__all__ = ['DAOLocalFilesDataSource', 'DAOVaultDataSource']
+
+
+class DAOLocalFilesDataSource(dsc.LocalFilesDataSource):
+
+    def __init__(self, config, cadc_client, metadata_reader, recursive):
+        super().__init__(config, cadc_client, metadata_reader, recursive)
+
+    def get_collection(self, f_name):
+        return dao_name.get_collection(f_name)
 
 
 class DAOVaultDataSource(dsc.VaultDataSource):

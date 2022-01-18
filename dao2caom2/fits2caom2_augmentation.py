@@ -71,7 +71,7 @@ import re
 
 from caom2pipe import caom_composable as cc
 from caom2 import DataProductType
-from dao2caom2 import telescopes
+from dao2caom2 import telescopes, dao_name
 
 
 class DAOFits2caom2Visitor(cc.Fits2caom2Visitor):
@@ -97,16 +97,7 @@ class DAOFits2caom2Visitor(cc.Fits2caom2Visitor):
                 headers
             )
             if data_product_type == DataProductType.IMAGE:
-                if (
-                    re.match(
-                        'dao_[cr]\\d{3}_\\d{4}_\\d{6}_[aevBF]',
-                        self._storage_name.file_id,
-                    ) or
-                    re.match(
-                        'dao_[p]\\d{3}_\\d{6}(u|v|y|r|i|)',
-                        self._storage_name.file_id,
-                    )
-                ):
+                if dao_name.DAOName.is_processed(self._storage_name.file_id):
                     if (
                         self._storage_name.file_name.startswith('dao_c122') or
                         self._storage_name.file_name.startswith('dao_r122') or
@@ -132,16 +123,7 @@ class DAOFits2caom2Visitor(cc.Fits2caom2Visitor):
                         self._storage_name, headers
                     )
             else:
-                if (
-                    re.match(
-                        'dao_[cr]\\d{3}_\\d{4}_\\d{6}_[aevBF]',
-                        self._storage_name.file_id,
-                    ) or
-                    re.match(
-                        'dao_[p]\\d{3}_\\d{6}(u|v|y|r|i|)',
-                        self._storage_name.file_id,
-                    )
-                ):
+                if dao_name.DAOName.is_processed(self._storage_name.file_id):
                     if (
                         self._storage_name.file_name.startswith('dao_c122') or
                         self._storage_name.file_name.startswith('dao_r122') or

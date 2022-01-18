@@ -104,7 +104,7 @@ def _common():
     if config.use_local_files:
         metadata_reader = rdc.FileMetadataReader()
         if config.cleanup_files_when_storing:
-            files_source = dsc.LocalFilesDataSource(
+            files_source = data_source.DAOLocalFilesDataSource(
                 config,
                 clients.data_client,
                 metadata_reader,
