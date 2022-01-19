@@ -42,8 +42,8 @@
         <caom2:reference>https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/dao/</caom2:reference>
         <caom2:lastExecuted>2018-10-06T14:15:31.000</caom2:lastExecuted>
         <caom2:inputs>
-          <caom2:planeURI>caom:DAO/dao_c182_2016_003944_B/dao_c182_2016_003944_B</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c182_2016_003933_F/dao_c182_2016_003933_F</caom2:planeURI>
+          <caom2:planeURI>caom:DAOCADC/dao_c182_2016_003944_B/dao_c182_2016_003944_B</caom2:planeURI>
+          <caom2:planeURI>caom:DAOCADC/dao_c182_2016_003933_F/dao_c182_2016_003933_F</caom2:planeURI>
           <caom2:planeURI>caom:DAO/dao_c182_2016_004034/dao_c182_2016_004034</caom2:planeURI>
         </caom2:inputs>
       </caom2:provenance>

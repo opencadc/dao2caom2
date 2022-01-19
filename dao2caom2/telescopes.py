@@ -79,7 +79,7 @@ from caom2 import ObservationIntentType, TypedSet, ObservationURI
 from caom2pipe import astro_composable as ac
 from caom2pipe import caom_composable as cc
 from caom2pipe import manage_composable as mc
-from dao2caom2.dao_name import DAOName, COLLECTION
+from dao2caom2.dao_name import DAOName, COLLECTION, get_collection
 
 
 __all__ = ['DAOTelescopeMapping']
@@ -283,7 +283,7 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
                     plane,
                     self._headers,
                     'FLAT_',
-                    'DAO',  # TODO
+                    COLLECTION,  # because FLAT_ references DAO files
                     _repair_provenance_value,
                     observation.observation_id,
                 )
@@ -295,7 +295,7 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
                     plane,
                     self._headers,
                     'ZERO_',
-                    'DAO',  # TODO
+                    COLLECTION,  # because ZERO_ references DAO files
                     _repair_provenance_value,
                     observation.observation_id,
                 )
@@ -363,21 +363,26 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
             if f_name is not None:
                 bias_name = DAOName(f_name)
                 ignore, plane_uri = cc.make_plane_uri(
-                    bias_name.obs_id, bias_name.product_id, 'DAO'
-                )  # TODO
+                    bias_name.obs_id,
+                    bias_name.product_id,
+                    get_collection(bias_name.file_name),
+                )
                 plane.provenance.inputs.add(plane_uri)
         if observation.type in ['object', 'comparison']:
             f_name = headers[0].get('FLAT')
             if f_name is not None:
                 flat_name = DAOName(f_name)
                 ignore, plane_uri = cc.make_plane_uri(
-                    flat_name.obs_id, flat_name.product_id, 'DAO'
-                )  # TODO
+                    flat_name.obs_id,
+                    flat_name.product_id,
+                    get_collection(flat_name.file_name),
+                )
                 plane.provenance.inputs.add(plane_uri)
             # referral to raw plane
             ignore, plane_uri = cc.make_plane_uri(
-                observation.observation_id, observation.observation_id,
-                'DAO',  # TODO
+                observation.observation_id,
+                observation.observation_id,
+                get_collection(observation.observation_id),
             )
             plane.provenance.inputs.add(plane_uri)
         if observation.type == 'object':
@@ -385,8 +390,9 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
             if f_name is not None:
                 ref_spec1_name = DAOName(f_name.split()[2])
                 ignore, plane_uri = cc.make_plane_uri(
-                    ref_spec1_name.obs_id, ref_spec1_name.product_id,
-                    'DAO',  # TODO
+                    ref_spec1_name.obs_id,
+                    ref_spec1_name.product_id,
+                    get_collection(ref_spec1_name.file_name),
                 )
                 plane.provenance.inputs.add(plane_uri)
             if headers[0].get('DCLOG2') is not None:
@@ -394,7 +400,7 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
                 ignore, plane_uri = cc.make_plane_uri(
                     ref_spec1_name.obs_id,
                     ref_spec1_name.product_id,
-                    COLLECTION,
+                    get_collection(ref_spec1_name.file_name),
                 )
                 plane.provenance.inputs.add(plane_uri)
         self._logger.debug(f'End _update_plane_provenance.')
