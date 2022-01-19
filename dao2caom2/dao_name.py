@@ -156,6 +156,14 @@ class DAOName(mc.StorageName):
         """The thumbnail file name for the file."""
         return '{}_256.png'.format(self.file_id)
 
+    @property
+    def is_12_metre(self):
+        return (
+            self.file_name.startswith('dao_c122') or
+            self.file_name.startswith('dao_r122') or
+            self.file_name.startswith('dao_p122')
+        )
+
     @staticmethod
     def get_obs_id(file_name):
         # observation ID differs from the file ID for processed data, except

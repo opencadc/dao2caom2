@@ -98,11 +98,7 @@ class DAOFits2caom2Visitor(cc.Fits2caom2Visitor):
             )
             if data_product_type == DataProductType.IMAGE:
                 if dao_name.DAOName.is_processed(self._storage_name.file_id):
-                    if (
-                        self._storage_name.file_name.startswith('dao_c122') or
-                        self._storage_name.file_name.startswith('dao_r122') or
-                        self._storage_name.file_name.startswith('dao_p122')
-                    ):
+                    if self._storage_name.is_12_metre:
                         result = telescopes.Dao12MetreProcessedImage(
                             self._storage_name, headers
                         )
@@ -110,11 +106,7 @@ class DAOFits2caom2Visitor(cc.Fits2caom2Visitor):
                         result = telescopes.Dao18MetreProcessedImage(
                             self._storage_name, headers
                         )
-                elif (
-                    self._storage_name.file_name.startswith('dao_c122') or
-                    self._storage_name.file_name.startswith('dao_r122') or
-                    self._storage_name.file_name.startswith('dao_p122')
-                ):
+                elif self._storage_name.is_12_metre:
                     result = telescopes.Dao12MetreImage(
                         self._storage_name, headers
                     )
@@ -124,11 +116,7 @@ class DAOFits2caom2Visitor(cc.Fits2caom2Visitor):
                     )
             else:
                 if dao_name.DAOName.is_processed(self._storage_name.file_id):
-                    if (
-                        self._storage_name.file_name.startswith('dao_c122') or
-                        self._storage_name.file_name.startswith('dao_r122') or
-                        self._storage_name.file_name.startswith('dao_p122')
-                    ):
+                    if self._storage_name.is_12_metre:
                         result = telescopes.Dao12MetreProcessedSpectrum(
                             self._storage_name, headers
                         )
@@ -136,11 +124,7 @@ class DAOFits2caom2Visitor(cc.Fits2caom2Visitor):
                         result = telescopes.Dao18MetreProcessedSpectrum(
                             self._storage_name, headers
                         )
-                elif (
-                    self._storage_name.file_name.startswith('dao_c122') or
-                    self._storage_name.file_name.startswith('dao_r122') or
-                    self._storage_name.file_name.startswith('dao_p122')
-                ):
+                elif self._storage_name.is_12_metre:
                     result = telescopes.Dao12MetreSpectrum(
                         self._storage_name, headers
                     )
@@ -149,6 +133,7 @@ class DAOFits2caom2Visitor(cc.Fits2caom2Visitor):
                         self._storage_name, headers
                     )
 
+        self._logger.debug(f'Created {type(result)} instance.')
         return result
 
 

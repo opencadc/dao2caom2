@@ -736,7 +736,7 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
 
         # derived observations
         if DAOName.is_derived(self._storage_name.file_uri):
-            bp.set('DerivedObservation.members', 'get_members()')
+            bp.set('DerivedObservation.members', [])
             bp.add_fits_attribute('Observation.algorithm.name', 'PROCNAME')
 
 
