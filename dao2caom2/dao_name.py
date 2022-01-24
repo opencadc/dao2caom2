@@ -194,6 +194,10 @@ class DAOName(mc.StorageName):
 
     @staticmethod
     def is_processed(entry):
+        # DB 19-01-22
+        # The simplest rule would be that any input with an observation ID
+        # ending in _[BFe] or even _* is in DAOCADC.  e.g. if I ever co-added
+        # object exposures (unlikely) then _v might be a member.
         file_name = mc.CaomName.extract_file_name(entry)
         file_id = DAOName.remove_extensions(file_name)
         result = False
