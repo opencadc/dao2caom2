@@ -100,11 +100,13 @@ class DAOVaultDataSource(dsc.VaultDataSource):
         self._store_modified_files_only = config.store_modified_files_only
         self._supports_latest_client = config.features.supports_latest_client
         self._archive = config.archive
-        self._collection = config.collection
         self._recursive = recursive
         self._cadc_client = cadc_client
         self._work = deque()
         self._logger = logging.getLogger(self.__class__.__name__)
+
+    def get_collection(self, f_name):
+        return dao_name.get_collection(f_name)
 
     def clean_up(self, entry):
         """
@@ -167,7 +169,8 @@ class DAOVaultDataSource(dsc.VaultDataSource):
         # get the metadata at CADC
         f_name = basename(entry_fqn)
         scheme = 'cadc' if self._supports_latest_client else 'ad'
-        cadc_name = mc.build_uri(self._collection, f_name, scheme)
+        collection = self.get_collection(f_name)
+        cadc_name = mc.build_uri(collection, f_name, scheme)
         cadc_meta = self._cadc_client.info(cadc_name)
         if cadc_meta is not None and vos_meta.md5sum == cadc_meta.md5sum:
             self._logger.warning(
