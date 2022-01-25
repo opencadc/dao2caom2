@@ -99,19 +99,11 @@ def _common():
     config = mc.Config()
     config.get_executors()
     clients = clc.ClientCollection(config)
-    files_source = None
     metadata_reader = None
     if config.use_local_files:
         metadata_reader = rdc.FileMetadataReader()
-        if config.cleanup_files_when_storing:
-            files_source = data_source.DAOLocalFilesDataSource(
-                config,
-                clients.data_client,
-                metadata_reader,
-                config.recurse_data_sources,
-            )
     name_builder = nbc.EntryBuilder(dao_name.DAOName)
-    return config, clients, files_source, name_builder, metadata_reader
+    return config, clients, name_builder, metadata_reader
 
 
 def _run():
@@ -121,7 +113,18 @@ def _run():
     :return 0 if successful, -1 if there's any sort of failure. Return status
         is used by airflow for task instance management and reporting.
     """
-    config, clients, files_source, name_builder, metadata_reader = _common()
+    config, clients, name_builder, metadata_reader = _common()
+    files_source = None
+    if config.use_local_files:
+        if config.cleanup_files_when_storing:
+            files_source = data_source.DAOLocalFilesDataSource(
+                config,
+                clients.data_client,
+                metadata_reader,
+                config.recurse_data_sources,
+            )
+    else:
+        files_source = dsc.TodoFileDataSource(config)
     return rc.run_by_todo(
         name_builder=name_builder,
         meta_visitors=META_VISITORS,
@@ -152,7 +155,7 @@ def _run_vo():
     :return 0 if successful, -1 if there's any sort of failure. Return status
         is used by airflow for task instance management and reporting.
     """
-    config, clients, files_source, name_builder, metadata_reader = _common()
+    config, clients, name_builder, metadata_reader = _common()
     vos_client = Client(vospace_certfile=config.proxy_file_name)
     source = data_source.DAOVaultDataSource(
         config, vos_client, clients.data_client, recursive=False
@@ -185,7 +188,18 @@ def _run_state():
     """Uses a state file with a timestamp to control which entries will be
     processed.
     """
-    config, clients, files_source, name_builder, metadata_reader = _common()
+    config, clients, name_builder, metadata_reader = _common()
+    files_source = None
+    if config.use_local_files:
+        if config.cleanup_files_when_storing:
+            files_source = data_source.DAOLocalFilesDataSource(
+                config,
+                clients.data_client,
+                metadata_reader,
+                config.recurse_data_sources,
+            )
+    else:
+        files_source = dsc.TodoFileDataSource(config)
     return rc.run_by_state(
         name_builder=name_builder,
         bookmark_name=DAO_BOOKMARK,
