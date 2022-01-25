@@ -84,15 +84,15 @@ __all__ = ['DAOLocalFilesDataSource', 'DAOVaultDataSource']
 
 class DAOLocalFilesDataSource(dsc.LocalFilesDataSource):
 
-    def __init__(self, config, cadc_client, metadata_reader, recursive):
-        super().__init__(config, cadc_client, metadata_reader, recursive)
+    def __init__(self, config, cadc_client, metadata_reader):
+        super().__init__(config, cadc_client, metadata_reader)
 
     def get_collection(self, f_name):
         return dao_name.get_collection(f_name)
 
 
 class DAOVaultDataSource(dsc.VaultDataSource):
-    def __init__(self, config, vault_client, cadc_client, recursive=True):
+    def __init__(self, config, vault_client, cadc_client):
         super(DAOVaultDataSource, self).__init__(vault_client, config)
         self._cleanup_when_storing = config.cleanup_files_when_storing
         self._cleanup_failure_directory = config.cleanup_failure_destination
@@ -100,7 +100,7 @@ class DAOVaultDataSource(dsc.VaultDataSource):
         self._store_modified_files_only = config.store_modified_files_only
         self._supports_latest_client = config.features.supports_latest_client
         self._archive = config.archive
-        self._recursive = recursive
+        self._recursive = config.recurse_data_sources
         self._cadc_client = cadc_client
         self._work = deque()
         self._logger = logging.getLogger(self.__class__.__name__)

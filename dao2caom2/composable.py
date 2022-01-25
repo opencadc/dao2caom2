@@ -118,10 +118,7 @@ def _run():
     if config.use_local_files:
         if config.cleanup_files_when_storing:
             files_source = data_source.DAOLocalFilesDataSource(
-                config,
-                clients.data_client,
-                metadata_reader,
-                config.recurse_data_sources,
+                config, clients.data_client, metadata_reader
             )
     else:
         files_source = dsc.TodoFileDataSource(config)
@@ -157,8 +154,9 @@ def _run_vo():
     """
     config, clients, name_builder, metadata_reader = _common()
     vos_client = Client(vospace_certfile=config.proxy_file_name)
+    clients.vo_client = vos_client
     source = data_source.DAOVaultDataSource(
-        config, vos_client, clients.data_client, recursive=False
+        config, clients.vo_client, clients.data_client
     )
     store_transferrer = transfer.VoFitsCleanupTransfer(vos_client, config)
     return rc.run_by_todo(
@@ -193,13 +191,10 @@ def _run_state():
     if config.use_local_files:
         if config.cleanup_files_when_storing:
             files_source = data_source.DAOLocalFilesDataSource(
-                config,
-                clients.data_client,
-                metadata_reader,
-                config.recurse_data_sources,
+                config, clients.data_client, metadata_reader
             )
     else:
-        files_source = dsc.TodoFileDataSource(config)
+        files_source = dsc.ListDirTimeBoxDataSource(config)
     return rc.run_by_state(
         name_builder=name_builder,
         bookmark_name=DAO_BOOKMARK,

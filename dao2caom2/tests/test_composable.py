@@ -291,7 +291,6 @@ def test_run_store_ingest(
 def test_run_store_ingest_remote(
     data_client_mock,
     repo_client_mock,
-    # get_work_mock,
     cleanup_mock,
     reader_file_info_mock,
     reader_headers_mock,
@@ -328,10 +327,11 @@ def test_run_store_ingest_remote(
         test_config.store_modified_files_only = True
         test_config.data_sources = ['vos:goliaths/DAOtest']
         test_config.data_source_extensions = ['.fits']
-        test_config.logging_level = 'DEBUG'
+        test_config.logging_level = 'INFO'
         test_config.proxy_file_name = 'cadcproxy.pem'
         test_config.proxy_fqn = f'{tmp_dir_name}/cadcproxy.pem'
         test_config.features.supports_latest_client = True
+        test_config.recurse_data_sources = False
         mc.Config.write_to_file(test_config)
         with open(test_config.proxy_fqn, 'w') as f:
             f.write('test content')

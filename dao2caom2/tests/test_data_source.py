@@ -95,6 +95,7 @@ def test_dao_transfer_check_fits_verify(vault_info_mock):
     test_config.data_sources = ['vos:DAO/Archive/Incoming']
     test_config.cleanup_failure_destination = 'vos:DAO/failure'
     test_config.cleanup_success_destination = 'vos:DAO/success'
+    test_config.recurse_data_sources = False
 
     def _mock_listdir(entry):
         if entry.endswith('Incoming'):
@@ -180,7 +181,7 @@ def test_data_source_exists():
 
     # mock that the same file already exists as CADC
     def _get_info(uri):
-        assert uri == 'ad:TEST/dest_fqn.fits', f'wrong storage check {uri}'
+        assert uri == 'ad:DAO/dest_fqn.fits', f'wrong storage check {uri}'
         return FileInfo(
             id=uri,
             md5sum='ghi',
