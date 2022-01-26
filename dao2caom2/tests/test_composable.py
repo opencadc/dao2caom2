@@ -75,7 +75,6 @@ from mock import ANY, Mock, patch, call
 from tempfile import TemporaryDirectory
 
 from cadcdata import FileInfo
-from caom2 import SimpleObservation
 from caom2pipe import manage_composable as mc
 from dao2caom2 import composable, dao_name
 
