@@ -76,23 +76,27 @@ def test_is_valid():
 
 
 def test_processed():
-    test_subject = DAOName('dao_c122_2020_004100_v.fits')
+    test_subject = DAOName('dao_c122_2020_004100_v.fits.gz')
     assert test_subject is not None, 'expect a value'
     assert test_subject.obs_id == 'dao_c122_2020_004100', 'wrong obs id'
     assert (
-        test_subject.file_name == 'dao_c122_2020_004100_v.fits'
+        test_subject.file_name == 'dao_c122_2020_004100_v.fits.gz'
     ), 'wrong file name'
     assert (
         test_subject.product_id == 'dao_c122_2020_004100_v'
     ), 'wrong product id'
     assert test_subject.file_id == 'dao_c122_2020_004100_v', 'wrong file id'
     assert (
-        test_subject.source_names == ['dao_c122_2020_004100_v.fits']
+        test_subject.source_names == ['dao_c122_2020_004100_v.fits.gz']
     ), 'wrong source names'
     assert (
         test_subject.destination_uris ==
         [f'cadc:{PRODUCT_COLLECTION}/dao_c122_2020_004100_v.fits']
     ), 'wrong destination uris'
+    assert (
+        test_subject.file_uri ==
+        f'cadc:{PRODUCT_COLLECTION}/dao_c122_2020_004100_v.fits'
+    ), 'wrong file uri'
     assert (
             test_subject.collection == PRODUCT_COLLECTION
     ), 'wrong collection'

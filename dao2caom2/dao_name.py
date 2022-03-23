@@ -109,7 +109,7 @@ class DAOName(mc.StorageName):
         return mc.build_uri(
             scheme=mc.StorageName.scheme,
             archive=self._collection,
-            file_name=file_name,
+            file_name=file_name.replace('.gz', ''),
         )
 
     @property

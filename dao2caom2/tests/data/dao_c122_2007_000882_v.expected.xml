@@ -51,7 +51,7 @@
       </caom2:provenance>
       <caom2:artifacts>
         <caom2:artifact caom2:id="00000000-0000-0000-6b4c-0158ad5fee65" caom2:lastModified="2017-11-10T18:35:13.673" caom2:maxLastModified="2017-11-10T18:35:13.673" caom2:metaChecksum="md5:938ebc812daf212b68749ca9a3d7a485" caom2:accMetaChecksum="md5:9142da179c32bbd597b393ffb6cdfa24" caom2:metaProducer="dao2caom2/0.3.1">
-          <caom2:uri>cadc:DAOCADC/dao_c122_2007_000882_v.fits.gz</caom2:uri>
+          <caom2:uri>cadc:DAOCADC/dao_c122_2007_000882_v.fits</caom2:uri>
           <caom2:productType>science</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>

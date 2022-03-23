@@ -155,13 +155,13 @@ def test_visit():
 
             try:
                 ignore = preview_augmentation.visit(obs, **kwargs)
+                f_name_list = [test_name.prev_uri, test_name.thumb_uri]
+                for p in f_name_list:
+                    artifact = obs.planes[test_name.product_id].artifacts[p]
+                    # assert artifact.content_checksum.uri ==
+                    # test_checksums[p], \
+                    #     f'wrong checksum {p} {artifact.content_checksum} ' \
+                    #     f'{test_checksums[p]}'
             except Exception as e:
-                assert False, f'{str(e)}'
-
-            f_name_list = [test_name.prev_uri, test_name.thumb_uri]
-            for p in f_name_list:
-                artifact = obs.planes[test_name.product_id].artifacts[p]
-                # assert artifact.content_checksum.uri == test_checksums[p], \
-                #     f'wrong checksum {p} {artifact.content_checksum} ' \
-                #     f'{test_checksums[p]}'
+                assert False, f'key {key} value {value} f_name {f_name} {str(e)}'
     # assert False

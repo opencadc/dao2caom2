@@ -80,7 +80,7 @@
       </caom2:provenance>
       <caom2:artifacts>
         <caom2:artifact caom2:id="00000000-0000-0000-e481-0158c157e489" caom2:lastModified="2017-11-10T19:20:57.160" caom2:maxLastModified="2017-11-10T19:20:57.160" caom2:metaChecksum="md5:e8204881408c0458cd170f7e738f1a18" caom2:accMetaChecksum="md5:68628e3a5f2da21a8fde1621c5909844" caom2:metaProducer="dao2caom2/0.3.1">
-          <caom2:uri>cadc:DAOCADC/dao_c122_2016_012652_B.fits.gz</caom2:uri>
+          <caom2:uri>cadc:DAOCADC/dao_c122_2016_012652_B.fits</caom2:uri>
           <caom2:productType>calibration</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>

@@ -31,7 +31,7 @@
       </caom2:provenance>
       <caom2:artifacts>
         <caom2:artifact caom2:id="c4c08806-cc4b-4996-9677-3652747dd324" caom2:metaProducer="dao2caom2/0.3.1">
-          <caom2:uri>cadc:DAO/a2020_06_17_07_00_01.fits.gz</caom2:uri>
+          <caom2:uri>cadc:DAO/a2020_06_17_07_00_01.fits</caom2:uri>
           <caom2:productType>calibration</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>

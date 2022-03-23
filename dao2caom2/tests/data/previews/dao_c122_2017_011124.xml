@@ -39,7 +39,7 @@
       <caom2:calibrationLevel>1</caom2:calibrationLevel>
       <caom2:artifacts>
         <caom2:artifact caom2:id="00000000-0000-0000-faa2-015d737e3c1a" caom2:lastModified="2017-11-22T01:02:10.017" caom2:maxLastModified="2017-11-22T01:02:10.017" caom2:metaChecksum="md5:d8a4c5360aa05cb094fc7edd8ee95f69" caom2:accMetaChecksum="md5:946234eec23c7232a91d53c35ddfaf35">
-          <caom2:uri>cadc:DAO/dao_c122_2017_011124.fits.gz</caom2:uri>
+          <caom2:uri>cadc:DAO/dao_c122_2017_011124.fits</caom2:uri>
           <caom2:productType>science</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>

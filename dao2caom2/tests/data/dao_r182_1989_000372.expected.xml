@@ -38,7 +38,7 @@
       </caom2:provenance>
       <caom2:artifacts>
         <caom2:artifact caom2:id="00000000-0000-0000-1ff9-016429082929" caom2:lastModified="2018-06-22T19:46:10.057" caom2:maxLastModified="2018-06-22T19:46:10.057" caom2:metaChecksum="md5:1133424deb98b65a4580f01a5f56c07a" caom2:accMetaChecksum="md5:f41c3eea3a3465870604a961ee2ece5f" caom2:metaProducer="dao2caom2/0.3.1">
-          <caom2:uri>cadc:DAO/dao_r182_1989_000372.fits.gz</caom2:uri>
+          <caom2:uri>cadc:DAO/dao_r182_1989_000372.fits</caom2:uri>
           <caom2:productType>calibration</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>

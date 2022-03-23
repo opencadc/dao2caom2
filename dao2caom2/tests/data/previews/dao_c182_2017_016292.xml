@@ -22,7 +22,7 @@
       <caom2:calibrationLevel>1</caom2:calibrationLevel>
       <caom2:artifacts>
         <caom2:artifact caom2:id="00000000-0000-0000-d40f-015eb2f51917" caom2:lastModified="2017-11-22T16:25:10.277" caom2:maxLastModified="2017-11-22T16:25:10.277" caom2:metaChecksum="md5:8715ed7f3392fac9e8e5a0a89d0ae455" caom2:accMetaChecksum="md5:b96167859e7a3917a2aa53010356d323">
-          <caom2:uri>cadc:DAO/dao_c182_2017_016292.fits.gz</caom2:uri>
+          <caom2:uri>cadc:DAO/dao_c182_2017_016292.fits</caom2:uri>
           <caom2:productType>science</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>
