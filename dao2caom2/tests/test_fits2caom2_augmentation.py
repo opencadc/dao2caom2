@@ -67,7 +67,7 @@
 # ***********************************************************************
 #
 
-from os import listdir
+from os import listdir, unlink
 from os.path import basename, dirname, exists, join, realpath
 
 from caom2.diff import get_differences
@@ -104,16 +104,18 @@ def test_visitor(test_name):
         'storage_name': dao_name,
         'metadata_reader': metadata_reader,
     }
-    observation = None
-    observation = fits2caom2_augmentation.visit(observation, **kwargs)
-
     expected_fqn = (
         f'{TEST_DATA_DIR}/{dao_name.file_id}.expected.xml'
     )
+    actual_fqn = expected_fqn.replace('expected', 'actual')
+    if exists(actual_fqn):
+        unlink(actual_fqn)
+    observation = None
+    observation = fits2caom2_augmentation.visit(observation, **kwargs)
+
     expected = mc.read_obs_from_file(expected_fqn)
     compare_result = get_differences(expected, observation)
     if compare_result is not None:
-        actual_fqn = expected_fqn.replace('expected', 'actual')
         mc.write_obs_to_file(observation, actual_fqn)
         compare_text = '\n'.join([r for r in compare_result])
         msg = (

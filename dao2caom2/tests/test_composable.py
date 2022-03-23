@@ -107,10 +107,6 @@ def test_run(run_mock, access_mock):
         ), type(test_storage)
         assert test_storage.obs_id == test_obs_id, 'wrong obs id'
         assert test_storage.file_name == test_f_name, 'wrong file name'
-        assert (
-                test_storage.fname_on_disk == test_f_name
-        ), 'wrong fname on disk'
-        assert test_storage.url is None, 'wrong url'
     finally:
         os.getcwd = getcwd_orig
         # clean up the summary report text file
@@ -149,16 +145,12 @@ def test_run_vo(run_mock, vo_client_mock, access_mock):
         assert test_storage.obs_id == test_obs_id, 'wrong obs id'
         assert test_storage.file_name == test_f_name, 'wrong file name'
         assert (
-                test_storage.fname_on_disk == test_f_name
-        ), 'wrong fname on disk'
-        assert test_storage.url is None, 'wrong url'
-        assert (
                 test_storage.source_names ==
                 ['vos:goliaths/DAOTest/sky_cam_image.fits.gz']
         ), 'wrong source names'
         assert (
                 test_storage.destination_uris ==
-                ['cadc:DAO/sky_cam_image.fits.gz']
+                ['cadc:DAO/sky_cam_image.fits']
         ), 'wrong destination uris'
     finally:
         os.getcwd = getcwd_orig

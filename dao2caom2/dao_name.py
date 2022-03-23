@@ -95,46 +95,30 @@ class DAOName(mc.StorageName):
     in the results page.
     """
 
-    DAO_NAME_PATTERN = '*'
+    DAO_NAME_PATTERN = '.*'
 
     def __init__(
         self,
         entry=None,
     ):
-        self._file_name = mc.CaomName.extract_file_name(entry).replace(
-            '.header', ''
+        file_name = mc.CaomName.extract_file_name(entry).replace('.header', '')
+        self._collection = get_collection(entry)
+        super().__init__(file_name=file_name, source_names=[entry])
+
+    def _get_uri(self, file_name):
+        return mc.build_uri(
+            scheme=mc.StorageName.scheme,
+            archive=self._collection,
+            file_name=file_name,
         )
-        obs_id = DAOName.get_obs_id(self._file_name)
-        file_id = mc.StorageName.remove_extensions(self._file_name)
-        self._collection = (
-            PRODUCT_COLLECTION if DAOName.is_processed(entry) else COLLECTION
-        )
-        super(DAOName, self).__init__(
-            obs_id,
-            self._collection,
-            DAOName.DAO_NAME_PATTERN,
-            self._file_name,
-            entry=entry,
-            compression='',
-            scheme='cadc',
-        )
-        self._file_id = file_id
-        self._source_names = [entry]
-        self._destination_uris = [self.file_uri]
-        self._logger = logging.getLogger(__name__)
-        self._logger.debug(self)
 
     @property
-    def file_id(self):
-        return self._file_id
-
-    @property
-    def file_name(self):
-        return self._file_name
+    def collection(self):
+        return self._collection
 
     @property
     def file_uri(self):
-        return f'{self.scheme}:{self.collection}/{self.file_name}'
+        return self._get_uri(self._file_name)
 
     def is_valid(self):
         return True
@@ -142,37 +126,33 @@ class DAOName(mc.StorageName):
     @property
     def prev(self):
         """The preview file name for the file."""
-        return '{}_1024.png'.format(self.file_id)
-
-    @property
-    def product_id(self):
-        if self._file_id.startswith('d'):
-            return self._file_id
-        else:
-            return 'sky_camera_image'
+        return f'{self._file_id}_1024.png'
 
     @property
     def thumb(self):
         """The thumbnail file name for the file."""
-        return '{}_256.png'.format(self.file_id)
+        return f'{self._file_id}_256.png'
 
     @property
     def is_12_metre(self):
         return (
-            self.file_name.startswith('dao_c122') or
-            self.file_name.startswith('dao_r122') or
-            self.file_name.startswith('dao_p122')
+            self._file_name.startswith('dao_c122') or
+            self._file_name.startswith('dao_r122') or
+            self._file_name.startswith('dao_p122')
         )
 
-    @staticmethod
-    def get_obs_id(file_name):
+    def set_obs_id(self, **kwargs):
         # observation ID differs from the file ID for processed data, except
         # for composite processed observations (master biases and flats)
-        file_id = mc.StorageName.remove_extensions(file_name)
-        obs_id = file_id
-        if re.match('dao_[cr]\\d{3}_\\d{4}_\\d{6}_[aev]', file_id):
-            obs_id = file_id[0:-2]
-        return obs_id
+        self._obs_id = self._file_id
+        if re.match('dao_[cr]\\d{3}_\\d{4}_\\d{6}_[aev]', self._file_id):
+            self._obs_id = self._file_id[0:-2]
+
+    def set_product_id(self, **kwargs):
+        if self._file_id.startswith('d'):
+            self._product_id = self._file_id
+        else:
+            self._product_id = 'sky_camera_image'
 
     @staticmethod
     def is_derived(entry):

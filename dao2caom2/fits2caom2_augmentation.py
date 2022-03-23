@@ -67,8 +67,6 @@
 # ***********************************************************************
 #
 
-import re
-
 from caom2pipe import caom_composable as cc
 from caom2 import DataProductType
 from dao2caom2 import telescopes, dao_name

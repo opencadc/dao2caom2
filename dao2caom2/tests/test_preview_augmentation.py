@@ -109,6 +109,7 @@ def test_visit():
             'dao_c122_2007_000881.fits.gz',
             'dao_c122_2007_000881_e.fits',
         ],
+        'sky_cam_start.xml': ['a2020_06_17_07_00_01.fits']
     }
 
     test_checksums = {
@@ -131,6 +132,7 @@ def test_visit():
         'cadc:DAO/dao_r182_1989_000369_256.png': 'md5:5ef8f53784376b31a12dccb8671aca5e',
         'cadc:DAO/dao_r182_1989_000369_1024.png': 'md5:2e14aefda2a74b5575f6a4d8d1b1b3cb',
         'cadc:DAO/dao_c122_2007_000882_v_1024.png': 'md5:37cfb96bce27da93ede75eadabad7b8f',
+        'cadc:DAO/a2020_06_17_07_00_01_1024.png': 'md5:37cfb96bce27da93ede75eadabad7b8f',
     }
 
     kwargs = {

@@ -583,7 +583,10 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
     def get_energy_resolving_power(self, ext):
         numerator = self._headers[ext].get('WAVELENG')
         denominator = self.get_energy_axis_function_delta(ext)
-        return numerator / (2.5 * denominator)
+        result = None
+        if numerator is not None and denominator is not None:
+            result = numerator / (2.5 * denominator)
+        return result
 
     def get_geo(self):
         # DB 10-09-20

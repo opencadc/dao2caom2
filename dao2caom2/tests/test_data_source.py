@@ -198,7 +198,7 @@ def test_data_source_exists():
 
     # test execution
     for entry in test_subject._work:
-        test_subject.clean_up(entry)
+        test_subject.clean_up(entry, 'ignore1', 'ignore2')
     assert test_vos_client.status.called, 'expect status call'
     assert test_vos_client.delete.called, 'expect delete call'
     test_vos_client.delete.assert_called_with(
