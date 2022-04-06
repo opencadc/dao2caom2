@@ -82,6 +82,7 @@ from caom2pipe import client_composable as clc
 from caom2pipe import data_source_composable as dsc
 from caom2pipe import name_builder_composable as nbc
 from caom2pipe import manage_composable as mc
+from caom2pipe import reader_composable as rdc
 from caom2pipe import run_composable as rc
 from dao2caom2 import dao_name, preview_augmentation
 from dao2caom2 import cleanup_augmentation, data_source, transfer
@@ -98,13 +99,11 @@ def _common():
     config = mc.Config()
     config.get_executors()
     clients = clc.ClientCollection(config)
-    files_source = None
-    if config.use_local_files and config.cleanup_files_when_storing:
-        files_source = dsc.UseLocalFilesDataSource(
-            config, clients.data_client, config.recurse_data_sources
-        )
+    metadata_reader = None
+    if config.use_local_files:
+        metadata_reader = rdc.FileMetadataReader()
     name_builder = nbc.EntryBuilder(dao_name.DAOName)
-    return config, clients, files_source, name_builder
+    return config, clients, name_builder, metadata_reader
 
 
 def _run():
@@ -114,7 +113,15 @@ def _run():
     :return 0 if successful, -1 if there's any sort of failure. Return status
         is used by airflow for task instance management and reporting.
     """
-    config, clients, files_source, name_builder = _common()
+    config, clients, name_builder, metadata_reader = _common()
+    files_source = None
+    if config.use_local_files:
+        if config.cleanup_files_when_storing:
+            files_source = data_source.DAOLocalFilesDataSource(
+                config, clients.data_client, metadata_reader
+            )
+    else:
+        files_source = dsc.TodoFileDataSource(config)
     return rc.run_by_todo(
         name_builder=name_builder,
         meta_visitors=META_VISITORS,
@@ -122,6 +129,7 @@ def _run():
         clients=clients,
         config=config,
         source=files_source,
+        metadata_reader=metadata_reader,
     )
 
 
@@ -144,10 +152,11 @@ def _run_vo():
     :return 0 if successful, -1 if there's any sort of failure. Return status
         is used by airflow for task instance management and reporting.
     """
-    config, clients, ignore_files_source, name_builder = _common()
+    config, clients, name_builder, metadata_reader = _common()
     vos_client = Client(vospace_certfile=config.proxy_file_name)
+    clients.vo_client = vos_client
     source = data_source.DAOVaultDataSource(
-        config, vos_client, clients.data_client, recursive=False
+        config, clients.vo_client, clients.data_client
     )
     store_transferrer = transfer.VoFitsCleanupTransfer(vos_client, config)
     return rc.run_by_todo(
@@ -157,6 +166,7 @@ def _run_vo():
         source=source,
         clients=clients,
         store_transfer=store_transferrer,
+        metadata_reader=metadata_reader,
     )
 
 
@@ -176,7 +186,15 @@ def _run_state():
     """Uses a state file with a timestamp to control which entries will be
     processed.
     """
-    config, clients, files_source, name_builder = _common()
+    config, clients, name_builder, metadata_reader = _common()
+    files_source = None
+    if config.use_local_files:
+        if config.cleanup_files_when_storing:
+            files_source = data_source.DAOLocalFilesDataSource(
+                config, clients.data_client, metadata_reader
+            )
+    else:
+        files_source = dsc.ListDirTimeBoxDataSource(config)
     return rc.run_by_state(
         name_builder=name_builder,
         bookmark_name=DAO_BOOKMARK,
@@ -184,6 +202,7 @@ def _run_state():
         data_visitors=DATA_VISITORS,
         source=files_source,
         clients=clients,
+        metadata_reader=metadata_reader,
     )
 
 

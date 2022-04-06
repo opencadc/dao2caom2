@@ -6,16 +6,6 @@ RUN apt-get update --no-install-recommends  && apt-get dist-upgrade -y && \
                        imagemagick && \
     rm -rf /var/lib/apt/lists/ /tmp/* /var/tmp/*
 
-RUN pip install cadcdata \
-    cadctap \
-    caom2 \
-    caom2repo \
-    caom2utils \
-    importlib-metadata \
-    python-dateutil \
-    PyYAML \
-    spherical-geometry
-
 WORKDIR /usr/src/app
 
 ARG CAOM2_BRANCH=master
@@ -24,20 +14,6 @@ ARG OPENCADC_BRANCH=master
 ARG OPENCADC_REPO=opencadc
 ARG PIPE_BRANCH=master
 ARG PIPE_REPO=opencadc
-ARG VOS_BRANCH=master
-ARG VOS_REPO=opencadc
-
-
-RUN git clone https://github.com/opencadc/cadctools.git && \
-    cd cadctools && \
-    pip install ./cadcdata && \
-    cd ..
-
-RUN git clone https://github.com/${VOS_REPO}/vostools.git && \
-    cd vostools && \
-    git checkout ${VOS_BRANCH} && \
-    pip install ./vos && \
-    cd ..
 
 RUN git clone https://github.com/${CAOM2_REPO}/caom2tools.git && \
     cd caom2tools && \

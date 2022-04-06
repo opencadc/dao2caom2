@@ -45,28 +45,28 @@
         <caom2:reference>https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/dao/</caom2:reference>
         <caom2:lastExecuted>2020-06-10T22:06:17.000</caom2:lastExecuted>
         <caom2:inputs>
-          <caom2:planeURI>caom:DAO/dao_c122_2020_004243/dao_c122_2020_004243</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2020_004245/dao_c122_2020_004245</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2020_004250/dao_c122_2020_004250</caom2:planeURI>
           <caom2:planeURI>caom:DAO/dao_c122_2020_004249/dao_c122_2020_004249</caom2:planeURI>
           <caom2:planeURI>caom:DAO/dao_c122_2020_004244/dao_c122_2020_004244</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2020_004258_B/dao_c122_2020_004258_B</caom2:planeURI>
+          <caom2:planeURI>caom:DAOCADC/dao_c122_2020_004258_B/dao_c122_2020_004258_B</caom2:planeURI>
           <caom2:planeURI>caom:DAO/dao_c122_2020_004248/dao_c122_2020_004248</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2020_004246/dao_c122_2020_004246</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2020_004251/dao_c122_2020_004251</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2020_004256/dao_c122_2020_004256</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2020_004254/dao_c122_2020_004254</caom2:planeURI>
           <caom2:planeURI>caom:DAO/dao_c122_2020_004247/dao_c122_2020_004247</caom2:planeURI>
           <caom2:planeURI>caom:DAO/dao_c122_2020_004252/dao_c122_2020_004252</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2020_004245/dao_c122_2020_004245</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2020_004251/dao_c122_2020_004251</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2020_004250/dao_c122_2020_004250</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2020_004246/dao_c122_2020_004246</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2020_004242/dao_c122_2020_004242</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2020_004256/dao_c122_2020_004256</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2020_004254/dao_c122_2020_004254</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2020_004243/dao_c122_2020_004243</caom2:planeURI>
           <caom2:planeURI>caom:DAO/dao_c122_2020_004257/dao_c122_2020_004257</caom2:planeURI>
           <caom2:planeURI>caom:DAO/dao_c122_2020_004253/dao_c122_2020_004253</caom2:planeURI>
           <caom2:planeURI>caom:DAO/dao_c122_2020_004255/dao_c122_2020_004255</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2020_004242/dao_c122_2020_004242</caom2:planeURI>
         </caom2:inputs>
       </caom2:provenance>
       <caom2:artifacts>
         <caom2:artifact caom2:id="c53e4bff-b8a5-4084-b9ac-612c524c7b84" caom2:lastModified="2020-06-10T23:08:45.207" caom2:maxLastModified="2020-06-10T23:08:45.207" caom2:metaChecksum="md5:a00356d989785425a54947fd40e5aeb7" caom2:accMetaChecksum="md5:5e8eab6e8d5e81e89a32ad6b3bf9d7d0" caom2:metaProducer="dao2caom2/0.3.1">
-          <caom2:uri>ad:DAOCADC/dao_c122_2020_004242_F.fits.gz</caom2:uri>
+          <caom2:uri>cadc:DAOCADC/dao_c122_2020_004242_F.fits</caom2:uri>
           <caom2:productType>calibration</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>
@@ -113,21 +113,21 @@
     </caom2:plane>
   </caom2:planes>
   <caom2:members>
-    <caom2:observationURI>caom:DAO/dao_c122_2020_004251</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2020_004242</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2020_004254</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2020_004252</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2020_004255</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2020_004244</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2020_004257</caom2:observationURI>
     <caom2:observationURI>caom:DAO/dao_c122_2020_004253</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2020_004248</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2020_004256</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2020_004246</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2020_004245</caom2:observationURI>
     <caom2:observationURI>caom:DAO/dao_c122_2020_004247</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2020_004255</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2020_004242</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2020_004248</caom2:observationURI>
     <caom2:observationURI>caom:DAO/dao_c122_2020_004249</caom2:observationURI>
     <caom2:observationURI>caom:DAO/dao_c122_2020_004243</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2020_004252</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2020_004251</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2020_004256</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2020_004254</caom2:observationURI>
     <caom2:observationURI>caom:DAO/dao_c122_2020_004250</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2020_004257</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2020_004244</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2020_004245</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2020_004246</caom2:observationURI>
   </caom2:members>
 </caom2:Observation>

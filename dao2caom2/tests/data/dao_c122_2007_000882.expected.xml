@@ -42,16 +42,16 @@
         <caom2:reference>https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/dao/</caom2:reference>
         <caom2:lastExecuted>2016-11-28T23:52:09.000</caom2:lastExecuted>
         <caom2:inputs>
-          <caom2:planeURI>caom:DAO/dao_c122_2007_000916_F/dao_c122_2007_000916_F</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2007_000881/dao_c122_2007_000881_e</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2007_000865_B/dao_c122_2007_000865_B</caom2:planeURI>
           <caom2:planeURI>caom:DAO/dao_c122_2007_000882/dao_c122_2007_000882</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2007_000865_B/dao_c122_2007_000865_B</caom2:planeURI>
           <caom2:planeURI>caom:DAO/dao_c122_2007_000890/dao_c122_2007_000890_e</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2007_000881/dao_c122_2007_000881_e</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2007_000916_F/dao_c122_2007_000916_F</caom2:planeURI>
         </caom2:inputs>
       </caom2:provenance>
       <caom2:artifacts>
         <caom2:artifact caom2:id="00000000-0000-0000-6b4c-0158ad5fee65" caom2:lastModified="2017-11-10T18:35:13.673" caom2:maxLastModified="2017-11-10T18:35:13.673" caom2:metaChecksum="md5:938ebc812daf212b68749ca9a3d7a485" caom2:accMetaChecksum="md5:9142da179c32bbd597b393ffb6cdfa24" caom2:metaProducer="dao2caom2/0.3.1">
-          <caom2:uri>ad:DAOCADC/dao_c122_2007_000882_v.fits.gz</caom2:uri>
+          <caom2:uri>cadc:DAOCADC/dao_c122_2007_000882_v.fits</caom2:uri>
           <caom2:productType>science</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>

@@ -47,21 +47,21 @@
         <caom2:lastExecuted>2018-09-21T15:08:26.000</caom2:lastExecuted>
         <caom2:inputs>
           <caom2:planeURI>caom:DAO/dao_c182_2017_005497/dao_c182_2017_005497</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c182_2017_005504/dao_c182_2017_005504</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c182_2017_005501/dao_c182_2017_005501</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c182_2017_005502/dao_c182_2017_005502</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c182_2017_005498/dao_c182_2017_005498</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c182_2017_005499/dao_c182_2017_005499</caom2:planeURI>
           <caom2:planeURI>caom:DAO/dao_c182_2017_005496/dao_c182_2017_005496</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c182_2017_005502/dao_c182_2017_005502</caom2:planeURI>
           <caom2:planeURI>caom:DAO/dao_c182_2017_005505/dao_c182_2017_005505</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c182_2017_005500/dao_c182_2017_005500</caom2:planeURI>
           <caom2:planeURI>caom:DAO/dao_c182_2017_005506/dao_c182_2017_005506</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c182_2017_005499/dao_c182_2017_005499</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c182_2017_005501/dao_c182_2017_005501</caom2:planeURI>
           <caom2:planeURI>caom:DAO/dao_c182_2017_005503/dao_c182_2017_005503</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c182_2017_005500/dao_c182_2017_005500</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c182_2017_005504/dao_c182_2017_005504</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c182_2017_005498/dao_c182_2017_005498</caom2:planeURI>
         </caom2:inputs>
       </caom2:provenance>
       <caom2:artifacts>
         <caom2:artifact caom2:id="00000000-0000-0000-89e5-016647254d3a" caom2:lastModified="2018-10-06T02:12:04.283" caom2:maxLastModified="2018-10-06T02:12:04.283" caom2:metaChecksum="md5:1a114940407fc57d7d8206a68190edbd" caom2:accMetaChecksum="md5:b7990cb95e38663c2f03f08776e050bf" caom2:metaProducer="dao2caom2/0.3.1">
-          <caom2:uri>ad:DAOCADC/dao_c182_2017_005498_B.fits.gz</caom2:uri>
+          <caom2:uri>cadc:DAOCADC/dao_c182_2017_005498_B.fits</caom2:uri>
           <caom2:productType>calibration</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>
@@ -99,16 +99,16 @@
     </caom2:plane>
   </caom2:planes>
   <caom2:members>
-    <caom2:observationURI>caom:DAO/dao_c182_2017_005498</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c182_2017_005499</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c182_2017_005497</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c182_2017_005503</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c182_2017_005504</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c182_2017_005502</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c182_2017_005496</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c182_2017_005506</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c182_2017_005505</caom2:observationURI>
     <caom2:observationURI>caom:DAO/dao_c182_2017_005501</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c182_2017_005505</caom2:observationURI>
     <caom2:observationURI>caom:DAO/dao_c182_2017_005500</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c182_2017_005498</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c182_2017_005496</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c182_2017_005502</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c182_2017_005504</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c182_2017_005499</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c182_2017_005503</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c182_2017_005506</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c182_2017_005497</caom2:observationURI>
   </caom2:members>
 </caom2:Observation>

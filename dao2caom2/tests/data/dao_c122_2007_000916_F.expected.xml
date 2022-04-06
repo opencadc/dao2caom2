@@ -41,23 +41,23 @@
         <caom2:reference>https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/dao/</caom2:reference>
         <caom2:lastExecuted>2016-11-28T23:51:38.000</caom2:lastExecuted>
         <caom2:inputs>
-          <caom2:planeURI>caom:DAO/dao_c122_2007_000923/dao_c122_2007_000923</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2007_000918/dao_c122_2007_000918</caom2:planeURI>
           <caom2:planeURI>caom:DAO/dao_c122_2007_000922/dao_c122_2007_000922</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2007_000926/dao_c122_2007_000926</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2007_000917/dao_c122_2007_000917</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2007_000924/dao_c122_2007_000924</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2007_000919/dao_c122_2007_000919</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2007_000925/dao_c122_2007_000925</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2007_000920/dao_c122_2007_000920</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2007_000916/dao_c122_2007_000916</caom2:planeURI>
-          <caom2:planeURI>caom:DAO/dao_c122_2007_000865_B/dao_c122_2007_000865_B</caom2:planeURI>
           <caom2:planeURI>caom:DAO/dao_c122_2007_000921/dao_c122_2007_000921</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2007_000923/dao_c122_2007_000923</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2007_000926/dao_c122_2007_000926</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2007_000924/dao_c122_2007_000924</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2007_000917/dao_c122_2007_000917</caom2:planeURI>
+          <caom2:planeURI>caom:DAOCADC/dao_c122_2007_000865_B/dao_c122_2007_000865_B</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2007_000925/dao_c122_2007_000925</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2007_000916/dao_c122_2007_000916</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2007_000920/dao_c122_2007_000920</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2007_000919/dao_c122_2007_000919</caom2:planeURI>
+          <caom2:planeURI>caom:DAO/dao_c122_2007_000918/dao_c122_2007_000918</caom2:planeURI>
         </caom2:inputs>
       </caom2:provenance>
       <caom2:artifacts>
         <caom2:artifact caom2:id="00000000-0000-0000-55f7-0158ad60671e" caom2:lastModified="2017-11-10T18:35:21.377" caom2:maxLastModified="2017-11-10T18:35:21.377" caom2:metaChecksum="md5:9459f4901f96a75e672d107e0360a138" caom2:accMetaChecksum="md5:682010c2e7572d169d486db601fd025e" caom2:metaProducer="dao2caom2/0.3.1">
-          <caom2:uri>ad:DAOCADC/dao_c122_2007_000916_F.fits.gz</caom2:uri>
+          <caom2:uri>cadc:DAOCADC/dao_c122_2007_000916_F.fits</caom2:uri>
           <caom2:productType>calibration</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>
@@ -104,16 +104,16 @@
     </caom2:plane>
   </caom2:planes>
   <caom2:members>
-    <caom2:observationURI>caom:DAO/dao_c122_2007_000922</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2007_000925</caom2:observationURI>
     <caom2:observationURI>caom:DAO/dao_c122_2007_000926</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2007_000920</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2007_000916</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2007_000917</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2007_000924</caom2:observationURI>
-    <caom2:observationURI>caom:DAO/dao_c122_2007_000919</caom2:observationURI>
     <caom2:observationURI>caom:DAO/dao_c122_2007_000921</caom2:observationURI>
     <caom2:observationURI>caom:DAO/dao_c122_2007_000923</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2007_000924</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2007_000925</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2007_000920</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2007_000916</caom2:observationURI>
     <caom2:observationURI>caom:DAO/dao_c122_2007_000918</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2007_000917</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2007_000919</caom2:observationURI>
+    <caom2:observationURI>caom:DAO/dao_c122_2007_000922</caom2:observationURI>
   </caom2:members>
 </caom2:Observation>

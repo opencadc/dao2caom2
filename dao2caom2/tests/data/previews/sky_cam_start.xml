@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<caom2:Observation xmlns:caom2="http://www.opencadc.org/caom2/xml/v2.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="caom2:SimpleObservation" caom2:id="6d2b3dd0-b0cb-4e89-ad75-4994d32b72d7" caom2:metaProducer="dao2caom2/0.3.1">
+  <caom2:collection>DAO</caom2:collection>
+  <caom2:observationID>a2020_06_17_07_00_01</caom2:observationID>
+  <caom2:metaRelease>2020-06-17T07:00:01.125</caom2:metaRelease>
+  <caom2:algorithm>
+    <caom2:name>exposure</caom2:name>
+  </caom2:algorithm>
+  <caom2:intent>calibration</caom2:intent>
+  <caom2:telescope>
+    <caom2:name>DAO Skycam</caom2:name>
+    <caom2:geoLocationX>-2331067.2171255187</caom2:geoLocationX>
+    <caom2:geoLocationY>-3533034.4012740254</caom2:geoLocationY>
+    <caom2:geoLocationZ>4755491.285752695</caom2:geoLocationZ>
+  </caom2:telescope>
+  <caom2:instrument>
+    <caom2:name>Sky Camera</caom2:name>
+  </caom2:instrument>
+  <caom2:planes>
+    <caom2:plane caom2:id="de515fdb-0b9a-40fc-8665-113015fc5d00" caom2:metaProducer="dao2caom2/0.3.1">
+      <caom2:productID>sky_camera_image</caom2:productID>
+      <caom2:metaRelease>2020-06-17T07:00:01.125</caom2:metaRelease>
+      <caom2:dataRelease>2020-06-17T07:00:01.125</caom2:dataRelease>
+      <caom2:dataProductType>image</caom2:dataProductType>
+      <caom2:calibrationLevel>1</caom2:calibrationLevel>
+      <caom2:provenance>
+        <caom2:name>DAO Sky Camera image</caom2:name>
+        <caom2:project>DAO Science Archive</caom2:project>
+        <caom2:producer>NRC Herzberg Astronomy and Astrophysics Research Centre</caom2:producer>
+        <caom2:reference>https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/dao/</caom2:reference>
+      </caom2:provenance>
+      <caom2:artifacts>
+        <caom2:artifact caom2:id="c4c08806-cc4b-4996-9677-3652747dd324" caom2:metaProducer="dao2caom2/0.3.1">
+          <caom2:uri>cadc:DAO/a2020_06_17_07_00_01.fits</caom2:uri>
+          <caom2:productType>calibration</caom2:productType>
+          <caom2:releaseType>data</caom2:releaseType>
+          <caom2:contentType>application/fits</caom2:contentType>
+          <caom2:contentChecksum>md5:d937df477fe2511995fa39a027e8ce2f</caom2:contentChecksum>
+          <caom2:parts/>
+        </caom2:artifact>
+      </caom2:artifacts>
+    </caom2:plane>
+  </caom2:planes>
+</caom2:Observation>

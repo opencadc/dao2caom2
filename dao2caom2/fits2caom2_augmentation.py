@@ -67,68 +67,73 @@
 # ***********************************************************************
 #
 
-import logging
-
-from caom2 import SimpleObservation, DerivedObservation, Algorithm
-from caom2utils import ObsBlueprint, GenericParser, FitsParser
-from dao2caom2 import telescopes
+from caom2pipe import caom_composable as cc
+from caom2 import DataProductType
+from dao2caom2 import telescopes, dao_name
 
 
-class Fits2caom2Visitor:
+class DAOFits2caom2Visitor(cc.Fits2caom2Visitor):
     def __init__(self, observation, **kwargs):
-        self._observation = observation
-        self._storage_name = kwargs.get('storage_name')
-        self._metadata_reader = kwargs.get('metadata_reader')
-        self._dump_config = False
-        self._logger = logging.getLogger(self.__class__.__name__)
+        super().__init__(observation, **kwargs)
 
-    def visit(self):
-        for uri, file_info in self._metadata_reader.file_info.items():
-            headers = self._metadata_reader.headers.get(uri)
-            telescope_data = telescopes.factory(uri, headers)
-            blueprint = ObsBlueprint(instantiated_class=telescope_data)
-            telescope_data.configure_axes(blueprint)
-            telescope_data.accumulate_bp(blueprint)
+    @staticmethod
+    def get_data_product_type(headers):
+        obs_mode = headers[0].get('OBSMODE')
+        # DB 30-04-20
+        # I added an obsmodes hash to allow it to be imaging or Imaging but
+        # all should be 'Imaging'.
+        data_product_type = DataProductType.IMAGE
+        if '-slit' in obs_mode:
+            data_product_type = DataProductType.SPECTRUM
+        return data_product_type
 
-            if len(headers) == 0:
-                parser = GenericParser(blueprint, uri)
-            else:
-                parser = FitsParser(headers, blueprint, uri)
-
-            if self._dump_config:
-                print(f'Blueprint for {uri}: {blueprint}')
-
-            if self._observation is None:
-                if blueprint._get('DerivedObservation.members') is None:
-                    self._logger.debug('Build a SimpleObservation')
-                    self._observation = SimpleObservation(
-                        collection=self._storage_name.collection,
-                        observation_id=self._storage_name.obs_id,
-                        algorithm=Algorithm('exposure'),
+    def _get_mapping(self, headers):
+        if self._storage_name.file_name.startswith('a'):
+            result = telescopes.SkyCam(self._storage_name, headers)
+        else:
+            data_product_type = DAOFits2caom2Visitor.get_data_product_type(
+                headers
+            )
+            if data_product_type == DataProductType.IMAGE:
+                if dao_name.DAOName.is_processed(self._storage_name.file_id):
+                    if self._storage_name.is_12_metre:
+                        result = telescopes.Dao12MetreProcessedImage(
+                            self._storage_name, headers
+                        )
+                    else:
+                        result = telescopes.Dao18MetreProcessedImage(
+                            self._storage_name, headers
+                        )
+                elif self._storage_name.is_12_metre:
+                    result = telescopes.Dao12MetreImage(
+                        self._storage_name, headers
                     )
                 else:
-                    self._logger.debug('Build a DerivedObservation')
-                    self._observation = DerivedObservation(
-                        collection=self._storage_name.collection,
-                        observation_id=self._storage_name.obs_id,
-                        algorithm=Algorithm('composite'),
+                    result = telescopes.Dao18MetreImage(
+                        self._storage_name, headers
+                    )
+            else:
+                if dao_name.DAOName.is_processed(self._storage_name.file_id):
+                    if self._storage_name.is_12_metre:
+                        result = telescopes.Dao12MetreProcessedSpectrum(
+                            self._storage_name, headers
+                        )
+                    else:
+                        result = telescopes.Dao18MetreProcessedSpectrum(
+                            self._storage_name, headers
+                        )
+                elif self._storage_name.is_12_metre:
+                    result = telescopes.Dao12MetreSpectrum(
+                        self._storage_name, headers
+                    )
+                else:
+                    result = telescopes.Dao18MetreSpectrum(
+                        self._storage_name, headers
                     )
 
-            parser.augment_observation(
-                observation=self._observation,
-                artifact_uri=uri,
-                product_id=self._storage_name.product_id,
-            )
-
-            telescope_data.update(
-                headers,
-                file_info,
-                self._observation,
-                self._storage_name,
-            )
-        return self._observation
+        self._logger.debug(f'Created {type(result)} instance.')
+        return result
 
 
 def visit(observation, **kwargs):
-    s = Fits2caom2Visitor(observation, **kwargs)
-    return s.visit()
+    return DAOFits2caom2Visitor(observation, **kwargs).visit()

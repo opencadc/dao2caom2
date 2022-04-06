@@ -3,7 +3,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2018.                            (c) 2018.
+#  (c) 2022.                            (c) 2022.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -62,65 +62,35 @@
 #  <http://www.gnu.org/licenses/>.      pas le cas, consultez :
 #                                       <http://www.gnu.org/licenses/>.
 #
-#  $Revision: 4 $
+#  : 4 $
 #
 # ***********************************************************************
 #
 
-from caom2pipe import name_builder_composable as nbc
-from dao2caom2 import DAOName, COLLECTION, PRODUCT_COLLECTION
+from os.path import basename
+
+from cadcdata import FileInfo
+from caom2pipe import astro_composable as ac
+from caom2pipe import reader_composable as rdc
+from dao2caom2 import DAOName, fits2caom2_augmentation
+import test_fits2caom2_augmentation
 
 
-def test_is_valid():
-    assert DAOName('anything').is_valid()
-
-
-def test_processed():
-    test_subject = DAOName('dao_c122_2020_004100_v.fits.gz')
-    assert test_subject is not None, 'expect a value'
-    assert test_subject.obs_id == 'dao_c122_2020_004100', 'wrong obs id'
-    assert (
-        test_subject.file_name == 'dao_c122_2020_004100_v.fits.gz'
-    ), 'wrong file name'
-    assert (
-        test_subject.product_id == 'dao_c122_2020_004100_v'
-    ), 'wrong product id'
-    assert test_subject.file_id == 'dao_c122_2020_004100_v', 'wrong file id'
-    assert (
-        test_subject.source_names == ['dao_c122_2020_004100_v.fits.gz']
-    ), 'wrong source names'
-    assert (
-        test_subject.destination_uris ==
-        [f'cadc:{PRODUCT_COLLECTION}/dao_c122_2020_004100_v.fits']
-    ), 'wrong destination uris'
-    assert (
-        test_subject.file_uri ==
-        f'cadc:{PRODUCT_COLLECTION}/dao_c122_2020_004100_v.fits'
-    ), 'wrong file uri'
-    assert (
-            test_subject.collection == PRODUCT_COLLECTION
-    ), 'wrong collection'
-
-
-def test_raw():
-    test_result = DAOName('cadc:DAO/dao_c182_2018_015013.fits')
-    assert test_result is not None, 'expect a result'
-    assert test_result.obs_id == 'dao_c182_2018_015013'
-    assert test_result.file_name == 'dao_c182_2018_015013.fits'
-    assert test_result.file_id == 'dao_c182_2018_015013'
-    assert test_result.source_names == ['cadc:DAO/dao_c182_2018_015013.fits']
-    assert (
-        test_result.destination_uris == ['cadc:DAO/dao_c182_2018_015013.fits']
-    ), 'wrong destination uris'
-
-    test_result_2 = DAOName(
-        '/usr/src/app/dao_c182_2018_015013/dao_c182_2018_015013.fits.gz'
+def test_failure():
+    test_fqn = (
+        f'{test_fits2caom2_augmentation.TEST_DATA_DIR}/broken_data/'
+        f'dao_c122_2001_006946.fits.header'
     )
-    assert (
-        test_result_2.source_names ==
-        ['/usr/src/app/dao_c182_2018_015013/dao_c182_2018_015013.fits.gz']
-    )
-    assert (
-        test_result_2.destination_uris ==
-        [f'cadc:{COLLECTION}/dao_c182_2018_015013.fits']
-    ), 'wrong destination uris'
+    dao_name = DAOName(basename(test_fqn).replace('.header', '.gz'))
+    file_info = FileInfo(id=dao_name.file_uri, file_type='application/fits')
+    headers = ac.make_headers_from_file(test_fqn)
+    metadata_reader = rdc.FileMetadataReader()
+    metadata_reader._headers = {dao_name.file_uri: headers}
+    metadata_reader._file_info = {dao_name.file_uri: file_info}
+    kwargs = {
+        'storage_name': dao_name,
+        'metadata_reader': metadata_reader,
+    }
+    observation = None
+    observation = fits2caom2_augmentation.visit(observation, **kwargs)
+    assert observation is None, 'failure, no observation creation'
