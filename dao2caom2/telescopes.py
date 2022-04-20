@@ -142,12 +142,11 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
     def __init__(self, storage_name, headers):
         super().__init__(storage_name, headers)
 
-    def update(self, observation, file_info, caom_repo_client):
-        """Called to fill multiple CAOM model elements and/or attributes (an n:n
-        relationship between TDM attributes and CAOM attributes). Must have this
-        signature for import_module loading and execution.
+    def update(self, observation, file_info, clients):
+        """Called to fill multiple CAOM model elements and/or attributes (an
+        n:n relationship between TDM attributes and CAOM attributes).
         """
-        logging.debug('Begin update.')
+        self._logger.debug('Begin update.')
         # correct the *_axis values
         for plane in observation.planes.values():
             for artifact in plane.artifacts.values():
@@ -310,7 +309,7 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
             ):
                 self._update_observation_members(observation)
 
-        logging.debug('Done update.')
+        self._logger.debug('Done update.')
         return observation
 
     def _update_observation_members(self, observation):
@@ -350,7 +349,9 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
 
         for entry in inputs:
             members_inputs.add(entry.get_observation_uri())
-            logging.debug(f'Adding Observation URI {entry.get_observation_uri()}')
+            self._logger.debug(
+                f'Adding Observation URI {entry.get_observation_uri()}'
+            )
         mc.update_typed_set(observation.members, members_inputs)
 
     def _update_plane_provenance(self, observation, plane, headers):

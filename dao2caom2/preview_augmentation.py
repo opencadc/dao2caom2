@@ -86,9 +86,9 @@ from dao2caom2 import dao_name as dn
 
 
 class DAOPreview(mc.PreviewVisitor):
-    def __init__(self, **kwargs):
+    def __init__(self, mime_type, **kwargs):
         super(DAOPreview, self).__init__(
-            dn.COLLECTION, ReleaseType.DATA, **kwargs
+            dn.COLLECTION, ReleaseType.DATA, mime_type, **kwargs
         )
 
     def generate_plots(self, obs_id):
