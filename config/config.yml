@@ -39,7 +39,7 @@ data_sources:
 # specify a list of the file extensions to be recognized for
 # processing by the pipeline. e.g. '.fits', '.fits.fz', '.hdf5'
 data_source_extensions:
-  - .fits.gz
+  - .fits
 # values DEBUG INFO WARNING ERROR
 logging_level: INFO
 # values True False
@@ -59,6 +59,8 @@ failure_log_file_name: failure_log.txt
 #
 # this file is created in the logs directory, default is 'retries.txt'
 retry_file_name: retries.txt
+retry_failures: True
+retry_count: 1
 # the filename where pipeline progress is written. This file is
 # always written. It's an on-going log of the number of entries processed
 # by the pipeline, and is useful when using time-boxed execution.
@@ -66,10 +68,6 @@ retry_file_name: retries.txt
 # this file is created in the logs directory, default is 'progress.txt'
 progress_file_name: progress.txt
 #
-# ad stream value - sorry
-# set stream to 'default', if using TaskType STORE or PULL
-stream: raw
-archive: DAO
 collection: DAO
 #
 # CADC service execution metrics
@@ -105,4 +103,4 @@ task_types:
   - ingest
   - modify
 features:
-  supports_latest_client: False
+  supports_latest_client: True
