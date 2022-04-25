@@ -136,9 +136,9 @@ class DAOName(mc.StorageName):
     @property
     def is_12_metre(self):
         return (
-            self._file_name.startswith('dao_c122') or
-            self._file_name.startswith('dao_r122') or
-            self._file_name.startswith('dao_p122')
+            self._file_name.startswith('dao_c122')
+            or self._file_name.startswith('dao_r122')
+            or self._file_name.startswith('dao_p122')
         )
 
     def set_obs_id(self, **kwargs):

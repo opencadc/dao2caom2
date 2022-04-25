@@ -86,20 +86,17 @@ def test_processed():
         test_subject.product_id == 'dao_c122_2020_004100_v'
     ), 'wrong product id'
     assert test_subject.file_id == 'dao_c122_2020_004100_v', 'wrong file id'
-    assert (
-        test_subject.source_names == ['dao_c122_2020_004100_v.fits.gz']
-    ), 'wrong source names'
-    assert (
-        test_subject.destination_uris ==
-        [f'cadc:{PRODUCT_COLLECTION}/dao_c122_2020_004100_v.fits']
-    ), 'wrong destination uris'
-    assert (
-        test_subject.file_uri ==
+    assert test_subject.source_names == [
+        'dao_c122_2020_004100_v.fits.gz'
+    ], 'wrong source names'
+    assert test_subject.destination_uris == [
         f'cadc:{PRODUCT_COLLECTION}/dao_c122_2020_004100_v.fits'
-    ), 'wrong file uri'
+    ], 'wrong destination uris'
     assert (
-            test_subject.collection == PRODUCT_COLLECTION
-    ), 'wrong collection'
+        test_subject.file_uri
+        == f'cadc:{PRODUCT_COLLECTION}/dao_c122_2020_004100_v.fits'
+    ), 'wrong file uri'
+    assert test_subject.collection == PRODUCT_COLLECTION, 'wrong collection'
 
 
 def test_raw():
@@ -109,18 +106,16 @@ def test_raw():
     assert test_result.file_name == 'dao_c182_2018_015013.fits'
     assert test_result.file_id == 'dao_c182_2018_015013'
     assert test_result.source_names == ['cadc:DAO/dao_c182_2018_015013.fits']
-    assert (
-        test_result.destination_uris == ['cadc:DAO/dao_c182_2018_015013.fits']
-    ), 'wrong destination uris'
+    assert test_result.destination_uris == [
+        'cadc:DAO/dao_c182_2018_015013.fits'
+    ], 'wrong destination uris'
 
     test_result_2 = DAOName(
         '/usr/src/app/dao_c182_2018_015013/dao_c182_2018_015013.fits.gz'
     )
-    assert (
-        test_result_2.source_names ==
-        ['/usr/src/app/dao_c182_2018_015013/dao_c182_2018_015013.fits.gz']
-    )
-    assert (
-        test_result_2.destination_uris ==
-        [f'cadc:{COLLECTION}/dao_c182_2018_015013.fits']
-    ), 'wrong destination uris'
+    assert test_result_2.source_names == [
+        '/usr/src/app/dao_c182_2018_015013/dao_c182_2018_015013.fits.gz'
+    ]
+    assert test_result_2.destination_uris == [
+        f'cadc:{COLLECTION}/dao_c182_2018_015013.fits'
+    ], 'wrong destination uris'

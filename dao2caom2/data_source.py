@@ -75,7 +75,6 @@ __all__ = ['DAOLocalFilesDataSource', 'DAOVaultDataSource']
 
 
 class DAOLocalFilesDataSource(dsc.LocalFilesDataSource):
-
     def __init__(self, config, cadc_client, metadata_reader):
         super().__init__(config, cadc_client, metadata_reader)
 

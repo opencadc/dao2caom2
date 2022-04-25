@@ -79,8 +79,7 @@ from caom2pipe import transfer_composable as tc
 __all__ = ['VoFitsCleanupTransfer']
 
 
-class VoFitsCleanupTransfer(tc.VoFitsTransfer):
-
+class VoFitsCleanupTransfer(tc.VoScienceTransfer):
     def __init__(self, vo_client, config):
         super(VoFitsCleanupTransfer, self).__init__(vo_client)
         self._cleanup_when_storing = config.cleanup_files_when_storing
