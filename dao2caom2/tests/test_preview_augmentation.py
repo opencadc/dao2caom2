@@ -109,7 +109,7 @@ def test_visit():
             'dao_c122_2007_000881.fits.gz',
             'dao_c122_2007_000881_e.fits',
         ],
-        'sky_cam_start.xml': ['a2020_06_17_07_00_01.fits']
+        'sky_cam_start.xml': ['a2020_06_17_07_00_01.fits'],
     }
 
     test_checksums = {
@@ -163,5 +163,7 @@ def test_visit():
                     #     f'wrong checksum {p} {artifact.content_checksum} ' \
                     #     f'{test_checksums[p]}'
             except Exception as e:
-                assert False, f'key {key} value {value} f_name {f_name} {str(e)}'
+                assert (
+                    False
+                ), f'key {key} value {value} f_name {f_name} {str(e)}'
     # assert False

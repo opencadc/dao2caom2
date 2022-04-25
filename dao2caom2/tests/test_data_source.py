@@ -100,14 +100,24 @@ def test_dao_transfer_check_fits_verify(vault_info_mock):
     def _mock_listdir(entry):
         if entry.endswith('Incoming'):
             return [
-                'dao123.fits.gz', 'dao456.fits', 'Yesterday', '.dot.fits.gz'
+                'dao123.fits.gz',
+                'dao456.fits',
+                'Yesterday',
+                '.dot.fits.gz',
             ]
         else:
             return []
 
     test_vos_client.listdir.side_effect = _mock_listdir
     test_vos_client.isdir.side_effect = [
-        False, False, True, False, False, False, True, False
+        False,
+        False,
+        True,
+        False,
+        False,
+        False,
+        True,
+        False,
     ]
     vault_info_mock.return_value = test_file_info
     test_data_client.info.return_value = test_file_info
@@ -177,6 +187,7 @@ def test_data_source_exists():
         node = type('', (), {})()
         node.props = {'length': 42, 'MD5': 'ghi', 'lastmod': 'Sept 10 2021'}
         return node
+
     test_vos_client.get_node.side_effect = _get_node
 
     # mock that the same file already exists as CADC
@@ -186,14 +197,16 @@ def test_data_source_exists():
             id=uri,
             md5sum='ghi',
         )
+
     test_data_client.info.side_effect = _get_info
 
     # destination file exists at CADC
     def _status(uri):
         assert (
-                uri == 'vos:test/success/dest_fqn.fits'
+            uri == 'vos:test/success/dest_fqn.fits'
         ), f'wrong status check {uri}'
         return True
+
     test_vos_client.status.side_effect = _status
 
     # test execution

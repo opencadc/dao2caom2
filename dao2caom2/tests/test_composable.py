@@ -102,9 +102,7 @@ def test_run(run_mock, access_mock):
         assert run_mock.called, 'should have been called'
         args, kwargs = run_mock.call_args
         test_storage = args[0]
-        assert isinstance(
-            test_storage, dao_name.DAOName
-        ), type(test_storage)
+        assert isinstance(test_storage, dao_name.DAOName), type(test_storage)
         assert test_storage.obs_id == test_obs_id, 'wrong obs id'
         assert test_storage.file_name == test_f_name, 'wrong file name'
     finally:
@@ -139,19 +137,15 @@ def test_run_vo(run_mock, vo_client_mock, access_mock):
         assert run_mock.called, 'should have been called'
         args, kwargs = run_mock.call_args
         test_storage = args[0]
-        assert isinstance(
-            test_storage, dao_name.DAOName
-        ), type(test_storage)
+        assert isinstance(test_storage, dao_name.DAOName), type(test_storage)
         assert test_storage.obs_id == test_obs_id, 'wrong obs id'
         assert test_storage.file_name == test_f_name, 'wrong file name'
-        assert (
-                test_storage.source_names ==
-                ['vos:goliaths/DAOTest/sky_cam_image.fits.gz']
-        ), 'wrong source names'
-        assert (
-                test_storage.destination_uris ==
-                ['cadc:DAO/sky_cam_image.fits']
-        ), 'wrong destination uris'
+        assert test_storage.source_names == [
+            'vos:goliaths/DAOTest/sky_cam_image.fits.gz'
+        ], 'wrong source names'
+        assert test_storage.destination_uris == [
+            'cadc:DAO/sky_cam_image.fits'
+        ], 'wrong destination uris'
     finally:
         os.getcwd = getcwd_orig
         # clean up the summary report text file
@@ -191,6 +185,7 @@ def test_run_store_ingest(
     get_work_mock.return_value = temp_deque
     repo_client_mock.return_value.read.return_value = None
     reader_headers_mock.return_value = [{'OBSMODE': 'abc'}]
+
     def _file_info_mock(uri):
         return FileInfo(
             id=uri,
@@ -233,7 +228,9 @@ def test_run_store_ingest(
                 data_client_mock.return_value.put.call_count == 2
             ), 'wrong number of puts'
             put_calls = [
-                call('/data', 'cadc:DAOCADC/dao_c122_2021_005157_e.fits', None),
+                call(
+                    '/data', 'cadc:DAOCADC/dao_c122_2021_005157_e.fits', None
+                ),
                 call('/data', 'cadc:DAO/dao_c122_2021_005157.fits', None),
             ]
             data_client_mock.return_value.put.assert_has_calls(
@@ -298,6 +295,7 @@ def test_run_store_ingest_remote(
     vo_mock.return_value.isdir.return_value = False
     repo_client_mock.return_value.read.return_value = None
     reader_headers_mock.return_value = [{'OBSMODE': 'abc'}]
+
     def _file_info_mock(uri):
         return FileInfo(
             id=uri,

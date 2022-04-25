@@ -104,9 +104,7 @@ def test_visitor(test_name):
         'storage_name': dao_name,
         'metadata_reader': metadata_reader,
     }
-    expected_fqn = (
-        f'{TEST_DATA_DIR}/{dao_name.file_id}.expected.xml'
-    )
+    expected_fqn = f'{TEST_DATA_DIR}/{dao_name.file_id}.expected.xml'
     actual_fqn = expected_fqn.replace('expected', 'actual')
     if exists(actual_fqn):
         unlink(actual_fqn)

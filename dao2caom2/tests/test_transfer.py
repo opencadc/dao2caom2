@@ -82,15 +82,14 @@ def test_transfer_fails_fits_check():
 
     def mock_copy(ignore_src, ignore_dst, send_md5=True):
         copyfile('/test_files/broken.fits', '/tmp/broken.fits')
+
     vos_client_mock.copy.side_effect = mock_copy
 
     test_config = mc.Config()
     test_config.cleanup_files_when_storing = True
     test_config.cleanup_failure_destination = 'vos:goliaths/dao_test/failure'
 
-    test_subject = transfer.VoFitsCleanupTransfer(
-        vos_client_mock, test_config
-    )
+    test_subject = transfer.VoFitsCleanupTransfer(vos_client_mock, test_config)
     assert test_subject is not None, 'expect ctor to work'
     test_subject.observable = Mock(autospec=True)
 
