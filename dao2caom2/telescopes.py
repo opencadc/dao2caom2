@@ -698,11 +698,26 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
                 # DB - 11-09-19 - precession with astropy
                 ra = self._headers[ext].get('RA', 0)
                 dec = self._headers[ext].get('DEC', 0)
+                # DB - 25-04-22
+                # Those are always calibration frames taken with the telescope
+                # in its old park position (pointing at the north celestial
+                # pole) and the old encoders gave incorrect values.  Search
+                # for values with DEC > +90 and set to precisely +90 in those
+                # cases.
                 equinox = f'J{self._headers[ext].get("EQUINOX")}'
                 fk5 = FK5(equinox=equinox)
-                coord = SkyCoord(
-                    f'{ra} {dec}', unit=(u.hourangle, u.deg), frame=fk5
-                )
+                try:
+                    coord = SkyCoord(
+                        f'{ra} {dec}', unit=(u.hourangle, u.deg), frame=fk5
+                    )
+                except ValueError as e:
+                    if '-90 deg <= angle <= 90 deg' in str(e):
+                        dec = '+90:00:00'
+                        coord = SkyCoord(
+                            f'{ra} {dec}', unit=(u.hourangle, u.deg), frame=fk5
+                        )
+                    else:
+                        raise e
                 j2000 = FK5(equinox='J2000')
                 result = coord.transform_to(j2000)
                 ra_deg = result.ra.degree
