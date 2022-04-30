@@ -117,9 +117,7 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
                                        RP      ''
 
     unprocessed DAO CCD spectrum
-    processed DAO spectrum flats
     dao_[c]\d{3}_\d{4}_\d{6}:
-    dao_[cr]\d{3}_\d{4}_\d{6}_F:
                                        CRVAL   'WAVELENG'
                                        CDELT   'DELTA_WL'
                                        CRPIX   'REFPIXEL'
@@ -134,7 +132,7 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
                                        CRPIX   'DATASEC' + math
 
     processed DAO spectrum
-    dao_[cr]\d{3}_\d{4}_\d{6}_[evB], obs.type in ['object', 'comparison']:
+    dao_[cr]\d{3}_\d{4}_\d{6}_[evBF], obs.type in ['object', 'comparison']:
                                        CRVAL   'CRVAL1'
                                        CDELT   'CDELT1'
                                        CRPIX   'CRPIX1'
@@ -172,9 +170,25 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
                                 plane.data_product_type
                                 == DataProductType.SPECTRUM
                             ):
-                                if DAOName.is_unprocessed_reticon(
-                                    artifact.uri
+                                if (
+                                    DAOName.is_unprocessed_reticon(
+                                        artifact.uri
+                                    )
+                                    or (
+                                        DAOName.is_derived(artifact.uri)
+                                        and observation.type == 'flat'
+                                    )
                                 ):
+                                    # DB 29-04-22
+                                    # Live WITHOUT energy metadata for the
+                                    # flats since users can find these from
+                                    # the inputs of the processed science
+                                    # data if needed.  This might be best
+                                    # since if I get to the point of
+                                    # processing really old data these might
+                                    # not even have WAVELENG and REFPIXEL or
+                                    # other metadata in the headers so there
+                                    # would be no way to figure energy info.
                                     cc.reset_energy(chunk)
                                 if (
                                     artifact.product_type
@@ -981,35 +995,6 @@ class Dao12MetreSpectrum(Dao12Metre):
 class Dao12MetreProcessedSpectrum(Dao12MetreSpectrum, ProcessedSpectrum):
     def __init__(self, storage_name, headers):
         super().__init__(storage_name, headers)
-
-    def accumulate_blueprint(self, bp, application=None):
-        super().accumulate_blueprint(bp, APPLICATION)
-        if self._headers[0].get('OBSTYPE').lower() == 'flat':
-
-            # DB 25-04-22
-            # Use the same algorithm that you use for unprocessed flats to
-            # derive spectral metadata. This has the disadvantage of producing
-            # somewhat less accurate spectral WCS than the processed arc/object
-            # exposures.  I could modify my processing script to add the CRVAL4
-            # etc. values used in one of the processed arcs but the flats are
-            # often taken a day or days before/after a science exposure so this
-            # wouldn’t be the best values either.
-            bp.set(
-                'Chunk.energy.axis.function.delta',
-                'get_energy_axis_function_delta()',
-            )
-            bp.set(
-                'Chunk.energy.axis.function.naxis',
-                'get_energy_axis_function_naxis()',
-            )
-            bp.set(
-                'Chunk.energy.axis.function.refCoord.pix',
-                'get_energy_axis_function_refcoord_pix()',
-            )
-            bp.clear('Chunk.energy.axis.function.refCoord.val')
-            bp.add_attribute(
-                'Chunk.energy.axis.function.refCoord.val', 'WAVELENG'
-            )
 
     def get_energy_resolving_power(self, ext):
         obs_type = self._headers[ext].get('OBSTYPE')

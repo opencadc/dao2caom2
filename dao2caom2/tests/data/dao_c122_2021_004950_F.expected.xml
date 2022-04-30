@@ -85,26 +85,6 @@
                       <caom2:bin>1</caom2:bin>
                     </caom2:dependent>
                   </caom2:observable>
-                  <caom2:energy>
-                    <caom2:axis>
-                      <caom2:axis>
-                        <caom2:ctype>WAVE</caom2:ctype>
-                        <caom2:cunit>m</caom2:cunit>
-                      </caom2:axis>
-                      <caom2:function>
-                        <caom2:naxis>4088</caom2:naxis>
-                        <caom2:delta>1.5e-11</caom2:delta>
-                        <caom2:refCoord>
-                          <caom2:pix>2046.0</caom2:pix>
-                          <caom2:val>6.6e-07</caom2:val>
-                        </caom2:refCoord>
-                      </caom2:function>
-                    </caom2:axis>
-                    <caom2:specsys>TOPOCENT</caom2:specsys>
-                    <caom2:ssysobs>TOPOCENT</caom2:ssysobs>
-                    <caom2:ssyssrc>TOPOCENT</caom2:ssyssrc>
-                    <caom2:resolvingPower>17600.0</caom2:resolvingPower>
-                  </caom2:energy>
                   <caom2:time>
                     <caom2:axis>
                       <caom2:axis>
