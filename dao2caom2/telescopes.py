@@ -726,7 +726,10 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
                     )
                 except ValueError as e:
                     if '-90 deg <= angle <= 90 deg' in str(e):
-                        dec = '+90:00:00'
+                        if dec.startswith('+') or dec.startswith('9'):
+                            dec = '+90:00:00'
+                        else:
+                            dec = '-90:00:00'
                         coord = SkyCoord(
                             f'{ra} {dec}', unit=(u.hourangle, u.deg), frame=fk5
                         )
