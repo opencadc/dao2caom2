@@ -174,9 +174,21 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
                                     DAOName.is_unprocessed_reticon(
                                         artifact.uri
                                     )
-                                    or DAOName.is_derived(artifact.uri)
-                                    and observation.type == 'flat'
+                                    or (
+                                        DAOName.is_derived(artifact.uri)
+                                        and observation.type == 'flat'
+                                    )
                                 ):
+                                    # DB 29-04-22
+                                    # Live WITHOUT energy metadata for the
+                                    # flats since users can find these from
+                                    # the inputs of the processed science
+                                    # data if needed.  This might be best
+                                    # since if I get to the point of
+                                    # processing really old data these might
+                                    # not even have WAVELENG and REFPIXEL or
+                                    # other metadata in the headers so there
+                                    # would be no way to figure energy info.
                                     cc.reset_energy(chunk)
                                 if (
                                     artifact.product_type
@@ -571,6 +583,8 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
             crpix = self._headers[ext].get('REFPIXEL')
             if crpix is None:
                 temp = self._headers[ext].get('DATASEC')
+                if temp is None:
+                    temp = self._headers[ext].get('CCDSEC')
                 if temp is not None:
                     datasec = re.sub(
                         r'(\[)(\d+:\d+,\d+:\d+)(\])', r'\g<2>', temp
@@ -698,11 +712,29 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
                 # DB - 11-09-19 - precession with astropy
                 ra = self._headers[ext].get('RA', 0)
                 dec = self._headers[ext].get('DEC', 0)
+                # DB - 25-04-22
+                # Those are always calibration frames taken with the telescope
+                # in its old park position (pointing at the north celestial
+                # pole) and the old encoders gave incorrect values.  Search
+                # for values with DEC > +90 and set to precisely +90 in those
+                # cases.
                 equinox = f'J{self._headers[ext].get("EQUINOX")}'
                 fk5 = FK5(equinox=equinox)
-                coord = SkyCoord(
-                    f'{ra} {dec}', unit=(u.hourangle, u.deg), frame=fk5
-                )
+                try:
+                    coord = SkyCoord(
+                        f'{ra} {dec}', unit=(u.hourangle, u.deg), frame=fk5
+                    )
+                except ValueError as e:
+                    if '-90 deg <= angle <= 90 deg' in str(e):
+                        if dec.startswith('+') or dec.startswith('9'):
+                            dec = '+90:00:00'
+                        else:
+                            dec = '-90:00:00'
+                        coord = SkyCoord(
+                            f'{ra} {dec}', unit=(u.hourangle, u.deg), frame=fk5
+                        )
+                    else:
+                        raise e
                 j2000 = FK5(equinox='J2000')
                 result = coord.transform_to(j2000)
                 ra_deg = result.ra.degree
