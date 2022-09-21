@@ -725,7 +725,7 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
                         f'{ra} {dec}', unit=(u.hourangle, u.deg), frame=fk5
                     )
                 except ValueError as e:
-                    if '-90 deg <= angle <= 90 deg' in str(e):
+                    if 'Cannot parse first argument data "+90' in str(e):
                         if dec.startswith('+') or dec.startswith('9'):
                             dec = '+90:00:00'
                         else:
