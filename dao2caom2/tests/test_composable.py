@@ -158,40 +158,31 @@ def test_run_vo(run_mock, vo_client_mock, access_mock):
                 os.unlink(fqn)
 
 
+@patch('caom2utils.data_util.get_local_headers_from_fits')
+@patch('caom2utils.data_util.get_local_file_info')
 @patch('caom2pipe.execute_composable.CaomExecute._caom2_store')
 @patch('caom2pipe.execute_composable.CaomExecute._visit_meta')
-@patch('cadcutils.net.ws.WsCapabilities.get_access_url')
-@patch('caom2pipe.reader_composable.FileMetadataReader._retrieve_headers')
-@patch('caom2pipe.reader_composable.FileMetadataReader._retrieve_file_info')
 @patch('caom2pipe.data_source_composable.LocalFilesDataSource.clean_up')
 @patch('caom2pipe.data_source_composable.LocalFilesDataSource.get_work')
-@patch('caom2pipe.client_composable.CAOM2RepoClient')
-@patch('caom2pipe.client_composable.StorageClientWrapper')
+@patch('caom2pipe.client_composable.ClientCollection', autospec=True)
 def test_run_store_ingest(
-    data_client_mock,
-    repo_client_mock,
+    clients_mock,
     get_work_mock,
     cleanup_mock,
-    reader_file_info_mock,
-    reader_headers_mock,
-    access_mock,
     visit_meta_mock,
     caom2_store_mock,
+    reader_headers_mock,
+    reader_file_info_mock,
 ):
-    access_mock.return_value = 'https://localhost'
     temp_deque = deque()
     temp_deque.append('/data/dao_c122_2021_005157_e.fits')
     temp_deque.append('/data/dao_c122_2021_005157.fits')
     get_work_mock.return_value = temp_deque
-    repo_client_mock.return_value.read.return_value = None
+    clients_mock.return_value.metadata_client.read.return_value = None
     reader_headers_mock.return_value = [{'OBSMODE': 'abc'}]
 
-    def _file_info_mock(uri):
-        return FileInfo(
-            id=uri,
-            file_type='application/fits',
-            md5sum='md5:def',
-        )
+    def _file_info_mock(key):
+        return FileInfo(id=key, file_type='application/fits', md5sum='def')
 
     reader_file_info_mock.side_effect = _file_info_mock
     cwd = os.getcwd()
@@ -219,23 +210,15 @@ def test_run_store_ingest(
             test_result = composable._run()
             assert test_result is not None, 'expect result'
             assert test_result == 0, 'expect success'
-            assert repo_client_mock.return_value.read.called, 'read called'
+            assert clients_mock.return_value.metadata_client.read.called, 'read called'
             # make sure data is not really being written to CADC storage :)
-            assert (
-                data_client_mock.return_value.put.called
-            ), 'put should be called'
-            assert (
-                data_client_mock.return_value.put.call_count == 2
-            ), 'wrong number of puts'
+            assert clients_mock.return_value.data_client.put.called, 'put should be called'
+            assert clients_mock.return_value.data_client.put.call_count == 2, 'wrong number of puts'
             put_calls = [
-                call(
-                    '/data', 'cadc:DAOCADC/dao_c122_2021_005157_e.fits', None
-                ),
+                call('/data', 'cadc:DAOCADC/dao_c122_2021_005157_e.fits', None),
                 call('/data', 'cadc:DAO/dao_c122_2021_005157.fits', None),
             ]
-            data_client_mock.return_value.put.assert_has_calls(
-                put_calls, any_order=False
-            )
+            clients_mock.return_value.data_client.put.assert_has_calls(put_calls, any_order=False)
             assert cleanup_mock.called, 'cleanup'
             cleanup_calls = [
                 call('/data/dao_c122_2021_005157_e.fits', 0, 0),
@@ -247,9 +230,7 @@ def test_run_store_ingest(
             assert caom2_store_mock.called, '_caom2_store call'
             assert caom2_store_mock.call_count == 2, '_caom2_store call count'
             assert reader_file_info_mock.called, 'info'
-            assert (
-                reader_file_info_mock.call_count == 2
-            ), 'wrong number of info calls'
+            assert reader_file_info_mock.call_count == 2, 'wrong number of info calls'
             reader_info_calls = [
                 call('/data/dao_c122_2021_005157_e.fits'),
                 call('/data/dao_c122_2021_005157.fits'),
@@ -267,44 +248,42 @@ def test_run_store_ingest(
             os.chdir(cwd)
 
 
+@patch('caom2utils.data_util.get_local_file_headers')
 @patch('dao2caom2.composable.Client')
 @patch('caom2pipe.execute_composable.CaomExecute._caom2_store')
 @patch('caom2pipe.execute_composable.CaomExecute._visit_meta')
-@patch('cadcutils.net.ws.WsCapabilities.get_access_url')
-@patch('caom2pipe.reader_composable.VaultReader._retrieve_headers')
-@patch('caom2pipe.reader_composable.VaultReader._retrieve_file_info')
 @patch('dao2caom2.data_source.DAOVaultDataSource.clean_up')
-@patch('caom2pipe.client_composable.CAOM2RepoClient')
-@patch('caom2pipe.client_composable.StorageClientWrapper')
+@patch('caom2pipe.client_composable.ClientCollection', autospec=True)
 def test_run_store_ingest_remote(
-    data_client_mock,
-    repo_client_mock,
+    clients_mock,
     cleanup_mock,
-    reader_file_info_mock,
-    reader_headers_mock,
-    access_mock,
     visit_meta_mock,
     caom2_store_mock,
     vo_mock,
+    file_headers_mock,
 ):
-    access_mock.return_value = 'https://localhost'
     vo_mock.return_value.listdir.return_value = [
-        'dao_c122_2021_005157_e.fits',
-        'dao_c122_2021_005157.fits',
+        'dao_c122_2021_005157_e.fits', 'dao_c122_2021_005157.fits'
     ]
     vo_mock.return_value.isdir.return_value = False
-    repo_client_mock.return_value.read.return_value = None
-    reader_headers_mock.return_value = [{'OBSMODE': 'abc'}]
+    clients_mock.return_value.metadata_client.read.return_value = None
+    file_headers_mock.return_value = [{'OBSMODE': 'abc'}]
+
+    def _get_node_mock(uri, limit, force):
+        import logging
+        logging.error(uri)
+        temp = type('', (), {})
+        temp.name = uri.split('/')[-1]
+        temp.path = f'vos:goliaths/DAOtest/{temp.name}'
+        temp.props = {'length': 1, 'MD5': 'md5:abc', 'lastmod': 1579740835.7357888}
+        return temp
+
+    vo_mock.return_value.get_node.side_effect = _get_node_mock
 
     def _file_info_mock(uri):
-        return FileInfo(
-            id=uri,
-            file_type='application/fits',
-            md5sum='md5:def',
-        )
+        return FileInfo(id=uri, file_type='application/fits', md5sum='def')
 
-    reader_file_info_mock.side_effect = _file_info_mock
-    data_client_mock.return_value.info.side_effect = _file_info_mock
+    clients_mock.return_value.data_client.info.side_effect = _file_info_mock
     cwd = os.getcwd()
     with TemporaryDirectory() as tmp_dir_name:
         os.chdir(tmp_dir_name)
@@ -330,42 +309,21 @@ def test_run_store_ingest_remote(
             test_result = composable._run_vo()
             assert test_result is not None, 'expect result'
             assert test_result == 0, 'expect success'
-            assert repo_client_mock.return_value.read.called, 'read called'
+            assert clients_mock.return_value.metadata_client.read.called, 'read called'
             # make sure data is not really being written to CADC storage :)
-            assert (
-                data_client_mock.return_value.put.called
-            ), 'put should be called'
-            assert (
-                data_client_mock.return_value.put.call_count == 2
-            ), 'wrong number of puts'
+            assert clients_mock.return_value.data_client.put.called, 'put should be called'
+            assert clients_mock.return_value.data_client.put.call_count == 2, 'wrong number of puts'
             put_calls = [
-                call(
-                    f'{tmp_dir_name}/dao_c122_2021_005157',
-                    'cadc:DAOCADC/dao_c122_2021_005157_e.fits',
-                    None,
-                ),
-                call(
-                    f'{tmp_dir_name}/dao_c122_2021_005157',
-                    'cadc:DAO/dao_c122_2021_005157.fits',
-                    None,
-                ),
+                call(f'{tmp_dir_name}/dao_c122_2021_005157', 'cadc:DAOCADC/dao_c122_2021_005157_e.fits', None),
+                call(f'{tmp_dir_name}/dao_c122_2021_005157', 'cadc:DAO/dao_c122_2021_005157.fits', None),
             ]
-            data_client_mock.return_value.put.assert_has_calls(
-                put_calls, any_order=False
-            )
-            assert (
-                data_client_mock.return_value.info.called
-            ), 'info should be called'
-            assert (
-                data_client_mock.return_value.info.call_count == 2
-            ), 'wrong number of infos'
+            clients_mock.return_value.data_client.put.assert_has_calls(put_calls, any_order=False)
+            assert clients_mock.return_value.data_client.info.called, 'info should be called'
+            assert clients_mock.return_value.data_client.info.call_count == 2, 'wrong number of infos'
             info_calls = [
-                call('cadc:DAOCADC/dao_c122_2021_005157_e.fits'),
-                call('cadc:DAO/dao_c122_2021_005157.fits'),
+                call('cadc:DAOCADC/dao_c122_2021_005157_e.fits'), call('cadc:DAO/dao_c122_2021_005157.fits')
             ]
-            data_client_mock.return_value.info.assert_has_calls(
-                info_calls, any_order=False
-            )
+            clients_mock.return_value.data_client.info.assert_has_calls(info_calls, any_order=False)
             assert cleanup_mock.called, 'cleanup'
             cleanup_calls = [
                 call('vos:goliaths/DAOtest/dao_c122_2021_005157_e.fits', 0, 0),
@@ -374,40 +332,37 @@ def test_run_store_ingest_remote(
             cleanup_mock.assert_has_calls(cleanup_calls), 'wrong cleanup args'
             assert vo_mock.return_value.copy.called, 'copy'
             copy_calls = [
+                call('vos:goliaths/DAOtest/dao_c122_2021_005157_e.fits', ANY, head=True),
                 call(
                     'vos:goliaths/DAOtest/dao_c122_2021_005157_e.fits',
-                    ANY,
+                    f'{tmp_dir_name}/dao_c122_2021_005157/dao_c122_2021_005157_e.fits',
                     send_md5=True,
                 ),
+                call('vos:goliaths/DAOtest/dao_c122_2021_005157.fits', ANY, head=True),
                 call(
                     'vos:goliaths/DAOtest/dao_c122_2021_005157.fits',
-                    ANY,
+                    f'{tmp_dir_name}/dao_c122_2021_005157/dao_c122_2021_005157.fits',
                     send_md5=True,
                 ),
             ]
-            vo_mock.return_value.copy.assert_has_calls(
-                copy_calls,
-            ), 'wrong copy parameters'
+            vo_mock.return_value.copy.assert_has_calls(copy_calls), 'wrong vo copy parameters'
             assert visit_meta_mock.called, '_visit_meta call'
             assert visit_meta_mock.call_count == 2, '_visit_meta call count'
             assert caom2_store_mock.called, '_caom2_store call'
             assert caom2_store_mock.call_count == 2, '_caom2_store call count'
-            assert reader_file_info_mock.called, 'info'
-            assert (
-                reader_file_info_mock.call_count == 2
-            ), 'wrong number of info calls'
+            assert vo_mock.return_value.get_node.called, 'info'
+            assert vo_mock.return_value.get_node.call_count == 4, 'wrong number of info calls'
             reader_info_calls = [
-                call('vos:goliaths/DAOtest/dao_c122_2021_005157_e.fits'),
-                call('vos:goliaths/DAOtest/dao_c122_2021_005157.fits'),
+                call('vos:goliaths/DAOtest/dao_c122_2021_005157_e.fits', limit=None, force=False),
+                call('vos:goliaths/DAOtest/dao_c122_2021_005157.fits', limit=None, force=False),
+                call('vos:goliaths/DAOtest/dao_c122_2021_005157_e.fits', limit=None, force=False),
+                call('vos:goliaths/DAOtest/dao_c122_2021_005157.fits', limit=None, force=False),
             ]
-            reader_file_info_mock.assert_has_calls(reader_info_calls), 'info'
-            assert reader_headers_mock.called, 'get_head should be called'
-            assert reader_headers_mock.call_count == 2, 'get_head call count'
-            header_calls = [
-                call('vos:goliaths/DAOtest/dao_c122_2021_005157_e.fits'),
-                call('vos:goliaths/DAOtest/dao_c122_2021_005157.fits'),
-            ]
-            reader_headers_mock.assert_has_calls(header_calls), 'get_head'
+            vo_mock.return_value.get_node.assert_has_calls(reader_info_calls), 'info'
+            assert file_headers_mock.called, 'get_head should be called'
+            assert file_headers_mock.call_count == 2, 'get_head call count'
+            header_calls = [call(ANY), call(ANY)]
+            file_headers_mock.assert_has_calls(header_calls), 'get_head'
         finally:
             os.getcwd = getcwd_orig
             os.chdir(cwd)
