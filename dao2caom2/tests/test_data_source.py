@@ -192,7 +192,7 @@ def test_data_source_exists():
 
     # mock that the same file already exists as CADC
     def _get_info(uri):
-        assert uri == 'ad:DAO/dest_fqn.fits', f'wrong storage check {uri}'
+        assert uri == 'cadc:DAO/dest_fqn.fits', f'wrong storage check {uri}'
         return FileInfo(
             id=uri,
             md5sum='ghi',
