@@ -67,15 +67,14 @@
 # ***********************************************************************
 #
 
-import logging
 import re
 
 from caom2pipe import manage_composable as mc
 
-__all__ = ['COLLECTION', 'DAOName', 'get_collection', 'PRODUCT_COLLECTION']
+__all__ = ['DAOName', 'get_collection', 'PRODUCT_COLLECTION']
 
 
-COLLECTION = 'DAO'
+# COLLECTION = 'DAO'
 PRODUCT_COLLECTION = 'DAOCADC'
 
 
@@ -105,12 +104,8 @@ class DAOName(mc.StorageName):
         self._collection = get_collection(entry)
         super().__init__(file_name=file_name, source_names=[entry])
 
-    def _get_uri(self, file_name):
-        return mc.build_uri(
-            scheme=mc.StorageName.scheme,
-            archive=self._collection,
-            file_name=file_name.replace('.gz', ''),
-        )
+    def _get_uri(self, file_name, scheme):
+        return mc.build_uri(self._collection, file_name.replace('.gz', ''), scheme)
 
     @property
     def collection(self):
@@ -118,7 +113,7 @@ class DAOName(mc.StorageName):
 
     @property
     def file_uri(self):
-        return self._get_uri(self._file_name)
+        return self._get_uri(self._file_name, self.scheme)
 
     def is_valid(self):
         return True
@@ -208,4 +203,4 @@ class DAOName(mc.StorageName):
 
 
 def get_collection(entry):
-    return PRODUCT_COLLECTION if DAOName.is_processed(entry) else COLLECTION
+    return PRODUCT_COLLECTION if DAOName.is_processed(entry) else mc.StorageName.collection

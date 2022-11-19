@@ -67,15 +67,14 @@
 # ***********************************************************************
 #
 
-from caom2pipe import name_builder_composable as nbc
-from dao2caom2 import DAOName, COLLECTION, PRODUCT_COLLECTION
+from dao2caom2 import DAOName, PRODUCT_COLLECTION
 
 
 def test_is_valid():
     assert DAOName('anything').is_valid()
 
 
-def test_processed():
+def test_processed(test_config):
     test_subject = DAOName('dao_c122_2020_004100_v.fits.gz')
     assert test_subject is not None, 'expect a value'
     assert test_subject.obs_id == 'dao_c122_2020_004100', 'wrong obs id'
@@ -90,32 +89,28 @@ def test_processed():
         'dao_c122_2020_004100_v.fits.gz'
     ], 'wrong source names'
     assert test_subject.destination_uris == [
-        f'cadc:{PRODUCT_COLLECTION}/dao_c122_2020_004100_v.fits'
+        f'{test_config.scheme}:{PRODUCT_COLLECTION}/dao_c122_2020_004100_v.fits'
     ], 'wrong destination uris'
     assert (
         test_subject.file_uri
-        == f'cadc:{PRODUCT_COLLECTION}/dao_c122_2020_004100_v.fits'
+        == f'{test_config.scheme}:{PRODUCT_COLLECTION}/dao_c122_2020_004100_v.fits'
     ), 'wrong file uri'
     assert test_subject.collection == PRODUCT_COLLECTION, 'wrong collection'
 
 
-def test_raw():
+def test_raw(test_config):
     test_result = DAOName('cadc:DAO/dao_c182_2018_015013.fits')
     assert test_result is not None, 'expect a result'
     assert test_result.obs_id == 'dao_c182_2018_015013'
     assert test_result.file_name == 'dao_c182_2018_015013.fits'
     assert test_result.file_id == 'dao_c182_2018_015013'
-    assert test_result.source_names == ['cadc:DAO/dao_c182_2018_015013.fits']
+    assert test_result.source_names == [f'{test_config.scheme}:DAO/dao_c182_2018_015013.fits']
     assert test_result.destination_uris == [
-        'cadc:DAO/dao_c182_2018_015013.fits'
+        f'{test_config.scheme}:{test_config.collection}/dao_c182_2018_015013.fits'
     ], 'wrong destination uris'
 
-    test_result_2 = DAOName(
-        '/usr/src/app/dao_c182_2018_015013/dao_c182_2018_015013.fits.gz'
-    )
-    assert test_result_2.source_names == [
-        '/usr/src/app/dao_c182_2018_015013/dao_c182_2018_015013.fits.gz'
-    ]
+    test_result_2 = DAOName('/usr/src/app/dao_c182_2018_015013/dao_c182_2018_015013.fits.gz')
+    assert test_result_2.source_names == ['/usr/src/app/dao_c182_2018_015013/dao_c182_2018_015013.fits.gz']
     assert test_result_2.destination_uris == [
-        f'cadc:{COLLECTION}/dao_c182_2018_015013.fits'
+        f'{test_config.scheme}:{test_config.collection}/dao_c182_2018_015013.fits'
     ], 'wrong destination uris'

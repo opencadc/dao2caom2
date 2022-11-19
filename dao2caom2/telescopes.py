@@ -79,7 +79,7 @@ from caom2 import ObservationIntentType, TypedSet, ObservationURI
 from caom2pipe import astro_composable as ac
 from caom2pipe import caom_composable as cc
 from caom2pipe import manage_composable as mc
-from dao2caom2.dao_name import DAOName, COLLECTION, get_collection
+from dao2caom2.dao_name import DAOName, get_collection
 
 
 __all__ = ['DAOTelescopeMapping']
@@ -302,7 +302,7 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
                     plane,
                     self._headers,
                     'FLAT_',
-                    COLLECTION,  # because FLAT_ references DAO files
+                    mc.StorageName.collection,  # because FLAT_ references DAO files
                     _repair_provenance_value,
                     observation.observation_id,
                 )
@@ -313,7 +313,7 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
                     plane,
                     self._headers,
                     'ZERO_',
-                    COLLECTION,  # because ZERO_ references DAO files
+                    mc.StorageName.collection,  # because ZERO_ references DAO files
                     _repair_provenance_value,
                     observation.observation_id,
                 )

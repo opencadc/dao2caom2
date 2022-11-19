@@ -3,7 +3,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2021.                            (c) 2021.
+#  (c) 2022.                            (c) 2022.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -67,57 +67,22 @@
 # ***********************************************************************
 #
 
-from os import listdir, unlink
-from os.path import basename, dirname, exists, join, realpath
+from caom2pipe.manage_composable import Config, StorageName
+import pytest
 
-from caom2.diff import get_differences
-from cadcdata import FileInfo
-from caom2pipe import astro_composable as ac
-from caom2pipe import manage_composable as mc
-from caom2pipe import reader_composable as rdc
-from dao2caom2 import DAOName
-from dao2caom2 import fits2caom2_augmentation
-
-THIS_DIR = dirname(realpath(__file__))
-TEST_DATA_DIR = join(THIS_DIR, 'data')
+COLLECTION = 'DAO'
+SCHEME = 'cadc'
+PREVIEW_SCHEME = 'cadc'
 
 
-def pytest_generate_tests(metafunc):
-    files = []
-    if exists(TEST_DATA_DIR):
-        files = [
-            join(TEST_DATA_DIR, name)
-            for name in listdir(TEST_DATA_DIR)
-            if name.endswith('header')
-        ]
-    metafunc.parametrize('test_name', files)
-
-
-def test_visitor(test_name, test_config):
-    dao_name = DAOName(basename(test_name).replace('.header', '.gz'))
-    file_info = FileInfo(id=dao_name.file_uri, file_type='application/fits')
-    headers = ac.make_headers_from_file(test_name)
-    metadata_reader = rdc.FileMetadataReader()
-    metadata_reader._headers = {dao_name.file_uri: headers}
-    metadata_reader._file_info = {dao_name.file_uri: file_info}
-    kwargs = {
-        'storage_name': dao_name,
-        'metadata_reader': metadata_reader,
-    }
-    expected_fqn = f'{TEST_DATA_DIR}/{dao_name.file_id}.expected.xml'
-    actual_fqn = expected_fqn.replace('expected', 'actual')
-    if exists(actual_fqn):
-        unlink(actual_fqn)
-    observation = None
-    observation = fits2caom2_augmentation.visit(observation, **kwargs)
-
-    expected = mc.read_obs_from_file(expected_fqn)
-    compare_result = get_differences(expected, observation)
-    if compare_result is not None:
-        mc.write_obs_to_file(observation, actual_fqn)
-        compare_text = '\n'.join([r for r in compare_result])
-        msg = (
-            f'Differences found in observation {expected.observation_id}\n'
-            f'{compare_text}'
-        )
-        raise AssertionError(msg)
+@pytest.fixture()
+def test_config():
+    config = Config()
+    config.collection = COLLECTION
+    config.preview_scheme = PREVIEW_SCHEME
+    config.scheme = SCHEME
+    config.logging_level = 'INFO'
+    StorageName.collection = config.collection
+    StorageName.preview_scheme = config.preview_scheme
+    StorageName.scheme = config.scheme
+    return config
