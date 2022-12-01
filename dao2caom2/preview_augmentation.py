@@ -82,14 +82,11 @@ from PIL import Image
 
 from caom2 import ReleaseType, ProductType
 from caom2pipe import manage_composable as mc
-from dao2caom2 import dao_name as dn
 
 
 class DAOPreview(mc.PreviewVisitor):
     def __init__(self, mime_type, **kwargs):
-        super(DAOPreview, self).__init__(
-            dn.COLLECTION, ReleaseType.DATA, mime_type, **kwargs
-        )
+        super(DAOPreview, self).__init__(ReleaseType.DATA, mime_type, **kwargs)
 
     def generate_plots(self, obs_id):
         count = 0

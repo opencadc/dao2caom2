@@ -89,32 +89,37 @@ F_NAME_LIST = [
 
 @patch('cadcutils.net.ws.WsCapabilities.get_access_url')
 @patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
-def test_run(run_mock, access_mock):
+def test_run(run_mock, access_mock, test_config):
     access_mock.return_value = 'https://localhost'
     test_f_id = 'test_file_id'
     test_obs_id = test_f_id
     test_f_name = f'{test_f_id}.fits'
-    getcwd_orig = os.getcwd
-    os.getcwd = Mock(return_value=test_fits2caom2_augmentation.TEST_DATA_DIR)
+    orig_cwd = os.getcwd()
     try:
-        # execution
-        composable._run()
-        assert run_mock.called, 'should have been called'
-        args, kwargs = run_mock.call_args
-        test_storage = args[0]
-        assert isinstance(test_storage, dao_name.DAOName), type(test_storage)
-        assert test_storage.obs_id == test_obs_id, 'wrong obs id'
-        assert test_storage.file_name == test_f_name, 'wrong file name'
+        with TemporaryDirectory() as tmp_dir_name:
+            os.chdir(tmp_dir_name)
+            test_config.change_working_directory(tmp_dir_name)
+            test_config.proxy_file_name = 'cadcproxy.pem'
+            test_config.write_to_file(test_config)
+            with open(test_config.proxy_fqn, 'w') as f:
+                f.write('test content')
+            with open(test_config.work_fqn, 'w') as f:
+                f.write('test_file_id.fits')
+
+            # execution
+            composable._run()
+
+            assert run_mock.called, 'should have been called'
+            args, kwargs = run_mock.call_args
+            test_storage = args[0]
+            assert isinstance(test_storage, dao_name.DAOName), type(test_storage)
+            assert test_storage.obs_id == test_obs_id, 'wrong obs id'
+            assert test_storage.file_name == test_f_name, 'wrong file name'
+            assert (
+                test_storage.destination_uris[0] == f'{test_config.scheme}:{test_config.collection}/{test_f_name}'
+            ), 'wrong destination uri'
     finally:
-        os.getcwd = getcwd_orig
-        # clean up the summary report text file
-        # clean up the files created as a by-product of a run
-        for f_name in F_NAME_LIST:
-            fqn = os.path.join(
-                test_fits2caom2_augmentation.TEST_DATA_DIR, f_name
-            )
-            if os.path.exists(fqn):
-                os.unlink(fqn)
+        os.chdir(orig_cwd)
 
 
 @patch('cadcutils.net.ws.WsCapabilities.get_access_url')
@@ -173,6 +178,7 @@ def test_run_store_ingest(
     caom2_store_mock,
     reader_headers_mock,
     reader_file_info_mock,
+    test_config,
 ):
     temp_deque = deque()
     temp_deque.append('/data/dao_c122_2021_005157_e.fits')
@@ -188,8 +194,7 @@ def test_run_store_ingest(
     cwd = os.getcwd()
     with TemporaryDirectory() as tmp_dir_name:
         os.chdir(tmp_dir_name)
-        test_config = mc.Config()
-        test_config.working_directory = tmp_dir_name
+        test_config.change_working_directory(tmp_dir_name)
         test_config.task_types = [mc.TaskType.STORE, mc.TaskType.INGEST]
         test_config.use_local_files = True
         test_config.cleanup_files_when_storing = True
@@ -197,11 +202,10 @@ def test_run_store_ingest(
         test_config.cleanup_success_destination = '/data/success'
         test_config.data_sources = ['/data']
         test_config.data_source_extensions = ['.fits']
-        test_config.logging_level = 'DEBUG'
+        test_config.logging_level = 'INFO'
         test_config.proxy_file_name = 'cadcproxy.pem'
-        test_config.proxy_fqn = f'{tmp_dir_name}/cadcproxy.pem'
         test_config.features.supports_latest_client = True
-        mc.Config.write_to_file(test_config)
+        test_config.write_to_file(test_config)
         with open(test_config.proxy_fqn, 'w') as f:
             f.write('test content')
         getcwd_orig = os.getcwd
@@ -215,8 +219,8 @@ def test_run_store_ingest(
             assert clients_mock.return_value.data_client.put.called, 'put should be called'
             assert clients_mock.return_value.data_client.put.call_count == 2, 'wrong number of puts'
             put_calls = [
-                call('/data', 'cadc:DAOCADC/dao_c122_2021_005157_e.fits', None),
-                call('/data', 'cadc:DAO/dao_c122_2021_005157.fits', None),
+                call('/data', 'cadc:DAOCADC/dao_c122_2021_005157_e.fits'),
+                call('/data', 'cadc:DAO/dao_c122_2021_005157.fits'),
             ]
             clients_mock.return_value.data_client.put.assert_has_calls(put_calls, any_order=False)
             assert cleanup_mock.called, 'cleanup'

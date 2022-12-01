@@ -79,13 +79,12 @@ REJECTED_FILE = os.path.join(
 )
 
 
-def test_visit():
+def test_visit(test_config):
 
     # this should result in three new artifacts being added to every plane:
     # one for a thumbnail and two for previews (one zoom)
 
     test_rejected = mc.Rejected(REJECTED_FILE)
-    test_config = mc.Config()
     test_observable = mc.Observable(test_rejected, mc.Metrics(test_config))
 
     test_files = {
@@ -163,7 +162,5 @@ def test_visit():
                     #     f'wrong checksum {p} {artifact.content_checksum} ' \
                     #     f'{test_checksums[p]}'
             except Exception as e:
-                assert (
-                    False
-                ), f'key {key} value {value} f_name {f_name} {str(e)}'
+                assert False, f'key {key} value {value} f_name {f_name} {str(e)}'
     # assert False

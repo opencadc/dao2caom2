@@ -79,7 +79,7 @@ from caom2 import ObservationIntentType, TypedSet, ObservationURI
 from caom2pipe import astro_composable as ac
 from caom2pipe import caom_composable as cc
 from caom2pipe import manage_composable as mc
-from dao2caom2.dao_name import DAOName, COLLECTION, get_collection
+from dao2caom2.dao_name import DAOName, get_collection
 
 
 __all__ = ['DAOTelescopeMapping']
@@ -140,10 +140,10 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
 
     """
 
-    def __init__(self, storage_name, headers):
-        super().__init__(storage_name, headers)
+    def __init__(self, storage_name, headers, clients):
+        super().__init__(storage_name, headers, clients)
 
-    def update(self, observation, file_info, clients):
+    def update(self, observation, file_info):
         """Called to fill multiple CAOM model elements and/or attributes (an
         n:n relationship between TDM attributes and CAOM attributes).
         """
@@ -302,7 +302,7 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
                     plane,
                     self._headers,
                     'FLAT_',
-                    COLLECTION,  # because FLAT_ references DAO files
+                    mc.StorageName.collection,  # because FLAT_ references DAO files
                     _repair_provenance_value,
                     observation.observation_id,
                 )
@@ -313,7 +313,7 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
                     plane,
                     self._headers,
                     'ZERO_',
-                    COLLECTION,  # because ZERO_ references DAO files
+                    mc.StorageName.collection,  # because ZERO_ references DAO files
                     _repair_provenance_value,
                     observation.observation_id,
                 )
@@ -788,8 +788,8 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
 
 
 class Dao12Metre(DAOTelescopeMapping):
-    def __init__(self, storage_name, headers):
-        super().__init__(storage_name, headers)
+    def __init__(self, storage_name, headers, clients):
+        super().__init__(storage_name, headers, clients)
 
     def get_geo(self):
         return ac.get_location(48.52092, -123.42006, 225.0)
@@ -799,8 +799,8 @@ class Dao12Metre(DAOTelescopeMapping):
 
 
 class Dao18Metre(DAOTelescopeMapping):
-    def __init__(self, storage_name, headers):
-        super().__init__(storage_name, headers)
+    def __init__(self, storage_name, headers, clients):
+        super().__init__(storage_name, headers, clients)
 
     def get_geo(self):
         return ac.get_location(48.51967, -123.41833, 232.0)
@@ -810,8 +810,8 @@ class Dao18Metre(DAOTelescopeMapping):
 
 
 class SkyCam(DAOTelescopeMapping):
-    def __init__(self, storage_name, headers):
-        super().__init__(storage_name, headers)
+    def __init__(self, storage_name, headers, clients):
+        super().__init__(storage_name, headers, clients)
 
     def configure_axes(self, bp):
         # DB - 10-07-20
@@ -869,8 +869,8 @@ class SkyCam(DAOTelescopeMapping):
 
 
 class Imaging(DAOTelescopeMapping):
-    def __init__(self, storage_name, headers):
-        super().__init__(storage_name, headers)
+    def __init__(self, storage_name, headers, clients):
+        super().__init__(storage_name, headers, clients)
 
     def configure_axes(self, bp):
         bp.configure_position_axes((1, 2))
@@ -921,8 +921,8 @@ class Imaging(DAOTelescopeMapping):
 
 
 class ProcessedImage(Imaging):
-    def __init__(self, storage_name, headers):
-        super().__init__(storage_name, headers)
+    def __init__(self, storage_name, headers, clients):
+        super().__init__(storage_name, headers, clients)
 
     def accumulate_blueprint(self, bp, application=None):
         super().accumulate_blueprint(bp, application)
@@ -946,8 +946,8 @@ class ProcessedImage(Imaging):
 
 
 class ProcessedSpectrum(DAOTelescopeMapping):
-    def __init__(self, storage_name, headers):
-        super().__init__(storage_name, headers)
+    def __init__(self, storage_name, headers, clients):
+        super().__init__(storage_name, headers, clients)
 
     def configure_axes(self, bp):
         bp.configure_position_axes((2, 3))
@@ -974,18 +974,18 @@ class ProcessedSpectrum(DAOTelescopeMapping):
 
 
 class Dao12MetreImage(Dao12Metre, Imaging):
-    def __init__(self, storage_name, headers):
-        super().__init__(storage_name, headers)
+    def __init__(self, storage_name, headers, clients):
+        super().__init__(storage_name, headers, clients)
 
 
 class Dao12MetreProcessedImage(Dao12MetreImage, ProcessedImage):
-    def __init__(self, storage_name, headers):
-        super().__init__(storage_name, headers)
+    def __init__(self, storage_name, headers, clients):
+        super().__init__(storage_name, headers, clients)
 
 
 class Dao12MetreSpectrum(Dao12Metre):
-    def __init__(self, storage_name, headers):
-        super().__init__(storage_name, headers)
+    def __init__(self, storage_name, headers, clients):
+        super().__init__(storage_name, headers, clients)
 
     def _get_dispaxis(self, ext):
         return self._headers[ext].get('DISPAXIS', 2)
@@ -996,8 +996,8 @@ class Dao12MetreSpectrum(Dao12Metre):
 
 
 class Dao12MetreProcessedSpectrum(Dao12MetreSpectrum, ProcessedSpectrum):
-    def __init__(self, storage_name, headers):
-        super().__init__(storage_name, headers)
+    def __init__(self, storage_name, headers, clients):
+        super().__init__(storage_name, headers, clients)
 
     def get_energy_resolving_power(self, ext):
         obs_type = self._headers[ext].get('OBSTYPE')
@@ -1011,18 +1011,18 @@ class Dao12MetreProcessedSpectrum(Dao12MetreSpectrum, ProcessedSpectrum):
 
 
 class Dao18MetreImage(Dao18Metre, Imaging):
-    def __init__(self, storage_name, headers):
-        super().__init__(storage_name, headers)
+    def __init__(self, storage_name, headers, clients):
+        super().__init__(storage_name, headers, clients)
 
 
 class Dao18MetreProcessedImage(Dao18MetreImage, ProcessedImage):
-    def __init__(self, storage_name, headers):
-        super().__init__(storage_name, headers)
+    def __init__(self, storage_name, headers, clients):
+        super().__init__(storage_name, headers, clients)
 
 
 class Dao18MetreSpectrum(Dao18Metre):
-    def __init__(self, storage_name, headers):
-        super().__init__(storage_name, headers)
+    def __init__(self, storage_name, headers, clients):
+        super().__init__(storage_name, headers, clients)
 
     def _get_dispaxis(self, ext):
         return self._headers[ext].get('DISPAXIS', 1)
@@ -1033,8 +1033,8 @@ class Dao18MetreSpectrum(Dao18Metre):
 
 
 class Dao18MetreProcessedSpectrum(Dao18MetreSpectrum, ProcessedSpectrum):
-    def __init__(self, storage_name, headers):
-        super().__init__(storage_name, headers)
+    def __init__(self, storage_name, headers, clients):
+        super().__init__(storage_name, headers, clients)
 
     def get_energy_resolving_power(self, ext):
         obs_type = self._headers[ext].get('OBS_TYPE')
