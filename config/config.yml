@@ -22,7 +22,8 @@ cleanup_failure_destination: /data/failure
 resource_id: ivo://cadc.nrc.ca/ams
 # resource_id: ivo://cadc.nrc.ca/sc2repo
 # queries files by date
-tap_id: ivo://cadc.nrc.ca/ad
+tap_id: ivo://cadc.nrc.ca/argus
+storage_inventory_resource_id: ivo://cadc.nrc.ca/uvic/minoc
 # file that contains the list of entries to process
 todo_file_name: todo.txt
 # values True False
@@ -69,6 +70,8 @@ retry_count: 1
 progress_file_name: progress.txt
 #
 collection: DAO
+scheme: cadc
+preview_scheme: cadc
 #
 # CADC service execution metrics
 #
@@ -102,5 +105,3 @@ task_types:
   - store
   - ingest
   - modify
-features:
-  supports_latest_client: True
