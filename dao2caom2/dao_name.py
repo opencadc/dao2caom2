@@ -74,7 +74,6 @@ from caom2pipe import manage_composable as mc
 __all__ = ['DAOName', 'get_collection', 'PRODUCT_COLLECTION']
 
 
-# COLLECTION = 'DAO'
 PRODUCT_COLLECTION = 'DAOCADC'
 
 
@@ -99,10 +98,15 @@ class DAOName(mc.StorageName):
     def __init__(
         self,
         entry=None,
+        file_name=None,
+        source_names=None,
     ):
-        file_name = mc.CaomName.extract_file_name(entry).replace('.header', '')
-        self._collection = get_collection(entry)
-        super().__init__(file_name=file_name, source_names=[entry])
+        if file_name is None:
+            file_name = mc.CaomName.extract_file_name(entry).replace('.header', '')
+        self._collection = get_collection(file_name)
+        if source_names is None:
+            source_names = [entry]
+        super().__init__(file_name=file_name, source_names=source_names)
 
     def _get_uri(self, file_name, scheme):
         return mc.build_uri(self._collection, file_name.replace('.gz', ''), scheme)

@@ -76,7 +76,7 @@ from dao2caom2 import DAOName, fits2caom2_augmentation
 import test_fits2caom2_augmentation
 
 
-def test_failure():
+def test_failure(test_config):
     test_fqn = (
         f'{test_fits2caom2_augmentation.TEST_DATA_DIR}/broken_data/'
         f'dao_c122_2001_006946.fits.header'
