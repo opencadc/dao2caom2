@@ -169,7 +169,7 @@ class DAOPreview(mc.PreviewVisitor):
         count = 0
         detector = header.get('DETECTOR')
         instrument = header.get('INSTRUME')
-        if detector == 'Reticon':
+        if detector.upper() == 'RETICON':
             # unprocessed RETICON spectrum
             object_type = header.get('OBJECT')
             if object_type is not None:
@@ -208,21 +208,21 @@ class DAOPreview(mc.PreviewVisitor):
                 resize2 = '256'
 
             if 'Imager' in instrument:
-                mc.exec_cmd(
-                    f'convert -resize 1024x1024 -normalize -negate {self._science_fqn} {self._preview_fqn}'
-                )
-                mc.exec_cmd(
-                    f'convert -resize 256x256 -normalize -negate {self._science_fqn} {self._thumb_fqn}'
-                )
+                preview_cmd = f'convert -resize 1024x1024 -normalize -negate {self._science_fqn} {self._preview_fqn}'
+                thumbnail_cmd = f'convert -resize 256x256 -normalize -negate {self._science_fqn} {self._thumb_fqn}'
             else:
-                mc.exec_cmd(
+                preview_cmd = (
                     f'convert -resize {resize1} -rotate {rotate} -normalize -negate {self._science_fqn} '
                     f'{self._preview_fqn}'
                 )
-                mc.exec_cmd(
+                thumbnail_cmd = (
                     f'convert -crop {geometry} -resize {resize2} -rotate {rotate} -normalize -negate '
                     f'{self._science_fqn} {self._thumb_fqn}'
                 )
+            self._logger.debug(f'Preview Generation: {preview_cmd}')
+            mc.exec_cmd(preview_cmd)
+            self._logger.debug(f'Thumbnail Generation: {thumbnail_cmd}')
+            mc.exec_cmd(thumbnail_cmd)
             count = 2
         return count
 
