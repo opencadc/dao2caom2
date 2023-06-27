@@ -72,11 +72,12 @@ from mock import Mock, patch
 from cadcutils import exceptions
 from cadcdata import FileInfo
 from caom2pipe import manage_composable as mc
+from caom2pipe.reader_composable import VaultReader
 from dao2caom2 import data_source
 
 
 @patch('caom2pipe.client_composable.vault_info', autospec=True)
-def test_dao_transfer_check_fits_verify(vault_info_mock):
+def test_dao_transfer_check_fits_verify(vault_info_mock, test_config, tmp_path):
     test_match_file_info = FileInfo(
         id='vos:abc/def.fits',
         md5sum='ghi',
@@ -89,14 +90,14 @@ def test_dao_transfer_check_fits_verify(vault_info_mock):
 
     test_data_client = Mock(autospec=True)
     test_vos_client = Mock(autospec=True)
+    test_metadata_reader = VaultReader(test_vos_client)
 
-    test_config = mc.Config()
+    test_config.change_working_directory(tmp_path)
     test_config.data_source_extensions = ['.fits.gz']
     test_config.data_sources = ['vos:DAO/Archive/Incoming']
     test_config.cleanup_failure_destination = 'vos:DAO/failure'
     test_config.cleanup_success_destination = 'vos:DAO/success'
     test_config.recurse_data_sources = False
-
     def _mock_listdir(entry):
         if entry.endswith('Incoming'):
             return [
@@ -109,6 +110,7 @@ def test_dao_transfer_check_fits_verify(vault_info_mock):
             return []
 
     test_vos_client.listdir.side_effect = _mock_listdir
+    # 'Yesterday' is a directory
     test_vos_client.isdir.side_effect = [
         False,
         False,
@@ -119,16 +121,18 @@ def test_dao_transfer_check_fits_verify(vault_info_mock):
         True,
         False,
     ]
-    vault_info_mock.return_value = test_file_info
-    test_data_client.info.return_value = test_file_info
+    vault_info_mock.side_effect = test_file_info
+    test_data_client.info.side_effect = test_file_info
+    test_reporter = mc.ExecutionReporter(test_config, observable=Mock(autospec=True))
 
     for case in [True, False]:
         test_config.cleanup_files_when_storing = case
 
         test_subject = data_source.DAOVaultDataSource(
-            test_config, test_vos_client, test_data_client
+            test_config, test_vos_client, test_data_client, test_metadata_reader
         )
         assert test_subject is not None, 'expect ctor to work'
+        test_subject.reporter = test_reporter
         test_result = test_subject.get_work()
 
         assert test_result is not None, 'expect a work list'
@@ -143,6 +147,7 @@ def test_dao_transfer_check_fits_verify(vault_info_mock):
     # test the case when the md5sums are the same, so the transfer does
     # not occur, but the file ends up in the success location
     test_vos_client.isdir.side_effect = [False, False, True, False]
+    test_config.task_types = [mc.TaskType.STORE]
     test_config.cleanup_files_when_storing = True
     test_config.store_modified_files_only = True
     vault_info_mock.return_value = test_match_file_info
@@ -150,9 +155,10 @@ def test_dao_transfer_check_fits_verify(vault_info_mock):
     test_vos_client.status.raises = exceptions.NotFoundException
 
     second_test_subject = data_source.DAOVaultDataSource(
-        test_config, test_vos_client, test_data_client
+        test_config, test_vos_client, test_data_client, test_metadata_reader
     )
     assert second_test_subject is not None, 'second ctor fails'
+    second_test_subject.reporter = test_reporter
     second_test_result = second_test_subject.get_work()
     assert second_test_result is not None, 'expect a second result'
     assert len(second_test_result) == 0, 'should be no successes'
@@ -164,20 +170,21 @@ def test_dao_transfer_check_fits_verify(vault_info_mock):
     assert test_vos_client.status.called, 'expect a status call'
 
 
-def test_data_source_exists():
+def test_data_source_exists(test_config):
     # test the case where the destination file already exists, so the
     # move cleanup has to remove it first
-    test_config = mc.Config()
     test_config.cleanup_failure_destination = 'vos:test/failure'
     test_config.cleanup_success_destination = 'vos:test/success'
     test_config.data_sources = 'vos:test'
     test_config.data_source_extensions = ['.fits']
     test_config.cleanup_files_when_storing = True
     test_config.collection = 'TEST'
+    test_config.task_types = [mc.TaskType.STORE]
     test_vos_client = Mock(autospec=True)
     test_data_client = Mock(autospec=True)
+    test_metadata_reader = VaultReader(test_vos_client)
     test_subject = data_source.DAOVaultDataSource(
-        test_config, test_vos_client, test_data_client
+        test_config, test_vos_client, test_data_client, test_metadata_reader
     )
     assert test_subject is not None, 'ctor failure'
     test_subject._work = ['vos:test/dest_fqn.fits']
@@ -190,13 +197,12 @@ def test_data_source_exists():
 
     test_vos_client.get_node.side_effect = _get_node
 
+    test_uri = 'cadc:DAO/dest_fqn.fits'
+    test_file_info = FileInfo(id=test_uri, md5sum='ghi' )
     # mock that the same file already exists as CADC
     def _get_info(uri):
-        assert uri == 'cadc:DAO/dest_fqn.fits', f'wrong storage check {uri}'
-        return FileInfo(
-            id=uri,
-            md5sum='ghi',
-        )
+        assert uri == test_uri, f'wrong storage check {uri}'
+        return test_file_info
 
     test_data_client.info.side_effect = _get_info
 
@@ -208,6 +214,7 @@ def test_data_source_exists():
         return True
 
     test_vos_client.status.side_effect = _status
+    test_metadata_reader.file_info[test_uri] = test_file_info
 
     # test execution
     for entry in test_subject._work:

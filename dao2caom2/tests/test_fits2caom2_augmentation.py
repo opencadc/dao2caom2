@@ -111,13 +111,16 @@ def test_visitor(test_name, test_config):
     observation = None
     observation = fits2caom2_augmentation.visit(observation, **kwargs)
 
-    expected = mc.read_obs_from_file(expected_fqn)
-    compare_result = get_differences(expected, observation)
-    if compare_result is not None:
-        mc.write_obs_to_file(observation, actual_fqn)
-        compare_text = '\n'.join([r for r in compare_result])
-        msg = (
-            f'Differences found in observation {expected.observation_id}\n'
-            f'{compare_text}'
-        )
-        raise AssertionError(msg)
+    if observation is None:
+        assert False, f'observation construction failed for {test_name}'
+    else:
+        expected = mc.read_obs_from_file(expected_fqn)
+        compare_result = get_differences(expected, observation)
+        if compare_result is not None:
+            mc.write_obs_to_file(observation, actual_fqn)
+            compare_text = '\n'.join([r for r in compare_result])
+            msg = (
+                f'Differences found in observation {expected.observation_id}\n'
+                f'{compare_text}'
+            )
+            raise AssertionError(msg)

@@ -85,9 +85,6 @@ from dao2caom2.dao_name import DAOName, get_collection
 __all__ = ['DAOTelescopeMapping']
 
 
-APPLICATION = 'dao2caom2'
-
-
 class DAOTelescopeMapping(cc.TelescopeMapping):
     """
     This class is the Spectrum implementation.
@@ -436,9 +433,9 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
         bp.configure_energy_axis(4)
         bp.configure_observable_axis(5)
 
-    def accumulate_blueprint(self, bp, application=None):
+    def accumulate_blueprint(self, bp):
         self.configure_axes(bp)
-        super().accumulate_blueprint(bp, APPLICATION)
+        super().accumulate_blueprint(bp)
         bp.set(
             'Chunk.energy.axis.function.delta',
             'get_energy_axis_function_delta()',
@@ -655,7 +652,7 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
         return None
 
     def get_time_axis_val(self, ext):
-        return ac.get_datetime(self._headers[ext].get('DATE-OBS'))
+        return ac.get_datetime_mjd(self._headers[ext].get('DATE-OBS'))
 
     def get_geo_x(self, ext):
         x, ign1, ign2 = self.get_geo()
@@ -820,13 +817,12 @@ class SkyCam(DAOTelescopeMapping):
         bp.configure_observable_axis(2)
         bp.configure_energy_axis(3)
 
-    def accumulate_blueprint(self, bp, application=None):
+    def accumulate_blueprint(self, bp):
         self.configure_axes(bp)
-        meta_producer = mc.get_version(APPLICATION)
-        bp.set('Observation.metaProducer', meta_producer)
-        bp.set('Plane.metaProducer', meta_producer)
-        bp.set('Artifact.metaProducer', meta_producer)
-        bp.set('Chunk.metaProducer', meta_producer)
+        bp.set('Observation.metaProducer', self._meta_producer)
+        bp.set('Plane.metaProducer', self._meta_producer)
+        bp.set('Artifact.metaProducer', self._meta_producer)
+        bp.set('Chunk.metaProducer', self._meta_producer)
 
         bp.set('Observation.metaRelease', 'get_release_date()')
         bp.set('Observation.intent', ObservationIntentType.CALIBRATION)
@@ -859,13 +855,13 @@ class SkyCam(DAOTelescopeMapping):
         self._accumulate_common_bp(bp)
 
     def get_release_date(self, ext):
-        return ac.get_datetime(self._headers[ext].get('CLOCKVAL'))
+        return ac.get_datetime_mjd(mc.make_datetime(self._headers[ext].get('CLOCKVAL')))
 
     def get_telescope_name(self, ext):
         return 'DAO Skycam'
 
     def get_time_axis_val(self, ext):
-        return ac.get_datetime(self._headers[ext].get('CLOCKVAL'))
+        return ac.get_datetime_mjd(mc.make_datetime(self._headers[ext].get('CLOCKVAL')))
 
 
 class Imaging(DAOTelescopeMapping):
@@ -877,8 +873,8 @@ class Imaging(DAOTelescopeMapping):
         bp.configure_time_axis(3)
         bp.configure_energy_axis(4)
 
-    def accumulate_blueprint(self, bp, application=None):
-        super().accumulate_blueprint(bp, application)
+    def accumulate_blueprint(self, bp):
+        super().accumulate_blueprint(bp)
         bp.set('Observation.target.type', TargetType.FIELD)
         bp.set('Plane.dataProductType', DataProductType.IMAGE)
         bp.clear('Chunk.energy.axis.function.delta')
@@ -924,8 +920,8 @@ class ProcessedImage(Imaging):
     def __init__(self, storage_name, headers, clients):
         super().__init__(storage_name, headers, clients)
 
-    def accumulate_blueprint(self, bp, application=None):
-        super().accumulate_blueprint(bp, application)
+    def accumulate_blueprint(self, bp):
+        super().accumulate_blueprint(bp)
         bp.set('Plane.calibrationLevel', CalibrationLevel.CALIBRATED)
         bp.clear('Chunk.position.axis.function.cd11')
         bp.add_attribute('Chunk.position.axis.function.cd11', 'CD1_1')
@@ -955,8 +951,8 @@ class ProcessedSpectrum(DAOTelescopeMapping):
         bp.configure_energy_axis(1)
         bp.configure_observable_axis(5)
 
-    def accumulate_blueprint(self, bp, application=None):
-        super().accumulate_blueprint(bp, application)
+    def accumulate_blueprint(self, bp):
+        super().accumulate_blueprint(bp)
         bp.set('Plane.calibrationLevel', CalibrationLevel.CALIBRATED)
         if DAOName.is_derived(self._storage_name.file_uri):
             # original dao2caom2.py, l392, l400

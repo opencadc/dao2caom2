@@ -85,8 +85,8 @@ class DAOLocalFilesDataSource(dsc.LocalFilesDataSource):
 
 
 class DAOVaultDataSource(dsc.VaultCleanupDataSource):
-    def __init__(self, config, vault_client, cadc_client):
-        super().__init__(config, vault_client, cadc_client)
+    def __init__(self, config, vault_client, cadc_client, metadata_reader):
+        super().__init__(config, vault_client, cadc_client, metadata_reader, dao_name.DAOName)
 
     def get_collection(self, f_name):
         return dao_name.get_collection(f_name)

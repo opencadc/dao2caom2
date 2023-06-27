@@ -88,9 +88,6 @@ from dao2caom2 import dao_name, preview_augmentation
 from dao2caom2 import cleanup_augmentation, data_source, transfer
 from dao2caom2 import fits2caom2_augmentation
 
-DAO_BOOKMARK = 'dao_timestamp'
-
-
 META_VISITORS = [fits2caom2_augmentation, cleanup_augmentation]
 DATA_VISITORS = [preview_augmentation]
 
@@ -128,7 +125,7 @@ def _run():
         data_visitors=DATA_VISITORS,
         clients=clients,
         config=config,
-        source=files_source,
+        sources=[files_source],
         metadata_reader=metadata_reader,
     )
 
@@ -154,16 +151,18 @@ def _run_vo():
     """
     config, clients, name_builder, metadata_reader = _common()
     vos_client = Client(vospace_certfile=config.proxy_file_name)
+    if metadata_reader is None:
+        metadata_reader = rdc.VaultReader(vos_client)
     clients.vo_client = vos_client
     source = data_source.DAOVaultDataSource(
-        config, clients.vo_client, clients.data_client
+        config, clients.vo_client, clients.data_client, metadata_reader
     )
     store_transferrer = transfer.VoFitsCleanupTransfer(vos_client, config)
     return rc.run_by_todo(
         name_builder=name_builder,
         meta_visitors=META_VISITORS,
         data_visitors=DATA_VISITORS,
-        source=source,
+        sources=[source],
         clients=clients,
         store_transfer=store_transferrer,
         metadata_reader=metadata_reader,
@@ -197,10 +196,9 @@ def _run_state():
         files_source = dsc.ListDirTimeBoxDataSource(config)
     return rc.run_by_state(
         name_builder=name_builder,
-        bookmark_name=DAO_BOOKMARK,
         meta_visitors=META_VISITORS,
         data_visitors=DATA_VISITORS,
-        source=files_source,
+        sources=[files_source],
         clients=clients,
         metadata_reader=metadata_reader,
     )

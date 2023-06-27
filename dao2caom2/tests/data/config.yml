@@ -5,4 +5,4 @@ data_sources:
   - vos:goliaths/DAOTest
 data_source_extensions:
   - .fits.gz
-
+collection: DAO

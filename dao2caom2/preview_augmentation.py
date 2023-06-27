@@ -169,14 +169,22 @@ class DAOPreview(mc.PreviewVisitor):
         count = 0
         detector = header.get('DETECTOR')
         instrument = header.get('INSTRUME')
-        if detector in [
-            'SITe-4',
-            'UBC-1',
-            'SITe-2',
-            'SITe-5',
-            'E2V-1',
-            'E2V-4',
-        ]:
+        if detector.upper() == 'RETICON':
+            # unprocessed RETICON spectrum
+            object_type = header.get('OBJECT')
+            if object_type is not None:
+                self._logger.info(f'Object: {object_type}')
+                naxis1 = header.get('NAXIS1')
+                signal = hdu_list[0].data[0]
+                baseline = hdu_list[0].data[1]
+                flux = np.subtract(signal, baseline)
+                wl = []
+                for i in range(0, naxis1):
+                    wl.append(i + 1)
+                wln = np.array(wl)
+                self._write_files_to_disk(wln, flux, 'Pixel', f'{self._storage_name.file_id}: {object_type}')
+                count = 2
+        else:
             # unprocessed CCD data
             if detector == 'SITe-4':
                 axis = 'NAXIS2'
@@ -200,47 +208,22 @@ class DAOPreview(mc.PreviewVisitor):
                 resize2 = '256'
 
             if 'Imager' in instrument:
-                mc.exec_cmd(
-                    f'convert -resize 1024x1024 -normalize -negate '
-                    f'{self._science_fqn} {self._preview_fqn}'
-                )
-                mc.exec_cmd(
-                    f'convert -resize 256x256 -normalize -negate '
-                    f'{self._science_fqn} {self._thumb_fqn}'
-                )
+                preview_cmd = f'convert -resize 1024x1024 -normalize -negate {self._science_fqn} {self._preview_fqn}'
+                thumbnail_cmd = f'convert -resize 256x256 -normalize -negate {self._science_fqn} {self._thumb_fqn}'
             else:
-                mc.exec_cmd(
-                    f'convert -resize {resize1} -rotate {rotate} '
-                    f'-normalize -negate {self._science_fqn} '
+                preview_cmd = (
+                    f'convert -resize {resize1} -rotate {rotate} -normalize -negate {self._science_fqn} '
                     f'{self._preview_fqn}'
                 )
-                mc.exec_cmd(
-                    f'convert -crop {geometry} -resize {resize2} -rotate '
-                    f'{rotate} -normalize -negate {self._science_fqn} '
-                    f'{self._thumb_fqn}'
+                thumbnail_cmd = (
+                    f'convert -crop {geometry} -resize {resize2} -rotate {rotate} -normalize -negate '
+                    f'{self._science_fqn} {self._thumb_fqn}'
                 )
+            self._logger.debug(f'Preview Generation: {preview_cmd}')
+            mc.exec_cmd(preview_cmd)
+            self._logger.debug(f'Thumbnail Generation: {thumbnail_cmd}')
+            mc.exec_cmd(thumbnail_cmd)
             count = 2
-        else:
-            # unprocessed RETICON spectrum
-            object_type = header.get('OBJECT')
-            if object_type is not None:
-                naxis1 = header.get('NAXIS1')
-                self._logger.info(f'Object: {object_type}')
-
-                signal = hdu_list[0].data[0]
-                baseline = hdu_list[0].data[1]
-                flux = np.subtract(signal, baseline)
-                wl = []
-                for i in range(0, naxis1):
-                    wl.append(i + 1)
-                wln = np.array(wl)
-                self._write_files_to_disk(
-                    wln,
-                    flux,
-                    'Pixel',
-                    f'{self._storage_name.file_id}: {object_type}',
-                )
-                count = 2
         return count
 
     def _do_skycam(self):
