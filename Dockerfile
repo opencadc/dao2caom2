@@ -1,4 +1,5 @@
-FROM opencadc/matplotlib:3.10-slim as builder
+ARG OPENCADC_PYTHON_VERSION=3.11
+FROM opencadc/matplotlib:${OPENCADC_PYTHON_VERSION}-slim as builder
 
 RUN apt-get update --no-install-recommends  && apt-get dist-upgrade -y && \
     apt-get install -y build-essential \
@@ -25,10 +26,11 @@ RUN pip install git+https://github.com/${OPENCADC_REPO}/caom2pipe@${OPENCADC_BRA
 
 RUN pip install git+https://github.com/${OPENCADC_REPO}/dao2caom2@${OPENCADC_BRANCH}#egg=dao2caom2
 
-FROM python:3.10-slim
+FROM python:${OPENCADC_PYTHON_VERSION}-slim
 WORKDIR /usr/src/app
+ARG OPENCADC_PYTHON_VERSION
 
-COPY --from=builder /usr/local/lib/python3.10/site-packages/ /usr/local/lib/python3.10/site-packages/
+COPY --from=builder /usr/local/lib/python${OPENCADC_PYTHON_VERSION}/site-packages/ /usr/local/lib/python${OPENCADC_PYTHON_VERSION}/site-packages/
 COPY --from=builder /usr/local/bin/* /usr/local/bin/
 COPY --from=builder /usr/local/.config/* /usr/local/.config/
 
