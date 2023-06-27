@@ -71,6 +71,7 @@ import os
 import test_fits2caom2_augmentation
 
 from collections import deque
+from datetime import datetime, timedelta
 from mock import ANY, Mock, patch, call
 
 from cadcdata import FileInfo
@@ -374,3 +375,31 @@ def test_run_store_ingest_remote(
     finally:
         os.getcwd = getcwd_orig
         os.chdir(cwd)
+
+
+
+@patch('cadcutils.net.ws.WsCapabilities.get_access_url')
+@patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
+def test_run_state(run_mock, access_mock, test_config, tmp_path):
+    access_mock.return_value = 'https://localhost'
+    test_f_id = 'test_file_id'
+    test_obs_id = test_f_id
+    test_f_name = f'{test_f_id}.fits'
+    orig_cwd = os.getcwd()
+    try:
+        os.chdir(tmp_path)
+        test_config.change_working_directory(tmp_path)
+        test_config.proxy_file_name = 'cadcproxy.pem'
+        test_config.write_to_file(test_config)
+        now_dt = datetime.now()
+        five_minutes_ago_dt = now_dt - timedelta(minutes=5)
+        with open(test_config.proxy_fqn, 'w') as f:
+            f.write('test content')
+        mc.State.write_bookmark(test_config.state_fqn, test_config.bookmark, five_minutes_ago_dt)
+
+        # execution
+        test_result = composable._run_state()
+        assert test_result == 0, 'expect success'
+        assert not run_mock.called, 'should not have been called'
+    finally:
+        os.chdir(orig_cwd)

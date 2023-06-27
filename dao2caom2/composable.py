@@ -88,9 +88,6 @@ from dao2caom2 import dao_name, preview_augmentation
 from dao2caom2 import cleanup_augmentation, data_source, transfer
 from dao2caom2 import fits2caom2_augmentation
 
-DAO_BOOKMARK = 'dao_timestamp'
-
-
 META_VISITORS = [fits2caom2_augmentation, cleanup_augmentation]
 DATA_VISITORS = [preview_augmentation]
 
@@ -199,7 +196,6 @@ def _run_state():
         files_source = dsc.ListDirTimeBoxDataSource(config)
     return rc.run_by_state(
         name_builder=name_builder,
-        bookmark_name=DAO_BOOKMARK,
         meta_visitors=META_VISITORS,
         data_visitors=DATA_VISITORS,
         sources=[files_source],
