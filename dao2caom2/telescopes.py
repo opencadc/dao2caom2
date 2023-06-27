@@ -855,14 +855,12 @@ class SkyCam(DAOTelescopeMapping):
         self._accumulate_common_bp(bp)
 
     def get_release_date(self, ext):
-        logging.error(self._headers[ext].get('CLOCKVAL'))
         return ac.get_datetime_mjd(mc.make_datetime(self._headers[ext].get('CLOCKVAL')))
 
     def get_telescope_name(self, ext):
         return 'DAO Skycam'
 
     def get_time_axis_val(self, ext):
-        logging.error(self._headers[ext].get('CLOCKVAL'))
         return ac.get_datetime_mjd(mc.make_datetime(self._headers[ext].get('CLOCKVAL')))
 
 
