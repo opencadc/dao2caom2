@@ -79,13 +79,13 @@ REJECTED_FILE = os.path.join(
 )
 
 
-def test_visit(test_config):
+def test_visit(test_config, tmp_path):
 
     # this should result in three new artifacts being added to every plane:
     # one for a thumbnail and two for previews (one zoom)
 
-    test_rejected = mc.Rejected(REJECTED_FILE)
-    test_observable = mc.Observable(test_rejected, mc.Metrics(test_config))
+    test_config.rejected_fqn = f'{tmp_path}/{test_config.rejected_file_name}'
+    test_observable = mc.Observable(test_config)
 
     test_files = {
         # processed spectrum
