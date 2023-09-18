@@ -11,8 +11,7 @@ RUN apt-get update --no-install-recommends  && apt-get dist-upgrade -y && \
                        zlib1g-dev && \
     rm -rf /var/lib/apt/lists/ /tmp/* /var/tmp/* 
 
-ARG OPENCADC_BRANCH=master
-ARG OPENCADC_MAIN_BRANCH=main
+ARG OPENCADC_BRANCH=main
 ARG OPENCADC_REPO=opencadc
 
 WORKDIR /usr/src/app
@@ -23,9 +22,9 @@ RUN git clone https://github.com/${OPENCADC_REPO}/caom2tools.git && \
     pip install ./caom2utils && \
     cd ..
 
-RUN pip install git+https://github.com/${OPENCADC_REPO}/caom2pipe@${OPENCADC_MAIN_BRANCH}#egg=caom2pipe
+RUN pip install git+https://github.com/${OPENCADC_REPO}/caom2pipe@${OPENCADC_BRANCH}#egg=caom2pipe
 
-RUN pip install git+https://github.com/${OPENCADC_REPO}/dao2caom2@${OPENCADC_MAIN_BRANCH}#egg=dao2caom2
+RUN pip install git+https://github.com/${OPENCADC_REPO}/dao2caom2@${OPENCADC_BRANCH}#egg=dao2caom2
 
 FROM python:${OPENCADC_PYTHON_VERSION}-slim
 WORKDIR /usr/src/app
