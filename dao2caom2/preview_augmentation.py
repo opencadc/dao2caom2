@@ -87,27 +87,26 @@ from caom2pipe import manage_composable as mc
 class DAOPreview(mc.PreviewVisitor):
     def __init__(self, mime_type, **kwargs):
         super(DAOPreview, self).__init__(ReleaseType.DATA, mime_type, **kwargs)
+        self._ext = 0
 
     def generate_plots(self, obs_id):
         count = 0
         self._logger.info(
             f'Building preview and thumbnail with {self._science_fqn}'
         )
-        hdu_list = fits.open(self._science_fqn)
-        header = hdu_list[0].header
+        self._hdu_list = fits.open(self._science_fqn)
+        header = self._hdu_list[self._ext].header
 
         if (
             'e' in self._storage_name.file_name
             or 'p' in self._storage_name.file_name
             or 'v' in self._storage_name.file_name
         ):
-            count += self._do_cal_processed(hdu_list, header, obs_id)
+            count += self._do_cal_processed(header, obs_id)
         elif self._storage_name.file_name.startswith('a'):
             count += self._do_skycam()
         else:
-            count += self._do_sci(hdu_list, header)
-
-        hdu_list.close()
+            count += self._do_sci(header)
 
         if count == 2:
             self.add_preview(
@@ -124,7 +123,7 @@ class DAOPreview(mc.PreviewVisitor):
             self.add_to_delete(self._preview_fqn)
         return count
 
-    def _do_cal_processed(self, hdu_list, header, obs_id):
+    def _do_cal_processed(self, header, obs_id):
         self._logger.debug(
             f'Do calibration preview augmentation with {self._science_fqn}'
         )
@@ -141,13 +140,11 @@ class DAOPreview(mc.PreviewVisitor):
             naxis1 = header.get('NAXIS1')
             self._logger.info(f'Object: {object_type}')
 
-            # if daoplate, daoPlate = False if 'v' in science_fqn:
             if 'v' in self._science_fqn or 'e' in self._science_fqn:
-                flux = hdu_list[0].data
+                flux = self._hdu_list[self._ext].data
             else:
-                flux = hdu_list[0].data[0]
+                flux = self._hdu_list[self._ext].data[0]
 
-            hdu_list.close()
             wl = []
             for i in range(0, naxis1):
                 wl.append(crval1 + cd1_1 * (float(i) - crpix1 - 1.0))
@@ -162,7 +159,7 @@ class DAOPreview(mc.PreviewVisitor):
             count = 2
         return count
 
-    def _do_sci(self, hdu_list, header):
+    def _do_sci(self, header):
         self._logger.debug(
             f'Do science preview augmentation with {self._science_fqn}'
         )
@@ -175,8 +172,8 @@ class DAOPreview(mc.PreviewVisitor):
             if object_type is not None:
                 self._logger.info(f'Object: {object_type}')
                 naxis1 = header.get('NAXIS1')
-                signal = hdu_list[0].data[0]
-                baseline = hdu_list[0].data[1]
+                signal = self._hdu_list[self._ext].data[0]
+                baseline = self._hdu_list[self._ext].data[1]
                 flux = np.subtract(signal, baseline)
                 wl = []
                 for i in range(0, naxis1):
@@ -227,9 +224,8 @@ class DAOPreview(mc.PreviewVisitor):
         return count
 
     def _do_skycam(self):
-        hdulist = fits.open(self._science_fqn)
-        image_data = hdulist[0].data
-        hdulist.close()
+        self._hdulist = fits.open(self._science_fqn)
+        image_data = self._hdulist[self._ext].data
         norm = ImageNormalize(
             image_data[330:950, 215:750],
             interval=ZScaleInterval(),

@@ -89,29 +89,45 @@ class DAOFits2caom2Visitor(cc.Fits2caom2Visitor):
 
     def _get_mapping(self, headers):
         if self._storage_name.file_name.startswith('a'):
-            result = telescopes.SkyCam(self._storage_name, headers, self._clients)
+            result = telescopes.SkyCam(self._storage_name, headers, self._clients, self._observable, self._observation)
         else:
             data_product_type = DAOFits2caom2Visitor.get_data_product_type(headers)
             if data_product_type == DataProductType.IMAGE:
                 if dao_name.DAOName.is_processed(self._storage_name.file_id):
                     if self._storage_name.is_12_metre:
-                        result = telescopes.Dao12MetreProcessedImage(self._storage_name, headers, self._clients)
+                        result = telescopes.Dao12MetreProcessedImage(
+                            self._storage_name, headers, self._clients, self._observable, self._observation
+                        )
                     else:
-                        result = telescopes.Dao18MetreProcessedImage(self._storage_name, headers, self._clients)
+                        result = telescopes.Dao18MetreProcessedImage(
+                            self._storage_name, headers, self._clients, self._observable, self._observation
+                        )
                 elif self._storage_name.is_12_metre:
-                    result = telescopes.Dao12MetreImage(self._storage_name, headers, self._clients)
+                    result = telescopes.Dao12MetreImage(
+                        self._storage_name, headers, self._clients, self._observable, self._observation
+                    )
                 else:
-                    result = telescopes.Dao18MetreImage(self._storage_name, headers, self._clients)
+                    result = telescopes.Dao18MetreImage(
+                        self._storage_name, headers, self._clients, self._observable, self._observation
+                    )
             else:
                 if dao_name.DAOName.is_processed(self._storage_name.file_id):
                     if self._storage_name.is_12_metre:
-                        result = telescopes.Dao12MetreProcessedSpectrum(self._storage_name, headers, self._clients)
+                        result = telescopes.Dao12MetreProcessedSpectrum(
+                            self._storage_name, headers, self._clients, self._observable, self._observation
+                        )
                     else:
-                        result = telescopes.Dao18MetreProcessedSpectrum(self._storage_name, headers, self._clients)
+                        result = telescopes.Dao18MetreProcessedSpectrum(
+                            self._storage_name, headers, self._clients, self._observable, self._observation
+                        )
                 elif self._storage_name.is_12_metre:
-                    result = telescopes.Dao12MetreSpectrum(self._storage_name, headers, self._clients)
+                    result = telescopes.Dao12MetreSpectrum(
+                        self._storage_name, headers, self._clients, self._observable, self._observation
+                    )
                 else:
-                    result = telescopes.Dao18MetreSpectrum(self._storage_name, headers, self._clients)
+                    result = telescopes.Dao18MetreSpectrum(
+                        self._storage_name, headers, self._clients, self._observable, self._observation
+                    )
 
         self._logger.debug(f'Created {type(result)} instance.')
         return result
