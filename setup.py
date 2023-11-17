@@ -89,7 +89,7 @@ setup(name=PACKAGENAME,
       use_2to3=False,
       setup_requires=[],
       entry_points=entry_points,
-      python_requires='>=3.7.*',
+      python_requires='>=3.11.*',
       packages=find_packages(),
       package_data={PACKAGENAME: ['data/*']},
       data_files=[('.config', ['config/config.yml'])],
@@ -97,7 +97,7 @@ setup(name=PACKAGENAME,
         'Natural Language :: English',
         'License :: OSI Approved :: GNU Affero General Public License v3',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3.9'
+        'Programming Language :: Python :: 3.11'
       ],
       cmdclass={
           'coverage': PyTest,
