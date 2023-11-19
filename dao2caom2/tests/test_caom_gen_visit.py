@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ***********************************************************************
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
@@ -103,6 +102,7 @@ def test_visitor(test_name, test_config):
     kwargs = {
         'storage_name': dao_name,
         'metadata_reader': metadata_reader,
+        'config': test_config,
     }
     expected_fqn = f'{TEST_DATA_DIR}/{dao_name.file_id}.expected.xml'
     actual_fqn = expected_fqn.replace('expected', 'actual')

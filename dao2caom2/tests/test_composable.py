@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ***********************************************************************
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
@@ -68,7 +67,6 @@
 #
 
 import os
-import test_fits2caom2_augmentation
 
 from collections import deque
 from datetime import datetime, timedelta
@@ -124,12 +122,12 @@ def test_run(run_mock, access_mock, test_config, tmp_path):
 @patch('cadcutils.net.ws.WsCapabilities.get_access_url')
 @patch('dao2caom2.composable.Client', autospec=True)
 @patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
-def test_run_vo(run_mock, vo_client_mock, access_mock):
+def test_run_vo(run_mock, vo_client_mock, access_mock, test_data_dir):
     access_mock.return_value = 'https://localhost'
     test_obs_id = 'sky_cam_image'
     test_f_name = f'{test_obs_id}.fits.gz'
     getcwd_orig = os.getcwd
-    os.getcwd = Mock(return_value=test_fits2caom2_augmentation.TEST_DATA_DIR)
+    os.getcwd = Mock(return_value=test_data_dir)
     vo_client_mock.return_value.listdir.return_value = [
         'sky_cam_image.fits.gz',
     ]
@@ -155,9 +153,7 @@ def test_run_vo(run_mock, vo_client_mock, access_mock):
         # clean up the summary report text file
         # clean up the files created as a by-product of a run
         for f_name in F_NAME_LIST:
-            fqn = os.path.join(
-                test_fits2caom2_augmentation.TEST_DATA_DIR, f_name
-            )
+            fqn = os.path.join(test_data_dir, f_name)
             if os.path.exists(fqn):
                 os.unlink(fqn)
 

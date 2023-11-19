@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ***********************************************************************
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
@@ -73,14 +72,10 @@ from cadcdata import FileInfo
 from caom2pipe import astro_composable as ac
 from caom2pipe import reader_composable as rdc
 from dao2caom2 import DAOName, fits2caom2_augmentation
-import test_fits2caom2_augmentation
 
 
-def test_failure(test_config):
-    test_fqn = (
-        f'{test_fits2caom2_augmentation.TEST_DATA_DIR}/broken_data/'
-        f'dao_c122_2001_006946.fits.header'
-    )
+def test_failure(test_config, test_data_dir):
+    test_fqn = f'{test_data_dir}/broken_data/dao_c122_2001_006946.fits.header'
     dao_name = DAOName(basename(test_fqn).replace('.header', '.gz'))
     file_info = FileInfo(id=dao_name.file_uri, file_type='application/fits')
     headers = ac.make_headers_from_file(test_fqn)
@@ -90,6 +85,7 @@ def test_failure(test_config):
     kwargs = {
         'storage_name': dao_name,
         'metadata_reader': metadata_reader,
+        'config': test_config,
     }
     observation = None
     observation = fits2caom2_augmentation.visit(observation, **kwargs)
