@@ -86,7 +86,7 @@ class DAOFits2caom2Visitor(cc.Fits2caom2Visitor):
             data_product_type = DataProductType.SPECTRUM
         return data_product_type
 
-    def _get_mapping(self, headers):
+    def _get_mapping(self, headers, _):
         if self._storage_name.file_name.startswith('a'):
             result = telescopes.SkyCam(
                 self._storage_name, headers, self._clients, self._observable, self._observation, self._config
@@ -130,7 +130,7 @@ class DAOFits2caom2Visitor(cc.Fits2caom2Visitor):
                         self._storage_name, headers, self._clients, self._observable, self._observation, self._config
                     )
 
-        self._logger.debug(f'Created {type(result)} instance.')
+        self._logger.debug(f'Created {result.__class__.__name__} instance.')
         return result
 
 

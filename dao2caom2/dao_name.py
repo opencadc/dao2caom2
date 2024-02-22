@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ***********************************************************************
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
@@ -183,15 +182,6 @@ class DAOName(mc.StorageName):
         if re.match(
             'dao_[cr]\\d{3}_\\d{4}_\\d{6}_[aevBF]', file_id
         ) or re.match('dao_[p]\\d{3}_\\d{6}(u|v|y|r|i|)', file_id):
-            result = True
-        return result
-
-    @staticmethod
-    def is_unprocessed_reticon(entry):
-        file_name = mc.CaomName.extract_file_name(entry)
-        file_id = DAOName.remove_extensions(file_name)
-        result = False
-        if re.match('dao_[r]\\d{3}_\\d{4}_\\d{6}', file_id):
             result = True
         return result
 

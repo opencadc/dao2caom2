@@ -166,12 +166,7 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
                                 plane.data_product_type
                                 == DataProductType.SPECTRUM
                             ):
-                                if (
-                                    DAOName.is_unprocessed_reticon(
-                                        artifact.uri
-                                    )
-                                    or (DAOName.is_derived(artifact.uri) and self._observation.type == 'flat')
-                                ):
+                                if DAOName.is_derived(artifact.uri) and self._observation.type == 'flat':
                                     # DB 29-04-22
                                     # Live WITHOUT energy metadata for the
                                     # flats since users can find these from
