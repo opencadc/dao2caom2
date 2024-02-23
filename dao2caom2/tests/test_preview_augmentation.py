@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ***********************************************************************
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
@@ -71,15 +70,15 @@ import os
 
 from caom2pipe import manage_composable as mc
 from dao2caom2 import preview_augmentation, dao_name
-import test_fits2caom2_augmentation
+import test_caom_gen_visit
 
 TEST_FILES_DIR = '/test_files'
-REJECTED_FILE = os.path.join(
-    test_fits2caom2_augmentation.TEST_DATA_DIR, 'rejected.yml'
-)
+# REJECTED_FILE = os.path.join(
+#     test_caom_gen_visit.TEST_DATA_DIR, 'rejected.yml'
+# )
 
 
-def test_visit(test_config, tmp_path):
+def test_visit(test_config, test_data_dir, tmp_path):
 
     # this should result in three new artifacts being added to every plane:
     # one for a thumbnail and two for previews (one zoom)
@@ -145,9 +144,7 @@ def test_visit(test_config, tmp_path):
         os.unlink(entry)
 
     for key, value in test_files.items():
-        obs = mc.read_obs_from_file(
-            f'{test_fits2caom2_augmentation.TEST_DATA_DIR}/previews/{key}'
-        )
+        obs = mc.read_obs_from_file(f'{test_data_dir}/previews/{key}')
         for f_name in value:
             test_name = dao_name.DAOName(f_name)
             kwargs['storage_name'] = test_name

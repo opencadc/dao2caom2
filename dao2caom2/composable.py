@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ***********************************************************************
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
@@ -113,10 +112,7 @@ def _run():
     config, clients, name_builder, metadata_reader = _common()
     files_source = None
     if config.use_local_files:
-        if config.cleanup_files_when_storing:
-            files_source = data_source.DAOLocalFilesDataSource(
-                config, clients.data_client, metadata_reader
-            )
+        files_source = data_source.DAOLocalFilesDataSource(config, clients.data_client, metadata_reader)
     else:
         files_source = dsc.TodoFileDataSource(config)
     return rc.run_by_todo(

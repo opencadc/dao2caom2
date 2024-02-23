@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ***********************************************************************
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
@@ -103,6 +102,7 @@ def test_visitor(test_name, test_config):
     kwargs = {
         'storage_name': dao_name,
         'metadata_reader': metadata_reader,
+        'config': test_config,
     }
     expected_fqn = f'{TEST_DATA_DIR}/{dao_name.file_id}.expected.xml'
     actual_fqn = expected_fqn.replace('expected', 'actual')
@@ -114,13 +114,17 @@ def test_visitor(test_name, test_config):
     if observation is None:
         assert False, f'observation construction failed for {test_name}'
     else:
-        expected = mc.read_obs_from_file(expected_fqn)
-        compare_result = get_differences(expected, observation)
-        if compare_result is not None:
+        if exists(expected_fqn):
+            expected = mc.read_obs_from_file(expected_fqn)
+            compare_result = get_differences(expected, observation)
+            if compare_result is not None:
+                mc.write_obs_to_file(observation, actual_fqn)
+                compare_text = '\n'.join([r for r in compare_result])
+                msg = (
+                    f'Differences found in observation {expected.observation_id}\n'
+                    f'{compare_text}'
+                )
+                raise AssertionError(msg)
+        else:
             mc.write_obs_to_file(observation, actual_fqn)
-            compare_text = '\n'.join([r for r in compare_result])
-            msg = (
-                f'Differences found in observation {expected.observation_id}\n'
-                f'{compare_text}'
-            )
-            raise AssertionError(msg)
+            raise AssertionError(f'{expected_fqn} does not exist.')

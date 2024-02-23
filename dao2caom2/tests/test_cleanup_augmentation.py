@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ***********************************************************************
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
@@ -70,13 +69,9 @@
 from caom2pipe import manage_composable as mc
 from dao2caom2 import cleanup_augmentation
 
-import test_fits2caom2_augmentation
 
-
-def test_cleanup_augmentation():
-    test_observation = mc.read_obs_from_file(
-        f'{test_fits2caom2_augmentation.TEST_DATA_DIR}/cleanup/double_uris.xml'
-    )
+def test_cleanup_augmentation(test_data_dir):
+    test_observation = mc.read_obs_from_file(f'{test_data_dir}/cleanup/double_uris.xml')
     test_product_id = 'dao_c122_2005_007071'
     assert (
         len(test_observation.planes[test_product_id].artifacts) == 4

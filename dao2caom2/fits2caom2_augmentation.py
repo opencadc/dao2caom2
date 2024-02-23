@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ***********************************************************************
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
@@ -87,49 +86,51 @@ class DAOFits2caom2Visitor(cc.Fits2caom2Visitor):
             data_product_type = DataProductType.SPECTRUM
         return data_product_type
 
-    def _get_mapping(self, headers):
+    def _get_mapping(self, headers, _):
         if self._storage_name.file_name.startswith('a'):
-            result = telescopes.SkyCam(self._storage_name, headers, self._clients, self._observable, self._observation)
+            result = telescopes.SkyCam(
+                self._storage_name, headers, self._clients, self._observable, self._observation, self._config
+            )
         else:
             data_product_type = DAOFits2caom2Visitor.get_data_product_type(headers)
             if data_product_type == DataProductType.IMAGE:
                 if dao_name.DAOName.is_processed(self._storage_name.file_id):
                     if self._storage_name.is_12_metre:
                         result = telescopes.Dao12MetreProcessedImage(
-                            self._storage_name, headers, self._clients, self._observable, self._observation
+                            self._storage_name, headers, self._clients, self._observable, self._observation, self._config
                         )
                     else:
                         result = telescopes.Dao18MetreProcessedImage(
-                            self._storage_name, headers, self._clients, self._observable, self._observation
+                            self._storage_name, headers, self._clients, self._observable, self._observation, self._config
                         )
                 elif self._storage_name.is_12_metre:
                     result = telescopes.Dao12MetreImage(
-                        self._storage_name, headers, self._clients, self._observable, self._observation
+                        self._storage_name, headers, self._clients, self._observable, self._observation, self._config
                     )
                 else:
                     result = telescopes.Dao18MetreImage(
-                        self._storage_name, headers, self._clients, self._observable, self._observation
+                        self._storage_name, headers, self._clients, self._observable, self._observation, self._config
                     )
             else:
                 if dao_name.DAOName.is_processed(self._storage_name.file_id):
                     if self._storage_name.is_12_metre:
                         result = telescopes.Dao12MetreProcessedSpectrum(
-                            self._storage_name, headers, self._clients, self._observable, self._observation
+                            self._storage_name, headers, self._clients, self._observable, self._observation, self._config
                         )
                     else:
                         result = telescopes.Dao18MetreProcessedSpectrum(
-                            self._storage_name, headers, self._clients, self._observable, self._observation
+                            self._storage_name, headers, self._clients, self._observable, self._observation, self._config
                         )
                 elif self._storage_name.is_12_metre:
                     result = telescopes.Dao12MetreSpectrum(
-                        self._storage_name, headers, self._clients, self._observable, self._observation
+                        self._storage_name, headers, self._clients, self._observable, self._observation, self._config
                     )
                 else:
                     result = telescopes.Dao18MetreSpectrum(
-                        self._storage_name, headers, self._clients, self._observable, self._observation
+                        self._storage_name, headers, self._clients, self._observable, self._observation, self._config
                     )
 
-        self._logger.debug(f'Created {type(result)} instance.')
+        self._logger.debug(f'Created {result.__class__.__name__} instance.')
         return result
 
 
