@@ -165,7 +165,6 @@ class DAOPreview(mc.PreviewVisitor):
         )
         count = 0
         detector = header.get('DETECTOR')
-        instrument = header.get('INSTRUME')
         if detector.upper() == 'RETICON':
             # unprocessed RETICON spectrum
             object_type = header.get('OBJECT')
@@ -182,32 +181,34 @@ class DAOPreview(mc.PreviewVisitor):
                 self._write_files_to_disk(wln, flux, 'Pixel', f'{self._storage_name.file_id}: {object_type}')
                 count = 2
         else:
-            # unprocessed CCD data
-            if detector == 'SITe-4':
-                axis = 'NAXIS2'
-                naxis1 = mc.to_int(header.get(axis))
-                xc = naxis1 / 2
-                xs = 512
-                xoffset = xc - xs / 2
-                rotate = '90.0'
-                geometry = '256x' + str(xs) + '+1+' + str(xoffset)
-                resize1 = 'x1024'
-                resize2 = 'x256'
-            else:
-                axis = 'NAXIS1'
-                naxis1 = mc.to_int(header.get(axis))
-                xc = naxis1 / 2
-                xs = 512
-                xoffset = xc - xs / 2
-                rotate = '0.0'
-                geometry = str(xs) + 'x256+' + str(xoffset) + '+1'
-                resize1 = '1024x1024'
-                resize2 = '256'
-
+            instrument = header.get('INSTRUME')
             if 'Imager' in instrument:
                 preview_cmd = f'convert -resize 1024x1024 -normalize -negate {self._science_fqn} {self._preview_fqn}'
                 thumbnail_cmd = f'convert -resize 256x256 -normalize -negate {self._science_fqn} {self._thumb_fqn}'
             else:
+                # unprocessed CCD data
+                dispaxis = mc.to_int(header.get('DISPAXIS'))
+                if dispaxis == 2:
+                    axis = 'NAXIS2'
+                    naxis1 = mc.to_int(header.get(axis))
+                    xc = naxis1 / 2
+                    xs = 512
+                    xoffset = xc - xs / 2
+                    rotate = '90.0'
+                    geometry = '256x' + str(xs) + '+1+' + str(xoffset)
+                    resize1 = 'x1024'
+                    resize2 = 'x256'
+                else:
+                    axis = 'NAXIS1'
+                    naxis1 = mc.to_int(header.get(axis))
+                    xc = naxis1 / 2
+                    xs = 512
+                    xoffset = xc - xs / 2
+                    rotate = '0.0'
+                    geometry = str(xs) + 'x256+' + str(xoffset) + '+1'
+                    resize1 = '1024x1024'
+                    resize2 = '256'
+
                 preview_cmd = (
                     f'convert -resize {resize1} -rotate {rotate} -normalize -negate {self._science_fqn} '
                     f'{self._preview_fqn}'
