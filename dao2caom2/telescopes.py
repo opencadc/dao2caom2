@@ -147,12 +147,8 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
         # correct the *_axis values
         for plane in self._observation.planes.values():
             for artifact in plane.artifacts.values():
-                if artifact.uri.replace(
-                    '.gz', ''
-                ) != self._storage_name.file_uri.replace('.gz', ''):
-                    self._logger.debug(
-                        f'Skipping artifact {self._storage_name.file_uri}'
-                    )
+                if artifact.uri.replace('.gz', '') != self._storage_name.file_uri.replace('.gz', ''):
+                    self._logger.debug(f'Skipping artifact {self._storage_name.file_uri}')
                     continue
 
                 update_artifact_meta(artifact, file_info)
@@ -162,10 +158,7 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
                         cc.undo_astropy_cdfix_call(chunk, time_delta)
 
                         if self._storage_name.file_name.startswith('d'):
-                            if (
-                                plane.data_product_type
-                                == DataProductType.SPECTRUM
-                            ):
+                            if plane.data_product_type == DataProductType.SPECTRUM:
                                 if DAOName.is_derived(artifact.uri) and self._observation.type == 'flat':
                                     # DB 29-04-22
                                     # Live WITHOUT energy metadata for the
@@ -178,10 +171,7 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
                                     # other metadata in the headers so there
                                     # would be no way to figure energy info.
                                     cc.reset_energy(chunk)
-                                if (
-                                    artifact.product_type
-                                    != ProductType.SCIENCE
-                                ):
+                                if artifact.product_type != ProductType.SCIENCE:
                                     if self._observation.type == 'dark':
                                         chunk.position_axis_1 = 3
                                         chunk.position_axis_2 = 4
@@ -195,10 +185,7 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
                                     plane.provenance.producer = 'Spaceguard_C'
                                 # no observable axis when image
                                 cc.reset_observable(chunk)
-                                if (
-                                    artifact.product_type
-                                    == ProductType.CALIBRATION
-                                ):
+                                if artifact.product_type == ProductType.CALIBRATION:
                                     if self._observation.type != 'dark':
                                         cc.reset_position(chunk)
                                     if self._observation.type not in ['flat', 'dark']:
@@ -243,17 +230,12 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
                                     and naxis2 is not None
                                     and naxis == 2
                                     and chunk.position is not None
-                                    and plane.data_product_type
-                                    is DataProductType.IMAGE
+                                    and plane.data_product_type is DataProductType.IMAGE
                                 ):
                                     chunk.naxis = 2
                                     chunk.position_axis_1 = 1
                                     chunk.position_axis_2 = 2
-                                if (
-                                    naxis1 is not None
-                                    and naxis == 1
-                                    and chunk.energy is not None
-                                ):
+                                if naxis1 is not None and naxis == 1 and chunk.energy is not None:
                                     chunk.naxis = 1
                                     chunk.energy_axis = 1
                         else:
@@ -298,9 +280,7 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
             if DAOName.is_processed(self._storage_name.file_uri):
                 self._update_plane_provenance(plane, self._headers)
 
-            if cc.is_composite(self._headers, 'FLAT_') or cc.is_composite(
-                self._headers, 'ZERO_'
-            ):
+            if cc.is_composite(self._headers, 'FLAT_') or cc.is_composite(self._headers, 'ZERO_'):
                 self._update_observation_members()
 
         self._logger.debug('Done update.')
@@ -337,17 +317,12 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
             ObservationURI,
         )
         for plane in self._observation.planes.values():
-            if (
-                plane.provenance is not None
-                and plane.provenance.inputs is not None
-            ):
+            if plane.provenance is not None and plane.provenance.inputs is not None:
                 inputs = filter(filter_fun, plane.provenance.inputs)
 
         for entry in inputs:
             members_inputs.add(entry.get_observation_uri())
-            self._logger.debug(
-                f'Adding Observation URI {entry.get_observation_uri()}'
-            )
+            self._logger.debug(f'Adding Observation URI {entry.get_observation_uri()}')
         mc.update_typed_set(self._observation.members, members_inputs)
 
     def _update_plane_provenance(self, plane, headers):
@@ -560,9 +535,7 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
                 if temp is None:
                     temp = self._headers[ext].get('CCDSEC')
                 if temp is not None:
-                    datasec = re.sub(
-                        r'(\[)(\d+:\d+,\d+:\d+)(\])', r'\g<2>', temp
-                    )
+                    datasec = re.sub(r'(\[)(\d+:\d+,\d+:\d+)(\])', r'\g<2>', temp)
                     (dx, dy) = datasec.split(',')
                     (xl, xh) = dx.split(':')
                     (yl, yh) = dy.split(':')
@@ -695,18 +668,14 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
                 equinox = f'J{self._headers[ext].get("EQUINOX")}'
                 fk5 = FK5(equinox=equinox)
                 try:
-                    coord = SkyCoord(
-                        f'{ra} {dec}', unit=(u.hourangle, u.deg), frame=fk5
-                    )
+                    coord = SkyCoord(f'{ra} {dec}', unit=(u.hourangle, u.deg), frame=fk5)
                 except ValueError as e:
                     if 'Cannot parse first argument data "+90' in str(e):
                         if dec.startswith('+') or dec.startswith('9'):
                             dec = '+90:00:00'
                         else:
                             dec = '-90:00:00'
-                        coord = SkyCoord(
-                            f'{ra} {dec}', unit=(u.hourangle, u.deg), frame=fk5
-                        )
+                        coord = SkyCoord(f'{ra} {dec}', unit=(u.hourangle, u.deg), frame=fk5)
                     else:
                         raise e
                 j2000 = FK5(equinox='J2000')
@@ -858,13 +827,9 @@ class Imaging(DAOTelescopeMapping):
         bp.add_attribute('Chunk.energy.axis.function.delta', 'BANDPASS')
         bp.set('Chunk.energy.axis.function.refCoord.pix', 1.0)
         bp.clear('Chunk.position.axis.function.dimension.naxis1')
-        bp.add_attribute(
-            'Chunk.position.axis.function.dimension.naxis1', 'NAXIS1'
-        )
+        bp.add_attribute('Chunk.position.axis.function.dimension.naxis1', 'NAXIS1')
         bp.clear('Chunk.position.axis.function.dimension.naxis2')
-        bp.add_attribute(
-            'Chunk.position.axis.function.dimension.naxis2', 'NAXI2'
-        )
+        bp.add_attribute('Chunk.position.axis.function.dimension.naxis2', 'NAXI2')
 
     def _get_position_by_scale_size_bin(self, ext):
         result = None
@@ -909,13 +874,9 @@ class ProcessedImage(Imaging):
         bp.clear('Chunk.position.axis.function.cd21')
         bp.add_attribute('Chunk.position.axis.function.cd21', 'CD2_1')
         bp.clear('Chunk.position.axis.function.refCoord.coord1.pix')
-        bp.add_attribute(
-            'Chunk.position.axis.function.refCoord.coord1.pix', 'CRPIX1'
-        )
+        bp.add_attribute('Chunk.position.axis.function.refCoord.coord1.pix', 'CRPIX1')
         bp.clear('Chunk.position.axis.function.refCoord.coord2.pix')
-        bp.add_attribute(
-            'Chunk.position.axis.function.refCoord.coord2.pix', 'CRPIX2'
-        )
+        bp.add_attribute('Chunk.position.axis.function.refCoord.coord2.pix', 'CRPIX2')
 
 
 class ProcessedSpectrum(DAOTelescopeMapping):

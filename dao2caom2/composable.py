@@ -150,9 +150,7 @@ def _run_vo():
     if metadata_reader is None:
         metadata_reader = rdc.VaultReader(vos_client)
     clients.vo_client = vos_client
-    source = data_source.DAOVaultDataSource(
-        config, clients.vo_client, clients.data_client, metadata_reader
-    )
+    source = data_source.DAOVaultDataSource(config, clients.vo_client, clients.data_client, metadata_reader)
     store_transferrer = transfer.VoFitsCleanupTransfer(vos_client, config)
     return rc.run_by_todo(
         name_builder=name_builder,
@@ -185,9 +183,7 @@ def _run_state():
     files_source = None
     if config.use_local_files:
         if config.cleanup_files_when_storing:
-            files_source = data_source.DAOLocalFilesDataSource(
-                config, clients.data_client, metadata_reader
-            )
+            files_source = data_source.DAOLocalFilesDataSource(config, clients.data_client, metadata_reader)
     else:
         files_source = dsc.ListDirTimeBoxDataSource(config)
     return rc.run_by_state(

@@ -73,18 +73,13 @@ from dao2caom2 import cleanup_augmentation
 def test_cleanup_augmentation(test_data_dir):
     test_observation = mc.read_obs_from_file(f'{test_data_dir}/cleanup/double_uris.xml')
     test_product_id = 'dao_c122_2005_007071'
-    assert (
-        len(test_observation.planes[test_product_id].artifacts) == 4
-    ), 'wrong artifact count precondition'
+    assert len(test_observation.planes[test_product_id].artifacts) == 4, 'wrong artifact count precondition'
 
     kwargs = {}
     test_result = cleanup_augmentation.visit(test_observation, **kwargs)
 
     assert test_result is not None, 'expect a result'
+    assert len(test_result.planes[test_product_id].artifacts) == 3, 'wrong artifact count'
     assert (
-        len(test_result.planes[test_product_id].artifacts) == 3
-    ), 'wrong artifact count'
-    assert (
-        'ad:DAO/dao_c122_2005_007071.fits.gz'
-        in test_result.planes[test_product_id].artifacts.keys()
+        'ad:DAO/dao_c122_2005_007071.fits.gz' in test_result.planes[test_product_id].artifacts.keys()
     ), 'removed wrong uri'

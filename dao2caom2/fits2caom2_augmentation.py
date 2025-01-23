@@ -97,11 +97,21 @@ class DAOFits2caom2Visitor(cc.Fits2caom2Visitor):
                 if dao_name.DAOName.is_processed(self._storage_name.file_id):
                     if self._storage_name.is_12_metre:
                         result = telescopes.Dao12MetreProcessedImage(
-                            self._storage_name, headers, self._clients, self._observable, self._observation, self._config
+                            self._storage_name,
+                            headers,
+                            self._clients,
+                            self._observable,
+                            self._observation,
+                            self._config,
                         )
                     else:
                         result = telescopes.Dao18MetreProcessedImage(
-                            self._storage_name, headers, self._clients, self._observable, self._observation, self._config
+                            self._storage_name,
+                            headers,
+                            self._clients,
+                            self._observable,
+                            self._observation,
+                            self._config,
                         )
                 elif self._storage_name.is_12_metre:
                     result = telescopes.Dao12MetreImage(
@@ -115,11 +125,21 @@ class DAOFits2caom2Visitor(cc.Fits2caom2Visitor):
                 if dao_name.DAOName.is_processed(self._storage_name.file_id):
                     if self._storage_name.is_12_metre:
                         result = telescopes.Dao12MetreProcessedSpectrum(
-                            self._storage_name, headers, self._clients, self._observable, self._observation, self._config
+                            self._storage_name,
+                            headers,
+                            self._clients,
+                            self._observable,
+                            self._observation,
+                            self._config,
                         )
                     else:
                         result = telescopes.Dao18MetreProcessedSpectrum(
-                            self._storage_name, headers, self._clients, self._observable, self._observation, self._config
+                            self._storage_name,
+                            headers,
+                            self._clients,
+                            self._observable,
+                            self._observation,
+                            self._config,
                         )
                 elif self._storage_name.is_12_metre:
                     result = telescopes.Dao12MetreSpectrum(

@@ -96,9 +96,7 @@ class VoFitsCleanupTransfer(tc.VoScienceTransfer):
                 self._vo_client.move(original_fqn, fail_fqn)
             except Exception as e:
                 self._logger.debug(traceback.format_exc())
-                self._logger.error(
-                    f'Failed to move {original_fqn} to {fail_fqn}'
-                )
+                self._logger.error(f'Failed to move {original_fqn} to {fail_fqn}')
                 raise mc.CadcException(e)
         try:
             if exists(destination_fqn):
