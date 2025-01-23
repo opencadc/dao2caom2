@@ -91,9 +91,7 @@ class DAOPreview(mc.PreviewVisitor):
 
     def generate_plots(self, obs_id):
         count = 0
-        self._logger.info(
-            f'Building preview and thumbnail with {self._science_fqn}'
-        )
+        self._logger.info(f'Building preview and thumbnail with {self._science_fqn}')
         self._hdu_list = fits.open(self._science_fqn)
         header = self._hdu_list[self._ext].header
 
@@ -124,15 +122,11 @@ class DAOPreview(mc.PreviewVisitor):
         return count
 
     def _do_cal_processed(self, header, obs_id):
-        self._logger.debug(
-            f'Do calibration preview augmentation with {self._science_fqn}'
-        )
+        self._logger.debug(f'Do calibration preview augmentation with {self._science_fqn}')
         count = 0
         object_type = header.get('OBJECT')
         if object_type is None:
-            self._logger.warning(
-                f'Stopping preview generation. No object type for {obs_id}.'
-            )
+            self._logger.warning(f'Stopping preview generation. No object type for {obs_id}.')
         else:
             crval1 = header.get('CRVAL1')
             crpix1 = header.get('CRPIX1')
@@ -160,9 +154,7 @@ class DAOPreview(mc.PreviewVisitor):
         return count
 
     def _do_sci(self, header):
-        self._logger.debug(
-            f'Do science preview augmentation with {self._science_fqn}'
-        )
+        self._logger.debug(f'Do science preview augmentation with {self._science_fqn}')
         count = 0
         detector = header.get('DETECTOR')
         if detector.upper() == 'RETICON':

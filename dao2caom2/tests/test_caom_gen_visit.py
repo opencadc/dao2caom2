@@ -2,7 +2,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2021.                            (c) 2021.
+#  (c) 2025.                            (c) 2025.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -84,11 +84,7 @@ TEST_DATA_DIR = join(THIS_DIR, 'data')
 def pytest_generate_tests(metafunc):
     files = []
     if exists(TEST_DATA_DIR):
-        files = [
-            join(TEST_DATA_DIR, name)
-            for name in listdir(TEST_DATA_DIR)
-            if name.endswith('header')
-        ]
+        files = [join(TEST_DATA_DIR, name) for name in listdir(TEST_DATA_DIR) if name.endswith('header')]
     metafunc.parametrize('test_name', files)
 
 
@@ -120,10 +116,7 @@ def test_visitor(test_name, test_config):
             if compare_result is not None:
                 mc.write_obs_to_file(observation, actual_fqn)
                 compare_text = '\n'.join([r for r in compare_result])
-                msg = (
-                    f'Differences found in observation {expected.observation_id}\n'
-                    f'{compare_text}'
-                )
+                msg = f'Differences found in observation {expected.observation_id}\n{compare_text}'
                 raise AssertionError(msg)
         else:
             mc.write_obs_to_file(observation, actual_fqn)

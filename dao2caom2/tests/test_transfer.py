@@ -98,9 +98,7 @@ def test_transfer_fails_fits_check():
     test_subject.get(test_source, test_destination)
 
     assert vos_client_mock.copy.called, 'expect copy call'
-    vos_client_mock.copy.assert_called_with(
-        test_source, test_destination, send_md5=True
-    ), 'wrong copy args'
+    vos_client_mock.copy.assert_called_with(test_source, test_destination, send_md5=True), 'wrong copy args'
     assert vos_client_mock.move.called, 'expect move call'
     vos_client_mock.move.assert_called_with(
         test_source, 'vos:goliaths/dao_test/failure/broken.fits'

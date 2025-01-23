@@ -38,26 +38,23 @@ VERSION = metadata.get('version', 'none')
 
 # generate the version file
 with open(os.path.join(PACKAGENAME, 'version.py'), 'w') as f:
-    f.write('version = \'{}\'\n'.format(VERSION))	
+    f.write('version = \'{}\'\n'.format(VERSION))
 
 # Treat everything in scripts except README.md as a script to be installed
-scripts = [fname for fname in glob.glob(os.path.join('scripts', '*'))
-           if os.path.basename(fname) != 'README.md']
+scripts = [fname for fname in glob.glob(os.path.join('scripts', '*')) if os.path.basename(fname) != 'README.md']
 
 # Define entry points for command-line scripts
 entry_points = {'console_scripts': []}
 
 entry_point_list = conf.items('entry_points')
 for entry_point in entry_point_list:
-    entry_points['console_scripts'].append('{0} = {1}'.format(entry_point[0],
-                                                              entry_point[1]))
+    entry_points['console_scripts'].append('{0} = {1}'.format(entry_point[0], entry_point[1]))
 
 
 # add the --cov option to the test command
 class PyTest(TestCommand):
-    """class py.test for the testing
+    """class py.test for the testing"""
 
-    """
     user_options = []
 
     def __init__(self, dist, **kw):
@@ -67,39 +64,42 @@ class PyTest(TestCommand):
     def run_tests(self):
         # import here, cause outside the eggs aren't loaded
         import pytest
+
         err_no = pytest.main(self.pytest_args)
         sys.exit(err_no)
-        
+
+
 # Note that requires and provides should not be included in the call to
 # ``setup``, since these are now deprecated. See this link for more details:
 # https://groups.google.com/forum/#!topic/astropy-dev/urYO8ckB2uM
 
 
-setup(name=PACKAGENAME,
-      version=VERSION,
-      description=DESCRIPTION,
-      scripts=scripts,
-      install_requires=metadata.get('install_requires', '').strip().split(),
-      author=AUTHOR,
-      author_email=AUTHOR_EMAIL,
-      license=LICENSE,
-      url=URL,
-      long_description=readme(),
-      zip_safe=False,
-      use_2to3=False,
-      setup_requires=[],
-      entry_points=entry_points,
-      python_requires='>=3.11',
-      packages=find_packages(),
-      package_data={PACKAGENAME: ['data/*']},
-      data_files=[('.config', ['config/config.yml'])],
-      classifiers=[
+setup(
+    name=PACKAGENAME,
+    version=VERSION,
+    description=DESCRIPTION,
+    scripts=scripts,
+    install_requires=metadata.get('install_requires', '').strip().split(),
+    author=AUTHOR,
+    author_email=AUTHOR_EMAIL,
+    license=LICENSE,
+    url=URL,
+    long_description=readme(),
+    zip_safe=False,
+    use_2to3=False,
+    setup_requires=[],
+    entry_points=entry_points,
+    python_requires='>=3.11',
+    packages=find_packages(),
+    package_data={PACKAGENAME: ['data/*']},
+    data_files=[('.config', ['config/config.yml'])],
+    classifiers=[
         'Natural Language :: English',
         'License :: OSI Approved :: GNU Affero General Public License v3',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3.11'
-      ],
-      cmdclass={
-          'coverage': PyTest,
-      }
+        'Programming Language :: Python :: 3.11',
+    ],
+    cmdclass={
+        'coverage': PyTest,
+    },
 )

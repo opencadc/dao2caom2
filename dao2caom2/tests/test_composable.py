@@ -142,12 +142,8 @@ def test_run_vo(run_mock, vo_client_mock, access_mock, test_data_dir):
         assert isinstance(test_storage, dao_name.DAOName), type(test_storage)
         assert test_storage.obs_id == test_obs_id, 'wrong obs id'
         assert test_storage.file_name == test_f_name, 'wrong file name'
-        assert test_storage.source_names == [
-            'vos:goliaths/DAOTest/sky_cam_image.fits.gz'
-        ], 'wrong source names'
-        assert test_storage.destination_uris == [
-            'cadc:DAO/sky_cam_image.fits'
-        ], 'wrong destination uris'
+        assert test_storage.source_names == ['vos:goliaths/DAOTest/sky_cam_image.fits.gz'], 'wrong source names'
+        assert test_storage.destination_uris == ['cadc:DAO/sky_cam_image.fits'], 'wrong destination uris'
     finally:
         os.getcwd = getcwd_orig
         # clean up the summary report text file
@@ -271,9 +267,7 @@ def test_run_store_ingest_remote(
     test_config,
     tmp_path,
 ):
-    vo_mock.return_value.listdir.return_value = [
-        'dao_c122_2021_005157_e.fits', 'dao_c122_2021_005157.fits'
-    ]
+    vo_mock.return_value.listdir.return_value = ['dao_c122_2021_005157_e.fits', 'dao_c122_2021_005157.fits']
     vo_mock.return_value.isdir.return_value = False
     clients_mock.return_value.metadata_client.read.return_value = None
     file_headers_mock.return_value = [{'OBSMODE': 'abc'}]
@@ -325,9 +319,7 @@ def test_run_store_ingest_remote(
         clients_mock.return_value.data_client.put.assert_has_calls(put_calls, any_order=False)
         assert clients_mock.return_value.data_client.info.called, 'info should be called'
         assert clients_mock.return_value.data_client.info.call_count == 2, 'wrong number of infos'
-        info_calls = [
-            call('cadc:DAOCADC/dao_c122_2021_005157_e.fits'), call('cadc:DAO/dao_c122_2021_005157.fits')
-        ]
+        info_calls = [call('cadc:DAOCADC/dao_c122_2021_005157_e.fits'), call('cadc:DAO/dao_c122_2021_005157.fits')]
         clients_mock.return_value.data_client.info.assert_has_calls(info_calls, any_order=False)
         assert cleanup_mock.called, 'cleanup'
         cleanup_calls = [
@@ -371,7 +363,6 @@ def test_run_store_ingest_remote(
     finally:
         os.getcwd = getcwd_orig
         os.chdir(cwd)
-
 
 
 @patch('cadcutils.net.ws.WsCapabilities.get_access_url')

@@ -98,6 +98,7 @@ def test_dao_transfer_check_fits_verify(vault_info_mock, test_config, tmp_path):
     test_config.cleanup_failure_destination = 'vos:DAO/failure'
     test_config.cleanup_success_destination = 'vos:DAO/success'
     test_config.recurse_data_sources = False
+
     def _mock_listdir(entry):
         if entry.endswith('Incoming'):
             return [
@@ -137,9 +138,7 @@ def test_dao_transfer_check_fits_verify(vault_info_mock, test_config, tmp_path):
 
         assert test_result is not None, 'expect a work list'
         assert len(test_result) == 1, 'wrong work list entries'
-        assert (
-            test_result[0] == 'vos:DAO/Archive/Incoming/dao123.fits.gz'
-        ), 'wrong work entry'
+        assert test_result[0] == 'vos:DAO/Archive/Incoming/dao123.fits.gz', 'wrong work entry'
 
         assert test_vos_client.isdir.call_count == 4, 'wrong is_dir count'
         test_vos_client.isdir.reset_mock()
@@ -198,7 +197,8 @@ def test_data_source_exists(test_config):
     test_vos_client.get_node.side_effect = _get_node
 
     test_uri = 'cadc:DAO/dest_fqn.fits'
-    test_file_info = FileInfo(id=test_uri, md5sum='ghi' )
+    test_file_info = FileInfo(id=test_uri, md5sum='ghi')
+
     # mock that the same file already exists as CADC
     def _get_info(uri):
         assert uri == test_uri, f'wrong storage check {uri}'
@@ -208,9 +208,7 @@ def test_data_source_exists(test_config):
 
     # destination file exists at CADC
     def _status(uri):
-        assert (
-            uri == 'vos:test/success/dest_fqn.fits'
-        ), f'wrong status check {uri}'
+        assert uri == 'vos:test/success/dest_fqn.fits', f'wrong status check {uri}'
         return True
 
     test_vos_client.status.side_effect = _status
@@ -221,9 +219,7 @@ def test_data_source_exists(test_config):
         test_subject.clean_up(entry, 'ignore1', 'ignore2')
     assert test_vos_client.status.called, 'expect status call'
     assert test_vos_client.delete.called, 'expect delete call'
-    test_vos_client.delete.assert_called_with(
-        'vos:test/success/dest_fqn.fits'
-    ), 'wrong delete args'
+    test_vos_client.delete.assert_called_with('vos:test/success/dest_fqn.fits'), 'wrong delete args'
     assert test_vos_client.move.called, 'expect move call'
     test_vos_client.move.assert_called_with(
         'vos:test/dest_fqn.fits', 'vos:test/success/dest_fqn.fits'

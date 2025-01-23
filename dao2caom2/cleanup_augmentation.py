@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 # ***********************************************************************
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2021.                            (c) 2021.
+#  (c) 2025.                            (c) 2025.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -89,10 +88,7 @@ def visit(observation, **kwargs):
 
     for product_id, uris in delete_list.items():
         for uri in uris:
-            logging.info(
-                f'Removing artifact {uri} from {observation.observation_id}, '
-                f'plane {product_id}'
-            )
+            logging.info(f'Removing artifact {uri} from {observation.observation_id}, plane {product_id}')
             count += 1
             observation.planes[product_id].artifacts.pop(uri)
 

@@ -75,9 +75,7 @@ __all__ = ['DAOLocalFilesDataSource', 'DAOVaultDataSource']
 
 class DAOLocalFilesDataSource(dsc.LocalFilesDataSource):
     def __init__(self, config, cadc_client, metadata_reader):
-        super().__init__(
-            config, cadc_client, metadata_reader, config.recurse_data_sources
-        )
+        super().__init__(config, cadc_client, metadata_reader, config.recurse_data_sources)
 
     def get_collection(self, f_name):
         return dao_name.get_collection(f_name)
