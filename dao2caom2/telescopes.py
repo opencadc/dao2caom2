@@ -2,7 +2,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2021.                            (c) 2021.
+#  (c) 2025.                            (c) 2025.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -84,7 +84,7 @@ from dao2caom2.dao_name import DAOName, get_collection
 __all__ = ['DAOTelescopeMapping']
 
 
-class DAOTelescopeMapping(cc.TelescopeMapping):
+class DAOTelescopeMapping(cc.TelescopeMapping2):
     """
     This class is the Spectrum implementation.
 
@@ -136,10 +136,7 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
 
     """
 
-    def __init__(self, storage_name, headers, clients, observable, observation, config):
-        super().__init__(storage_name, headers, clients, observable, observation, config)
-
-    def update(self, file_info):
+    def update(self):
         """Called to fill multiple CAOM model elements and/or attributes (an
         n:n relationship between TDM attributes and CAOM attributes).
         """
@@ -151,7 +148,7 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
                     self._logger.debug(f'Skipping artifact {self._storage_name.file_uri}')
                     continue
 
-                update_artifact_meta(artifact, file_info)
+                update_artifact_meta(artifact, self._storage_name.file_info.get(self._storage_name.file_uri))
                 for part in artifact.parts.values():
                     for chunk in part.chunks:
                         time_delta = self.get_time_axis_delta(ext=0)
@@ -332,8 +329,8 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
         if self._observation.type in ['object', 'flat', 'comparison']:
             f_name = headers[0].get('BIAS')
             if f_name is not None:
-                bias_name = DAOName(f_name)
-                ignore, plane_uri = cc.make_plane_uri(
+                bias_name = DAOName([f_name])
+                _, plane_uri = cc.make_plane_uri(
                     bias_name.obs_id,
                     bias_name.product_id,
                     get_collection(bias_name.file_name),
@@ -342,15 +339,15 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
         if self._observation.type in ['object', 'comparison']:
             f_name = headers[0].get('FLAT')
             if f_name is not None:
-                flat_name = DAOName(f_name)
-                ignore, plane_uri = cc.make_plane_uri(
+                flat_name = DAOName([f_name])
+                _, plane_uri = cc.make_plane_uri(
                     flat_name.obs_id,
                     flat_name.product_id,
                     get_collection(flat_name.file_name),
                 )
                 plane.provenance.inputs.add(plane_uri)
             # referral to raw plane
-            ignore, plane_uri = cc.make_plane_uri(
+            _, plane_uri = cc.make_plane_uri(
                 self._observation.observation_id,
                 self._observation.observation_id,
                 get_collection(self._observation.observation_id),
@@ -359,16 +356,16 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
         if self._observation.type == 'object':
             f_name = headers[0].get('DCLOG1')
             if f_name is not None:
-                ref_spec1_name = DAOName(f_name.split()[2])
-                ignore, plane_uri = cc.make_plane_uri(
+                ref_spec1_name = DAOName([f_name.split()[2]])
+                _, plane_uri = cc.make_plane_uri(
                     ref_spec1_name.obs_id,
                     ref_spec1_name.product_id,
                     get_collection(ref_spec1_name.file_name),
                 )
                 plane.provenance.inputs.add(plane_uri)
             if headers[0].get('DCLOG2') is not None:
-                ref_spec1_name = DAOName(headers[0].get('DCLOG2').split()[2])
-                ignore, plane_uri = cc.make_plane_uri(
+                ref_spec1_name = DAOName([headers[0].get('DCLOG2').split()[2]])
+                _, plane_uri = cc.make_plane_uri(
                     ref_spec1_name.obs_id,
                     ref_spec1_name.product_id,
                     get_collection(ref_spec1_name.file_name),
@@ -516,12 +513,13 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
         else:
             if cdelt is None:
                 dispersion = self._headers[ext].get('DISPERSI')
+                pixel_size = self._headers[ext].get('PIXSIZE')
                 dispaxis = self._get_dispaxis(ext)
                 if dispaxis == 1:
                     xbin = mc.to_float(self._headers[ext].get('XBIN'))
                 else:
                     xbin = mc.to_float(self._headers[ext].get('YBIN'))
-                cdelt = dispersion * 15.0 * xbin / 1000.0
+                cdelt = dispersion * pixel_size * xbin / 1000.0
         return cdelt
 
     def get_energy_axis_function_refcoord_pix(self, ext):
@@ -731,8 +729,6 @@ class DAOTelescopeMapping(cc.TelescopeMapping):
 
 
 class Dao12Metre(DAOTelescopeMapping):
-    def __init__(self, storage_name, headers, clients, observable, observation, config):
-        super().__init__(storage_name, headers, clients, observable, observation, config)
 
     def get_geo(self):
         return ac.get_location(48.52092, -123.42006, 225.0)
@@ -742,8 +738,6 @@ class Dao12Metre(DAOTelescopeMapping):
 
 
 class Dao18Metre(DAOTelescopeMapping):
-    def __init__(self, storage_name, headers, clients, observable, observation, config):
-        super().__init__(storage_name, headers, clients, observable, observation, config)
 
     def get_geo(self):
         return ac.get_location(48.51967, -123.41833, 232.0)
@@ -753,8 +747,6 @@ class Dao18Metre(DAOTelescopeMapping):
 
 
 class SkyCam(DAOTelescopeMapping):
-    def __init__(self, storage_name, headers, clients, observable, observation, config):
-        super().__init__(storage_name, headers, clients, observable, observation, config)
 
     def configure_axes(self, bp):
         # DB - 10-07-20
@@ -811,8 +803,6 @@ class SkyCam(DAOTelescopeMapping):
 
 
 class Imaging(DAOTelescopeMapping):
-    def __init__(self, storage_name, headers, clients, observable, observation, config):
-        super().__init__(storage_name, headers, clients, observable, observation, config)
 
     def configure_axes(self, bp):
         bp.configure_position_axes((1, 2))
@@ -859,8 +849,6 @@ class Imaging(DAOTelescopeMapping):
 
 
 class ProcessedImage(Imaging):
-    def __init__(self, storage_name, headers, clients, observable, observation, config):
-        super().__init__(storage_name, headers, clients, observable, observation, config)
 
     def accumulate_blueprint(self, bp):
         super().accumulate_blueprint(bp)
@@ -880,8 +868,6 @@ class ProcessedImage(Imaging):
 
 
 class ProcessedSpectrum(DAOTelescopeMapping):
-    def __init__(self, storage_name, headers, clients, observable, observation, config):
-        super().__init__(storage_name, headers, clients, observable, observation, config)
 
     def configure_axes(self, bp):
         bp.configure_position_axes((2, 3))
@@ -908,18 +894,16 @@ class ProcessedSpectrum(DAOTelescopeMapping):
 
 
 class Dao12MetreImage(Dao12Metre, Imaging):
-    def __init__(self, storage_name, headers, clients, observable, observation, config):
-        super().__init__(storage_name, headers, clients, observable, observation, config)
+    def __init__(self, storage_name, clients, observable, observation, config):
+        super().__init__(storage_name, clients, observable, observation, config)
 
 
 class Dao12MetreProcessedImage(Dao12MetreImage, ProcessedImage):
-    def __init__(self, storage_name, headers, clients, observable, observation, config):
-        super().__init__(storage_name, headers, clients, observable, observation, config)
+    def __init__(self, storage_name, clients, observable, observation, config):
+        super().__init__(storage_name, clients, observable, observation, config)
 
 
 class Dao12MetreSpectrum(Dao12Metre):
-    def __init__(self, storage_name, headers, clients, observable, observation, config):
-        super().__init__(storage_name, headers, clients, observable, observation, config)
 
     def _get_dispaxis(self, ext):
         return self._headers[ext].get('DISPAXIS', 2)
@@ -930,8 +914,6 @@ class Dao12MetreSpectrum(Dao12Metre):
 
 
 class Dao12MetreProcessedSpectrum(Dao12MetreSpectrum, ProcessedSpectrum):
-    def __init__(self, storage_name, headers, clients, observable, observation, config):
-        super().__init__(storage_name, headers, clients, observable, observation, config)
 
     def get_energy_resolving_power(self, ext):
         obs_type = self._headers[ext].get('OBSTYPE')
@@ -945,18 +927,16 @@ class Dao12MetreProcessedSpectrum(Dao12MetreSpectrum, ProcessedSpectrum):
 
 
 class Dao18MetreImage(Dao18Metre, Imaging):
-    def __init__(self, storage_name, headers, clients, observable, observation, config):
-        super().__init__(storage_name, headers, clients, observable, observation, config)
+    def __init__(self, storage_name, clients, observable, observation, config):
+        super().__init__(storage_name, clients, observable, observation, config)
 
 
 class Dao18MetreProcessedImage(Dao18MetreImage, ProcessedImage):
-    def __init__(self, storage_name, headers, clients, observable, observation, config):
-        super().__init__(storage_name, headers, clients, observable, observation, config)
+    def __init__(self, storage_name, clients, observable, observation, config):
+        super().__init__(storage_name, clients, observable, observation, config)
 
 
 class Dao18MetreSpectrum(Dao18Metre):
-    def __init__(self, storage_name, headers, clients, observable, observation, config):
-        super().__init__(storage_name, headers, clients, observable, observation, config)
 
     def _get_dispaxis(self, ext):
         return self._headers[ext].get('DISPAXIS', 1)
@@ -967,8 +947,6 @@ class Dao18MetreSpectrum(Dao18Metre):
 
 
 class Dao18MetreProcessedSpectrum(Dao18MetreSpectrum, ProcessedSpectrum):
-    def __init__(self, storage_name, headers, clients, observable, observation, config):
-        super().__init__(storage_name, headers, clients, observable, observation, config)
 
     def get_energy_resolving_power(self, ext):
         obs_type = self._headers[ext].get('OBS_TYPE')
@@ -994,7 +972,7 @@ def _repair_provenance_value(value, obs_id):
     # ZERO_18 = 'dao_c122_2016_012728.fits'
     # ZERO_19 = 'dao_c122_2016_012729.fits'
     # ZERO_20 = 'dao_c122_2016_012730.fits'
-    dn = DAOName(value)
+    dn = DAOName([value])
     prov_prod_id = dn.product_id
     prov_obs_id = dn.obs_id
     logging.debug(f'End _repair_provenance_value')

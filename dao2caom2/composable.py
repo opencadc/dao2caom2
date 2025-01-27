@@ -2,7 +2,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2018.                            (c) 2018.
+#  (c) 2025.                            (c) 2025.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -67,8 +67,8 @@
 #
 
 """
-Application to create CAOM2 observations from DAO FITS files. Based on
-code and configuration from wcaom2archive/dao2caom2.
+Application to create CAOM2 observations from DAO FITS files. Based on code and configuration from
+wcaom2archive/dao2caom2.
 """
 
 import logging
@@ -79,9 +79,7 @@ from vos import Client
 
 from caom2pipe import client_composable as clc
 from caom2pipe import data_source_composable as dsc
-from caom2pipe import name_builder_composable as nbc
 from caom2pipe import manage_composable as mc
-from caom2pipe import reader_composable as rdc
 from caom2pipe import run_composable as rc
 from dao2caom2 import dao_name, preview_augmentation
 from dao2caom2 import cleanup_augmentation, data_source, transfer
@@ -95,11 +93,7 @@ def _common():
     config = mc.Config()
     config.get_executors()
     clients = clc.ClientCollection(config)
-    metadata_reader = None
-    if config.use_local_files:
-        metadata_reader = rdc.FileMetadataReader()
-    name_builder = nbc.EntryBuilder(dao_name.DAOName)
-    return config, clients, name_builder, metadata_reader
+    return config, clients
 
 
 def _run():
@@ -109,20 +103,19 @@ def _run():
     :return 0 if successful, -1 if there's any sort of failure. Return status
         is used by airflow for task instance management and reporting.
     """
-    config, clients, name_builder, metadata_reader = _common()
+    config, clients = _common()
     files_source = None
     if config.use_local_files:
-        files_source = data_source.DAOLocalFilesDataSource(config, clients.data_client, metadata_reader)
+        files_source = data_source.DAOLocalFilesDataSource(config, clients.data_client)
     else:
-        files_source = dsc.TodoFileDataSource(config)
-    return rc.run_by_todo(
-        name_builder=name_builder,
+        files_source = dsc.TodoFileDataSourceRunnerMeta(config, dao_name.DAOName)
+    return rc.run_by_todo_runner_meta(
         meta_visitors=META_VISITORS,
         data_visitors=DATA_VISITORS,
         clients=clients,
         config=config,
         sources=[files_source],
-        metadata_reader=metadata_reader,
+        storage_name_ctor=dao_name.DAOName,
     )
 
 
@@ -145,21 +138,18 @@ def _run_vo():
     :return 0 if successful, -1 if there's any sort of failure. Return status
         is used by airflow for task instance management and reporting.
     """
-    config, clients, name_builder, metadata_reader = _common()
+    config, clients = _common()
     vos_client = Client(vospace_certfile=config.proxy_file_name)
-    if metadata_reader is None:
-        metadata_reader = rdc.VaultReader(vos_client)
     clients.vo_client = vos_client
-    source = data_source.DAOVaultDataSource(config, clients.vo_client, clients.data_client, metadata_reader)
+    source = data_source.DAOVaultDataSource(config, clients.vo_client, clients.data_client)
     store_transferrer = transfer.VoFitsCleanupTransfer(vos_client, config)
-    return rc.run_by_todo(
-        name_builder=name_builder,
+    return rc.run_by_todo_runner_meta(
         meta_visitors=META_VISITORS,
         data_visitors=DATA_VISITORS,
         sources=[source],
         clients=clients,
         store_transfer=store_transferrer,
-        metadata_reader=metadata_reader,
+        storage_name_ctor=dao_name.DAOName,
     )
 
 
@@ -179,20 +169,21 @@ def _run_state():
     """Uses a state file with a timestamp to control which entries will be
     processed.
     """
-    config, clients, name_builder, metadata_reader = _common()
+    config, clients = _common()
     files_source = None
     if config.use_local_files:
         if config.cleanup_files_when_storing:
-            files_source = data_source.DAOLocalFilesDataSource(config, clients.data_client, metadata_reader)
+            files_source = data_source.DAOLocalFilesDataSource(config, clients.data_client)
     else:
-        files_source = dsc.ListDirTimeBoxDataSource(config)
-    return rc.run_by_state(
-        name_builder=name_builder,
+        files_source = dsc.LocalFilesDataSourceRunnerMeta(
+            config, clients.data_client, config.recurse_data_sources, config.scheme, dao_name.DAOName
+        )
+    return rc.run_by_state_runner_meta(
         meta_visitors=META_VISITORS,
         data_visitors=DATA_VISITORS,
         sources=[files_source],
         clients=clients,
-        metadata_reader=metadata_reader,
+        storage_name_ctor=dao_name.DAOName,
     )
 
 

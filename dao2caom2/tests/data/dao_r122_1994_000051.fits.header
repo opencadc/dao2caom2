@@ -1,0 +1,36 @@
+# HDU 0 in dao_r122_1994_000051.fits:
+SIMPLE  =                    T / conforms to FITS standard                      
+BITPIX  =                   16 / array data type                                
+NAXIS   =                    2 / number of array dimensions                     
+NAXIS1  =                 2000                                                  
+NAXIS2  =                    2                                                  
+OBJECT  = 'eta Tau '           / OBJECT label                                   
+ITIME   =                  781 / OBJECT INTEGRATION TIME                        
+BTIME   =                    1 / BASELINE INTEGRATION TIME                      
+UT      = '04:53:42'           / UT at start of exposure                        
+DATE-OBS= '1994-02-18T04:53:42' / UT date/time at start of exposure             
+LMDAREF =                    0 / WAVELENGTH REFERENCE POINT                     
+PIXLREF =                    0 / CORRESPONDING PIXEL REFERENCE                  
+EXP-NBR =                   51 / ARCHIVE EXPOSURE NUMBER                        
+ORIGIN  = 'NRC HAARC'                                                           
+INSTRUME= 'McKellar Spectrograph'                                               
+TELESCOP= '1.2-m   '                                                            
+OBSERVER= 'JUGAKU  '                                                            
+DETECTOR= 'RETICON '                                                            
+PIXSIZE =                 15.0 / pixel size in microns                          
+DISPAXIS=                    1                                                  
+OBSERVAT= 'DAO     '                                                            
+OBSMODE = 'single-slit spectroscopy'                                            
+EXPTIME =                  781 / Integration time (s)                           
+UTMIDDLE=    5.003472222222221 / UT at mid-exposure                             
+UT-DATE = '1994-02-18'         / The UT date at start of exposure               
+RELEASE = '1995-02-18T04:53:42'   / Date when the proprietary period expires    
+MJD-OBS =    49401.20395833333 / Modified JD at start of exposure               
+EXPNUM  = 'dao_r122_1994_000051' / The unique DAO archive exposure number       
+OBSTYPE = 'object  '                                                            
+HISTORY                                                                         
+COMMENT  4590-4650A                                                             
+COMMENT 4590-4650A                                                              
+RA      = '03:47:29.1'         / coordinates set by CDS Sesame service          
+DEC     = '+24:06:18'          / coordinates set by CDS Sesame service          
+EQUINOX =               2000.0                                                  
