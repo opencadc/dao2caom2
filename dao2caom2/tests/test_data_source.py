@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 # ***********************************************************************
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2021.                            (c) 2021.
+#  (c) 2025.                            (c) 2025.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -72,8 +71,7 @@ from mock import Mock, patch
 from cadcutils import exceptions
 from cadcdata import FileInfo
 from caom2pipe import manage_composable as mc
-from caom2pipe.reader_composable import VaultReader
-from dao2caom2 import data_source
+from dao2caom2 import dao_name, data_source
 
 
 @patch('caom2pipe.client_composable.vault_info', autospec=True)
@@ -90,9 +88,9 @@ def test_dao_transfer_check_fits_verify(vault_info_mock, test_config, tmp_path):
 
     test_data_client = Mock(autospec=True)
     test_vos_client = Mock(autospec=True)
-    test_metadata_reader = VaultReader(test_vos_client)
 
     test_config.change_working_directory(tmp_path)
+    test_config.task_types = [mc.TaskType.STORE]
     test_config.data_source_extensions = ['.fits.gz']
     test_config.data_sources = ['vos:DAO/Archive/Incoming']
     test_config.cleanup_failure_destination = 'vos:DAO/failure'
@@ -124,21 +122,19 @@ def test_dao_transfer_check_fits_verify(vault_info_mock, test_config, tmp_path):
     ]
     vault_info_mock.side_effect = test_file_info
     test_data_client.info.side_effect = test_file_info
-    test_reporter = mc.ExecutionReporter(test_config, observable=Mock(autospec=True))
+    test_reporter = mc.ExecutionReporter2(test_config)
 
     for case in [True, False]:
         test_config.cleanup_files_when_storing = case
 
-        test_subject = data_source.DAOVaultDataSource(
-            test_config, test_vos_client, test_data_client, test_metadata_reader
-        )
+        test_subject = data_source.DAOVaultDataSource(test_config, test_vos_client, test_data_client)
         assert test_subject is not None, 'expect ctor to work'
         test_subject.reporter = test_reporter
         test_result = test_subject.get_work()
 
         assert test_result is not None, 'expect a work list'
         assert len(test_result) == 1, 'wrong work list entries'
-        assert test_result[0] == 'vos:DAO/Archive/Incoming/dao123.fits.gz', 'wrong work entry'
+        assert test_result[0].source_names[0] == 'vos:DAO/Archive/Incoming/dao123.fits.gz', 'wrong work entry'
 
         assert test_vos_client.isdir.call_count == 4, 'wrong is_dir count'
         test_vos_client.isdir.reset_mock()
@@ -149,13 +145,10 @@ def test_dao_transfer_check_fits_verify(vault_info_mock, test_config, tmp_path):
     test_config.task_types = [mc.TaskType.STORE]
     test_config.cleanup_files_when_storing = True
     test_config.store_modified_files_only = True
-    vault_info_mock.return_value = test_match_file_info
+    vault_info_mock.side_effect = [test_match_file_info]
     test_data_client.info.return_value = test_different_file_info
     test_vos_client.status.raises = exceptions.NotFoundException
-
-    second_test_subject = data_source.DAOVaultDataSource(
-        test_config, test_vos_client, test_data_client, test_metadata_reader
-    )
+    second_test_subject = data_source.DAOVaultDataSource(test_config, test_vos_client, test_data_client)
     assert second_test_subject is not None, 'second ctor fails'
     second_test_subject.reporter = test_reporter
     second_test_result = second_test_subject.get_work()
@@ -181,12 +174,10 @@ def test_data_source_exists(test_config):
     test_config.task_types = [mc.TaskType.STORE]
     test_vos_client = Mock(autospec=True)
     test_data_client = Mock(autospec=True)
-    test_metadata_reader = VaultReader(test_vos_client)
-    test_subject = data_source.DAOVaultDataSource(
-        test_config, test_vos_client, test_data_client, test_metadata_reader
-    )
+    test_subject = data_source.DAOVaultDataSource(test_config, test_vos_client, test_data_client)
     assert test_subject is not None, 'ctor failure'
-    test_subject._work = ['vos:test/dest_fqn.fits']
+    test_storage_name = dao_name.DAOName(['vos:test/dest_fqn.fits'])
+    test_subject._work = [test_storage_name]
 
     def _get_node(uri, limit=None, force=None):
         assert uri == 'vos:test/dest_fqn.fits', f'wrong vo check {uri}'
@@ -212,7 +203,7 @@ def test_data_source_exists(test_config):
         return True
 
     test_vos_client.status.side_effect = _status
-    test_metadata_reader.file_info[test_uri] = test_file_info
+    test_storage_name.file_info[test_uri] = test_file_info
 
     # test execution
     for entry in test_subject._work:

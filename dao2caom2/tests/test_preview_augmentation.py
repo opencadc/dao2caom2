@@ -2,7 +2,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2020.                            (c) 2020.
+#  (c) 2025.                            (c) 2025.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -70,12 +70,8 @@ import os
 
 from caom2pipe import manage_composable as mc
 from dao2caom2 import preview_augmentation, dao_name
-import test_caom_gen_visit
 
 TEST_FILES_DIR = '/test_files'
-# REJECTED_FILE = os.path.join(
-#     test_caom_gen_visit.TEST_DATA_DIR, 'rejected.yml'
-# )
 
 
 def test_visit(test_config, test_data_dir, tmp_path):
@@ -146,7 +142,7 @@ def test_visit(test_config, test_data_dir, tmp_path):
     for key, value in test_files.items():
         obs = mc.read_obs_from_file(f'{test_data_dir}/previews/{key}')
         for f_name in value:
-            test_name = dao_name.DAOName(f_name)
+            test_name = dao_name.DAOName([f_name])
             kwargs['storage_name'] = test_name
 
             try:

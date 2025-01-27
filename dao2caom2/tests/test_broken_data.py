@@ -2,7 +2,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2022.                            (c) 2022.
+#  (c) 2025.                            (c) 2025.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -70,22 +70,23 @@ from os.path import basename
 
 from cadcdata import FileInfo
 from caom2pipe import astro_composable as ac
-from caom2pipe import reader_composable as rdc
+from caom2pipe.manage_composable import ExecutionReporter2
 from dao2caom2 import DAOName, fits2caom2_augmentation
 
 
-def test_failure(test_config, test_data_dir):
+def test_failure(test_config, test_data_dir, tmp_path):
+    test_config.change_working_directory(tmp_path.as_posix())
     test_fqn = f'{test_data_dir}/broken_data/dao_c122_2001_006946.fits.header'
     dao_name = DAOName(basename(test_fqn).replace('.header', '.gz'))
     file_info = FileInfo(id=dao_name.file_uri, file_type='application/fits')
     headers = ac.make_headers_from_file(test_fqn)
-    metadata_reader = rdc.FileMetadataReader()
-    metadata_reader._headers = {dao_name.file_uri: headers}
-    metadata_reader._file_info = {dao_name.file_uri: file_info}
+    dao_name.metadata = {dao_name.file_uri: headers}
+    dao_name.file_info = {dao_name.file_uri: file_info}
+    test_reporter = ExecutionReporter2(test_config)
     kwargs = {
         'storage_name': dao_name,
-        'metadata_reader': metadata_reader,
         'config': test_config,
+        'reporter': test_reporter,
     }
     observation = None
     observation = fits2caom2_augmentation.visit(observation, **kwargs)

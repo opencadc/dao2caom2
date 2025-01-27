@@ -73,7 +73,6 @@ from caom2.diff import get_differences
 from cadcdata import FileInfo
 from caom2pipe import astro_composable as ac
 from caom2pipe import manage_composable as mc
-from caom2pipe import reader_composable as rdc
 from dao2caom2 import DAOName
 from dao2caom2 import fits2caom2_augmentation
 
@@ -88,17 +87,18 @@ def pytest_generate_tests(metafunc):
     metafunc.parametrize('test_name', files)
 
 
-def test_visitor(test_name, test_config):
-    dao_name = DAOName(basename(test_name).replace('.header', '.gz'))
+def test_visitor(test_name, test_config, tmp_path):
+    test_config.change_working_directory(tmp_path.as_posix())
+    dao_name = DAOName([test_name.replace('.header', '.gz')])
     file_info = FileInfo(id=dao_name.file_uri, file_type='application/fits')
     headers = ac.make_headers_from_file(test_name)
-    metadata_reader = rdc.FileMetadataReader()
-    metadata_reader._headers = {dao_name.file_uri: headers}
-    metadata_reader._file_info = {dao_name.file_uri: file_info}
+    dao_name.metadata = {dao_name.file_uri: headers}
+    dao_name.file_info = {dao_name.file_uri: file_info}
+    test_reporter = mc.ExecutionReporter2(test_config)
     kwargs = {
         'storage_name': dao_name,
-        'metadata_reader': metadata_reader,
         'config': test_config,
+        'reporter': test_reporter,
     }
     expected_fqn = f'{TEST_DATA_DIR}/{dao_name.file_id}.expected.xml'
     actual_fqn = expected_fqn.replace('expected', 'actual')

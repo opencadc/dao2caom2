@@ -1,0 +1,40 @@
+# HDU 0 in dao_r122_1994_000008.fits:
+SIMPLE  =                    T / conforms to FITS standard                      
+BITPIX  =                   16 / array data type                                
+NAXIS   =                    2 / number of array dimensions                     
+NAXIS1  =                 2000                                                  
+NAXIS2  =                    2                                                  
+OBJECT  = 'Gam Gem '           / OBJECT label                                   
+ITIME   =                 3611 / OBJECT INTEGRATION TIME                        
+BTIME   =                    5 / BASELINE INTEGRATION TIME                      
+UT      = '03:52:37'           / UT at start of exposure                        
+DATE-OBS= '1994-02-11T03:52:37' / UT date/time at start of exposure             
+RA      = '06:37:42.7'         / coordinates set by CDS Sesame service          
+DEC     = '+16:23:57'          / coordinates set by CDS Sesame service          
+LMDAREF =                 4072 / WAVELENGTH REFERENCE POINT                     
+PIXLREF =                  722 / CORRESPONDING PIXEL REFERENCE                  
+EXP-NBR =                    8 / ARCHIVE EXPOSURE NUMBER                        
+ORIGIN  = 'NRC HAARC'                                                           
+INSTRUME= 'McKellar Spectrograph'                                               
+TELESCOP= '1.2-m   '                                                            
+OBSERVER= 'sj adelman'                                                          
+DETECTOR= 'RETICON '                                                            
+PIXSIZE =                 15.0 / pixel size in microns                          
+DISPAXIS=                    1                                                  
+OBSERVAT= 'DAO     '                                                            
+OBSMODE = 'single-slit spectroscopy'                                            
+WAVELENG=                 4072                                                  
+REFPIXEL=                  722                                                  
+EXPTIME =                 3611 / Integration time (s)                           
+UTMIDDLE=    4.378472222222222 / UT at mid-exposure                             
+UT-DATE = '1994-02-11'         / The UT date at start of exposure               
+RELEASE = '1995-02-11T03:52:37'   / Date when the proprietary period expires    
+MJD-OBS =    49394.16153935185 / Modified JD at start of exposure               
+EXPNUM  = 'dao_r122_1994_000008' / The unique DAO archive exposure number       
+OBSTYPE = 'object  '                                                            
+HISTORY                                                                         
+COMMENT  Reticon 2.4 A/mm 40894  0 A Center                                     
+COMMENT Reticon 2.4 A                                                           
+DISPERSI=                  2.4 / Angstroms/mm                                   
+DELTA_WL=                0.036 / Approx spacing of pixels (Angstroms)           
+EQUINOX =               2000.0                                                  

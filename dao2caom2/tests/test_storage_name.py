@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 # ***********************************************************************
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2018.                            (c) 2018.
+#  (c) 2025.                            (c) 2025.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -71,11 +70,11 @@ from dao2caom2 import DAOName, PRODUCT_COLLECTION
 
 
 def test_is_valid():
-    assert DAOName('anything').is_valid()
+    assert DAOName(['anything']).is_valid()
 
 
 def test_processed(test_config):
-    test_subject = DAOName('dao_c122_2020_004100_v.fits.gz')
+    test_subject = DAOName(['dao_c122_2020_004100_v.fits.gz'])
     assert test_subject is not None, 'expect a value'
     assert test_subject.obs_id == 'dao_c122_2020_004100', 'wrong obs id'
     assert test_subject.file_name == 'dao_c122_2020_004100_v.fits.gz', 'wrong file name'
@@ -92,7 +91,7 @@ def test_processed(test_config):
 
 
 def test_raw(test_config):
-    test_result = DAOName('cadc:DAO/dao_c182_2018_015013.fits')
+    test_result = DAOName(['cadc:DAO/dao_c182_2018_015013.fits'])
     assert test_result is not None, 'expect a result'
     assert test_result.obs_id == 'dao_c182_2018_015013'
     assert test_result.file_name == 'dao_c182_2018_015013.fits'
@@ -102,7 +101,7 @@ def test_raw(test_config):
         f'{test_config.scheme}:{test_config.collection}/dao_c182_2018_015013.fits'
     ], 'wrong destination uris'
 
-    test_result_2 = DAOName('/usr/src/app/dao_c182_2018_015013/dao_c182_2018_015013.fits.gz')
+    test_result_2 = DAOName(['/usr/src/app/dao_c182_2018_015013/dao_c182_2018_015013.fits.gz'])
     assert test_result_2.source_names == ['/usr/src/app/dao_c182_2018_015013/dao_c182_2018_015013.fits.gz']
     assert test_result_2.destination_uris == [
         f'{test_config.scheme}:{test_config.collection}/dao_c182_2018_015013.fits'
