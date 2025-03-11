@@ -894,13 +894,11 @@ class ProcessedSpectrum(DAOTelescopeMapping):
 
 
 class Dao12MetreImage(Dao12Metre, Imaging):
-    def __init__(self, storage_name, clients, observable, observation, config):
-        super().__init__(storage_name, clients, observable, observation, config)
+    pass
 
 
 class Dao12MetreProcessedImage(Dao12MetreImage, ProcessedImage):
-    def __init__(self, storage_name, clients, observable, observation, config):
-        super().__init__(storage_name, clients, observable, observation, config)
+    pass
 
 
 class Dao12MetreSpectrum(Dao12Metre):
@@ -927,13 +925,11 @@ class Dao12MetreProcessedSpectrum(Dao12MetreSpectrum, ProcessedSpectrum):
 
 
 class Dao18MetreImage(Dao18Metre, Imaging):
-    def __init__(self, storage_name, clients, observable, observation, config):
-        super().__init__(storage_name, clients, observable, observation, config)
+    pass
 
 
 class Dao18MetreProcessedImage(Dao18MetreImage, ProcessedImage):
-    def __init__(self, storage_name, clients, observable, observation, config):
-        super().__init__(storage_name, clients, observable, observation, config)
+    pass
 
 
 class Dao18MetreSpectrum(Dao18Metre):
