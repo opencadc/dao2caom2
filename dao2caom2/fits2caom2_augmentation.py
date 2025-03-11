@@ -71,9 +71,7 @@ from caom2 import DataProductType
 from dao2caom2 import telescopes, dao_name
 
 
-class DAOFits2caom2Visitor(cc.Fits2caom2Visitor):
-    def __init__(self, observation, **kwargs):
-        super().__init__(observation, **kwargs)
+class DAOFits2caom2Visitor(cc.Fits2caom2VisitorRunnerMeta):
 
     @staticmethod
     def get_data_product_type(headers):
@@ -86,72 +84,68 @@ class DAOFits2caom2Visitor(cc.Fits2caom2Visitor):
             data_product_type = DataProductType.SPECTRUM
         return data_product_type
 
-    def _get_mapping(self, headers, _):
+    def _get_mappings(self, dest_uri):
         if self._storage_name.file_name.startswith('a'):
             result = telescopes.SkyCam(
-                self._storage_name, headers, self._clients, self._observable, self._observation, self._config
+                self._storage_name, self._clients, self._reporter, self._observation, self._config
             )
         else:
-            data_product_type = DAOFits2caom2Visitor.get_data_product_type(headers)
+            data_product_type = DAOFits2caom2Visitor.get_data_product_type(self._storage_name.metadata.get(dest_uri))
             if data_product_type == DataProductType.IMAGE:
                 if dao_name.DAOName.is_processed(self._storage_name.file_id):
                     if self._storage_name.is_12_metre:
                         result = telescopes.Dao12MetreProcessedImage(
                             self._storage_name,
-                            headers,
                             self._clients,
-                            self._observable,
+                            self._reporter,
                             self._observation,
                             self._config,
                         )
                     else:
                         result = telescopes.Dao18MetreProcessedImage(
                             self._storage_name,
-                            headers,
                             self._clients,
-                            self._observable,
+                            self._reporter,
                             self._observation,
                             self._config,
                         )
                 elif self._storage_name.is_12_metre:
                     result = telescopes.Dao12MetreImage(
-                        self._storage_name, headers, self._clients, self._observable, self._observation, self._config
+                        self._storage_name, self._clients, self._reporter, self._observation, self._config
                     )
                 else:
                     result = telescopes.Dao18MetreImage(
-                        self._storage_name, headers, self._clients, self._observable, self._observation, self._config
+                        self._storage_name, self._clients, self._reporter, self._observation, self._config
                     )
             else:
                 if dao_name.DAOName.is_processed(self._storage_name.file_id):
                     if self._storage_name.is_12_metre:
                         result = telescopes.Dao12MetreProcessedSpectrum(
                             self._storage_name,
-                            headers,
                             self._clients,
-                            self._observable,
+                            self._reporter,
                             self._observation,
                             self._config,
                         )
                     else:
                         result = telescopes.Dao18MetreProcessedSpectrum(
                             self._storage_name,
-                            headers,
                             self._clients,
-                            self._observable,
+                            self._reporter,
                             self._observation,
                             self._config,
                         )
                 elif self._storage_name.is_12_metre:
                     result = telescopes.Dao12MetreSpectrum(
-                        self._storage_name, headers, self._clients, self._observable, self._observation, self._config
+                        self._storage_name, self._clients, self._reporter, self._observation, self._config
                     )
                 else:
                     result = telescopes.Dao18MetreSpectrum(
-                        self._storage_name, headers, self._clients, self._observable, self._observation, self._config
+                        self._storage_name, self._clients, self._reporter, self._observation, self._config
                     )
 
         self._logger.debug(f'Created {result.__class__.__name__} instance.')
-        return result
+        return [result]
 
 
 def visit(observation, **kwargs):

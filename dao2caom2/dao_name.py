@@ -2,7 +2,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2020.                            (c) 2020.
+#  (c) 2025.                            (c) 2025.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -68,6 +68,7 @@
 
 import re
 
+from os.path import basename
 from caom2pipe import manage_composable as mc
 
 __all__ = ['DAOName', 'get_collection', 'PRODUCT_COLLECTION']
@@ -96,16 +97,10 @@ class DAOName(mc.StorageName):
 
     def __init__(
         self,
-        entry=None,
-        file_name=None,
         source_names=None,
     ):
-        if file_name is None:
-            file_name = mc.CaomName.extract_file_name(entry).replace('.header', '')
-        self._collection = get_collection(file_name)
-        if source_names is None:
-            source_names = [entry]
-        super().__init__(file_name=file_name, source_names=source_names)
+        self._collection = get_collection(basename(source_names[0]))
+        super().__init__(source_names=source_names)
 
     def _get_uri(self, file_name, scheme):
         return mc.build_uri(self._collection, file_name.replace('.gz', ''), scheme)

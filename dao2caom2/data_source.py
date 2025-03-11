@@ -2,7 +2,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2021.                            (c) 2021.
+#  (c) 2025.                            (c) 2025.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -73,17 +73,23 @@ from dao2caom2 import dao_name
 __all__ = ['DAOLocalFilesDataSource', 'DAOVaultDataSource']
 
 
-class DAOLocalFilesDataSource(dsc.LocalFilesDataSource):
-    def __init__(self, config, cadc_client, metadata_reader):
-        super().__init__(config, cadc_client, metadata_reader, config.recurse_data_sources)
+class DAOLocalFilesDataSource(dsc.LocalFilesDataSourceRunnerMeta):
+    def __init__(self, config, cadc_client):
+        super().__init__(
+            config,
+            cadc_client,
+            config.recurse_data_sources,
+            scheme=config.scheme,
+            storage_name_ctor=dao_name.DAOName,
+        )
 
     def get_collection(self, f_name):
         return dao_name.get_collection(f_name)
 
 
-class DAOVaultDataSource(dsc.VaultCleanupDataSource):
-    def __init__(self, config, vault_client, cadc_client, metadata_reader):
-        super().__init__(config, vault_client, cadc_client, metadata_reader, dao_name.DAOName)
+class DAOVaultDataSource(dsc.VaultCleanupDataSourceRunnerMeta):
+    def __init__(self, config, vault_client, cadc_client):
+        super().__init__(config, vault_client, cadc_client, dao_name.DAOName)
 
     def get_collection(self, f_name):
         return dao_name.get_collection(f_name)
